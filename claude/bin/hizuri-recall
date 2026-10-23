@@ -1,0 +1,31 @@
+#!/usr/bin/env node
+// hizuri-recall: search everything the user and the agent ever said, and the user's notes.
+// It indexes what is new first (seconds), so the newest session is always in it.
+import { parseFlags } from "../lib/hizuri.mjs";
+import { formatRecall, recall, sync } from "../lib/memory.mjs";
+
+const { flags, rest } = parseFlags(process.argv.slice(2), {
+  "--speaker": "speaker",
+  "--from": "from",
+  "--to": "to",
+  "--day": "day",
+  "-k": "k",
+  "--context": "context",
+  "--exact": "exact",
+  "--all": "all?",
+  "--json": "json?",
+  "--no-sync": "noSync?",
+  "-h": "help?",
+  "--help": "help?",
+});
+const query = rest.join(" ").trim();
+if (flags.help || (!query && !flags.exact && !flags.day)) {
+  console.log(`usage: hizuri-recall [--speaker user|agent|all] [--from YYYY-MM-DD] [--to YYYY-MM-DD]
+                     [--day YYYY-MM-DD] [-k N] [--context N] [--exact "words"] [--all] [--json] <words>
+  Each hit starts with its phrase id: p… for a spoken phrase, m… for a typed one, n… for a note.
+  --all also searches subagent sessions.`);
+  process.exit(flags.help ? 0 : 2);
+}
+if (!flags.noSync) sync({ quiet: true });
+const result = recall(query, flags);
+console.log(flags.json ? JSON.stringify(result, null, 2) : formatRecall(result, flags));

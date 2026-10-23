@@ -1,0 +1,39 @@
+#!/usr/bin/env node
+// hizuri-retro: the retro log. `add` appends one dated line (what happened · rule: key),
+// `week` prints a week's file, `pending` lists what the next weekly retro will read,
+// `due` says whether it is due, `done` marks a finished weekly retro.
+import { readFileSync, existsSync } from "node:fs";
+
+import { addLine, isoWeek, linesSinceRetro, markRetroDone, retroDue, weekFile } from "../lib/retro.mjs";
+
+const [command, ...args] = process.argv.slice(2);
+switch (command) {
+  case "add": {
+    const text = args.join(" ").trim();
+    if (!text) {
+      console.error('usage: hizuri-retro add "<what happened> · rule: <key>"');
+      process.exit(2);
+    }
+    console.log(`retro line added to ${addLine(text)}`);
+    break;
+  }
+  case "week": {
+    const file = weekFile(args[0] ?? isoWeek());
+    console.log(existsSync(file) ? readFileSync(file, "utf8").trimEnd() : `no retro log for ${args[0] ?? isoWeek()} yet`);
+    break;
+  }
+  case "pending":
+    console.log(linesSinceRetro().join("\n") || "no retro lines since the last retro");
+    break;
+  case "due": {
+    const { due, waiting, last } = retroDue();
+    console.log(`${due ? "due" : "not due"} · ${waiting} lines waiting · last retro ${last ?? "never"}`);
+    break;
+  }
+  case "done":
+    console.log(`weekly retro marked done on ${markRetroDone()}`);
+    break;
+  default:
+    console.error("usage: hizuri-retro add <text> | week [YYYY-Www] | pending | due | done");
+    process.exit(command ? 2 : 0);
+}

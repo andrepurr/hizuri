@@ -1,0 +1,38 @@
+{
+  "name": "hizuri",
+  "displayName": "hizuri",
+  "version": "0.1.0",
+  "description": "A self-learning agent: memory of every session searched before it asks you, a Guardian side check against its rules whose notes the agent must answer, a dated retro line on every complaint, a weekly retro it runs alone, skills it writes and has reviewed, the hizuri daemon's tools, and secrets typed from your own vault.",
+  "author": { "name": "hizuri" },
+  "homepage": "https://hizuri.com",
+  "license": "Apache-2.0",
+  "keywords": ["memory", "self-learning", "guardian", "retro", "voice", "secrets"],
+  "userConfig": {
+    "language": {
+      "type": "string",
+      "title": "Language of notes",
+      "description": "The language the Guardian writes its notes in (rule keys stay English).",
+      "default": "English"
+    },
+    "guardianModel": {
+      "type": "string",
+      "title": "Guardian model",
+      "description": "Model alias or id for the Guardian side check. A small model is enough and costs little.",
+      "default": "haiku"
+    },
+    "guardianEvery": {
+      "type": "number",
+      "title": "Guardian: check every N steps",
+      "description": "The Guardian checks once this many model requests have passed since its last check, at each trigger moment and once at each turn end.",
+      "default": 6,
+      "min": 1,
+      "max": 100
+    },
+    "guardianBlocks": {
+      "type": "string",
+      "title": "Guardian: rules that refuse a reply",
+      "description": "Comma-separated rule keys whose sure misses refuse the reply itself instead of a note (memory-first, check-dont-guess). Empty: notes only.",
+      "default": "memory-first,check-dont-guess"
+    }
+  }
+}

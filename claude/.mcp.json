@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "hizuri": {
+      "type": "http",
+      "url": "${HIZURI_DAEMON_URL:-http://127.0.0.1:6767}/mcp/agents",
+      "headers": {
+        "Authorization": "Bearer ${HIZURI_MCP_TOKEN:-none}"
+      }
+    }
+  }
+}

@@ -1,0 +1,65 @@
+#!/usr/bin/env node
+// hizuri-memory: the memory database. `up` creates or starts it, `sync` indexes new session
+// lines, `note` keeps the user's own memory, `stats` says what is in it.
+import { parseFlags } from "../lib/hizuri.mjs";
+import { addNote, doneNote, searchNotes, stats, sync, up } from "../lib/memory.mjs";
+
+const USAGE = `usage:
+  hizuri-memory up                       create or start the database, apply the schema
+  hizuri-memory sync [--quiet]           index what is new in the session transcripts
+  hizuri-memory stats                    what is indexed
+  hizuri-memory note add [--kind K] [--title T] [--tags a,b] [--due YYYY-MM-DD] [--from p12,m40] <text>
+  hizuri-memory note ls [--kind K] [words]
+  hizuri-memory note done <id>`;
+
+const [command, ...args] = process.argv.slice(2);
+switch (command) {
+  case "up":
+    up();
+    break;
+  case "sync": {
+    const { flags } = parseFlags(args, { "--quiet": "quiet?" });
+    sync({ quiet: flags.quiet === true });
+    break;
+  }
+  case "stats": {
+    const s = stats();
+    console.log(`messages ${s.messages} · sessions ${s.sessions} · from ${s.first} to ${s.last} · notes ${s.notes} · transcript files ${s.files}`);
+    break;
+  }
+  case "note": {
+    const [sub, ...rest] = args;
+    const { flags, rest: words } = parseFlags(rest, {
+      "--kind": "kind",
+      "--title": "title",
+      "--tags": "tags",
+      "--due": "due",
+      "--from": "from",
+    });
+    if (sub === "add") {
+      const body = words.join(" ").trim();
+      if (!body) {
+        console.error(USAGE);
+        process.exit(2);
+      }
+      const split = (v) => (v ? String(v).split(",").map((t) => t.trim()).filter(Boolean) : []);
+      const id = addNote({ kind: flags.kind, title: flags.title, body, tags: split(flags.tags), due: flags.due, sources: split(flags.from) });
+      console.log(`note n${id} saved`);
+    } else if (sub === "ls") {
+      for (const n of searchNotes(words.join(" "), 50, flags.kind ?? null)) {
+        const extra = [n.tags && `tags ${n.tags}`, n.due && `due ${n.due}`, n.done && "done"].filter(Boolean).join(" · ");
+        console.log(`n${n.id} · ${n.kind}${n.title ? ` · ${n.title}` : ""}: ${n.body}${extra ? `  (${extra})` : ""}`);
+      }
+    } else if (sub === "done" && words[0]) {
+      doneNote(words[0]);
+      console.log(`note ${words[0]} done`);
+    } else {
+      console.error(USAGE);
+      process.exit(2);
+    }
+    break;
+  }
+  default:
+    console.error(USAGE);
+    process.exit(command ? 2 : 0);
+}
