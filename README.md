@@ -1,223 +1,67 @@
 <p align="center">
-  <img src="packages/website/public/logo.svg" width="64" height="64" alt="Paseo logo">
+  <img src="packages/app/assets/images/icon.png" width="96" height="96" alt="hizuri mark: a field of dots around one glowing point">
 </p>
 
-<h1 align="center">Paseo</h1>
+<h1 align="center">hizuri</h1>
+
+<p align="center"><b>One window into everything AI can do for you. You talk; your agent does the work on your own machine and shows you what it is doing.</b></p>
 
 <p align="center">
-  <a href="README.md">English</a> ·
-  <a href="README.zh-CN.md">简体中文</a> ·
-  <a href="README.ja.md">日本語</a> ·
-  <a href="README.ko.md">한국어</a>
+  <img src="docs/images/readme-show.png" width="270" alt="The Show page: a tab titled The best 55-inch TV for films, with the best pick at 899 euros, four steps, and OLED compared with Mini-LED">
 </p>
+<p align="center"><sub>Show, the canvas the assistant draws on, in the web app (sample data).</sub></p>
 
-<p align="center">
-  <a href="https://github.com/getpaseo/paseo/stargazers">
-    <img src="https://img.shields.io/github/stars/getpaseo/paseo?style=flat&logo=github" alt="GitHub stars">
-  </a>
-  <a href="https://github.com/getpaseo/paseo/releases">
-    <img src="https://img.shields.io/github/v/release/getpaseo/paseo?style=flat&logo=github" alt="GitHub release">
-  </a>
-  <a href="https://x.com/moboudra">
-    <img src="https://img.shields.io/badge/%40moboudra-555?logo=x" alt="X">
-  </a>
-  <a href="https://discord.gg/jz8T2uahpH">
-    <img src="https://img.shields.io/badge/Discord-555?logo=discord" alt="Discord">
-  </a>
-  <a href="https://www.reddit.com/r/PaseoAI/">
-    <img src="https://img.shields.io/badge/Reddit-555?logo=reddit" alt="Reddit">
-  </a>
-</p>
+hizuri turns Claude Code into one assistant with a voice, a face and a screen of its own. You speak; it answers aloud, does the work on your machine, and draws what it found on the screen in front of you. Tools, skills, plugins and models stay under the hood: you ask, and the assistant works out how. The built-in assistant is called Zuri.
 
-<p align="center">One interface for Claude Code, Codex, Copilot, OpenCode, Pi, Antigravity, and Muse Code agents.</p>
+hizuri is a fork of [Paseo](https://github.com/getpaseo/paseo), the open-source app that runs coding agents on your machine and streams them to your phone, browser and desktop. hizuri keeps all of Paseo and builds a new experience on top of it.
 
-<p align="center">
-  <img src="https://paseo.sh/hero-mockup.png" alt="Paseo app screenshot" width="100%">
-</p>
+## What makes it different
 
-<p align="center">
-  <img src="https://paseo.sh/mobile-mockup.png" alt="Paseo mobile app" width="100%">
-</p>
+1. **Voice first.** Talk the way you talk to a person: hands free, screen off, phone in your pocket.
+   - Every phrase you say gets an id. The assistant signs for each one, and every reply records what of it you actually heard. Nothing you say is dropped without a trace: a phrase the filters reject stays in the voice journal with the reason.
+   - You can talk over it. Your words stop the reply; background noise does not.
+   - Optional fast front: a small Claude model says a first short line in the assistant's voice right after you stop, while the main agent thinks.
+2. **Three screens, one swipe.** On the phone, and in a browser at any width, every agent is three pages side by side: its face, the chat, and Show. The assistant moves the app between them itself, so you see the right one while you talk.
+3. **Show: one canvas the assistant draws on.** It opens tabs and fills them while it explains:
+   - numbers, progress, tables, charts, steps, choices and cards, updated in place;
+   - a web page, a picture or a video, or up to four of them side by side on one tab;
+   - live slides it flips as it speaks;
+   - films, YouTube and music, playing on while you look elsewhere;
+   - a secure form for a password or a card: the value goes straight into your vault, and the agent only ever hears its name.
 
-Paseo is a desktop, mobile, web, and CLI app for coding agents. Open the desktop app and work: agents, editor, terminals, diffs, pull requests, and a browser in one window. Run many agents at once, each in its own worktree, on one machine or several. The mobile app is the full app, native on iOS and Android.
+   Tabs are kept by the daemon, so they come back after a restart, a reconnect or a cold start, and the last state shows even offline.
 
-- **Parallel agents:** Run many agents at once, each in its own worktree.
-- **Built-in orchestration:** Agents in Paseo can create worktrees, launch other agents, and talk to them, across providers.
-- **Full IDE:** Edit files, review diffs, open pull requests, and run terminals, in split panes you arrange how you want.
-- **Self-hosted:** Agents run on your machine with your full dev environment. Use your tools, your configs, and your skills.
-- **Multi-provider:** Claude Code, Codex, Copilot, OpenCode, Pi, Antigravity, and Muse Code through the same interface. Pick the right model for each job.
-- **Voice control:** Dictate tasks or talk through problems in voice mode. Hands-free when you need it.
-- **Cross-device:** iOS, Android, desktop, web, and CLI. Start work at your desk, check in from your phone, script it from the terminal.
-- **Privacy-first:** Paseo doesn't have any telemetry, tracking, or forced log-ins.
+4. **An agent that remembers.** hizuri ships as a Claude Code plugin. Every session, typed or spoken, goes into a local memory the agent searches by phrase id or by words. What the plugin holds: [claude/README.md](claude/README.md).
+5. **Agents that rate tools for each other.** Given a task, the assistant finds a matching MCP tool in its hub, reads the reviews other agents left, installs it only after your yes, and runs it in a sandbox. After the call it leaves its own review, backed by a signed receipt of that real call; reviews with receipts rank first. How it works: [docs/tool-hub.md](docs/tool-hub.md).
+6. **A face that lives.** Give it a VRM avatar and it gets a 3D face with lip sync driven by its own voice, and body language for listening, thinking, working and speaking. On Android it can leave the app with you and float over any other app.
+7. **Nothing to configure.** The app opens straight on the chat you last had with the assistant, and the simple version (on by default) shows only the assistant and its settings. The assistant switches its own model and effort when a task needs it; you never pick one.
+8. **Your machine, your data.** Agents run on your own computer with your own Claude Code login. Files, memory, logs and voice recordings stay there, secrets go to your own vault, and there is no telemetry.
 
-[Run parallel tasks in Paseo](https://paseo.sh/docs/parallel-development): start agents in separate worktrees, review their diffs, run each app, and check it in the built-in browser.
+## Where it is going
 
-## Plugins
+1. One door to your digital life: your own agent, by voice, for everything.
+2. One public hub of tools rated by agents: the receipt-backed reviews every install already writes, shared between all agents, so yours picks the tool that fits your task.
+3. Modifications instead of pull requests: the agent that fixes a bug publishes the fix to the hub, and other agents pick it by those reviews.
 
-Plugins run on the daemon and show up in every client you connect, with the same UI on desktop, web,
-iOS, and Android. Write a plugin once and it is on your phone.
+## Install
 
-- **UI:** screens, sidebar items, workspace panels, Command Center items, slash commands, composer pills, attachment sources, timeline items, themes.
-- **Agent lifecycle:** change configuration, environment, and MCP servers, answer permissions, follow up when a turn ends.
-- **Providers:** add a coding agent as a provider.
-
-Install from the registry with `paseo plugin add owner/slug`, or from Git or a local directory.
-
-**[Browse plugins](https://paseo.sh/plugins)** · **[Plugin docs](https://paseo.sh/docs/plugins)**
-
-Plugins run with access to your daemon machine and inside connected clients; install only code you trust.
-
-## Getting Started
-
-Paseo runs a local server called the daemon that manages your coding agents. Clients like the desktop app, mobile app, web app, and CLI connect to it.
-
-### Prerequisites
-
-You need at least one agent CLI installed and configured with your credentials:
-
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code)
-- [Codex](https://github.com/openai/codex)
-- [GitHub Copilot](https://github.com/features/copilot/cli/)
-- [OpenCode](https://github.com/anomalyco/opencode)
-- [Pi](https://pi.dev)
-- [Antigravity](https://paseo.sh/docs/supported-providers#antigravity)
-- [Muse Code](https://paseo.sh/docs/muse-code)
-
-### Desktop app (recommended)
-
-Download it from [paseo.sh/download](https://paseo.sh/download) or the [GitHub releases page](https://github.com/getpaseo/paseo/releases). Open the app and the daemon starts automatically. Nothing else to install.
-
-To connect from your phone, open **Settings → your host → Pair Device**.
-
-### Server
-
-For a server, a VM, or any machine without the desktop app. Install the CLI and start the daemon:
+Send the link to this repo to your own coding agent (Claude Code) and ask it to install hizuri. It runs one script from a fresh clone; you can run it yourself too:
 
 ```bash
-npm install -g @getpaseo/cli
-paseo
+git clone https://github.com/andrepurr/hizuri hizuri && cd hizuri && ./install.sh
 ```
 
-Paseo starts, then asks whether to enable the end-to-end encrypted relay for device pairing. If you decline, connect directly over TCP, Tailscale, or another VPN. The desktop, mobile, and web apps connect to this daemon like any other host.
+1. The script never uses sudo. It checks what is missing, lists one install command for each missing tool and stops; run it again after that. Every step checks before it acts, so a second run is safe.
+2. It creates your private folder `~/.hizuri/personal`, starts the memory (one local Postgres container), loads the `hizuri` plugin into Claude Code straight from the clone, builds and starts the daemon with local voice, and prints how to pair your phone: through an end-to-end encrypted relay (`./install.sh --relay <host:port>`) or over your own WireGuard or Tailscale network.
+3. Speech runs on the same machine: Paseo's local models (Parakeet for speech-to-text, Kokoro for the voice, through sherpa-onnx) download when the daemon first starts. Any OpenAI-compatible speech server works too.
+4. The assistant is called Zuri until you rename it: set `"PASEO_ASSISTANT_NAME": "<name>"` under `env` in `~/.hizuri/personal/settings.json` and restart the daemon; the voice, the prompts and the app follow.
+5. The Android app builds from source with the F-Droid profile: [docs/android.md](docs/android.md). It updates itself over the air from your own daemon.
+6. Working on hizuri itself: `CI=true npm ci`, then `npm run dev:server` and `npm run dev:app`. More in [docs/development.md](docs/development.md).
 
-For full setup and configuration, see:
+## Built with agents
 
-- [Docs](https://paseo.sh/docs)
-- [Connectivity guide](https://paseo.sh/docs/connectivity)
-- [Configuration reference](https://paseo.sh/docs/configuration)
+hizuri is built in the open by one engineer directing AI coding agents: design, code, builds, tests and docs. The repo is written for agents as much as for people: `CLAUDE.md`, the docs in `docs/` and the comments next to the code say why things are the way they are, so any agent can pick up the work. A commit guard (`scripts/personal-guard.mjs`) keeps secrets and personal data out of every commit.
 
-### Docker
+## Credits and licence
 
-Run the Paseo daemon and self-hosted web UI in Docker:
-
-```bash
-docker run -d --name paseo \
-  -p 6767:6767 \
-  -e PASEO_PASSWORD=change-me \
-  -v "$PWD/paseo-home:/home/paseo" \
-  -v "$PWD:/workspace" \
-  ghcr.io/getpaseo/paseo:latest
-```
-
-Open `http://localhost:6767` after it starts. Extend the base image with the agent CLIs you use, then provide credentials through environment variables or the persistent `/home/paseo` volume. See the [Docker documentation](docs/docker.md) for full setup details.
-
-## CLI
-
-Everything you can do in the app, you can do from the terminal.
-
-```bash
-paseo run --provider claude/opus-4.6 "implement user authentication"
-paseo run --provider codex/gpt-5.5 --worktree feature-x "implement feature X"
-
-paseo ls                           # list running agents
-paseo attach abc123                # stream live output
-paseo send abc123 "also add tests" # follow-up task
-
-# run on a remote daemon; --cwd is a path on that host
-paseo run --host workstation.local:6767 --cwd /workspace "run the full test suite"
-```
-
-See the [full CLI reference](https://paseo.sh/docs/cli) for more.
-
-## TypeScript SDK
-
-Build issue integrations, dashboards, and orchestration services with `@getpaseo/client`:
-
-```ts
-import { createPaseoClient } from "@getpaseo/client";
-
-const client = createPaseoClient({ url: "ws://127.0.0.1:6767/ws" });
-await client.connect();
-
-const agent = await client.agents.create({
-  config: { provider: "codex/gpt-5.5" },
-  cwd: "/Users/me/dev/storefront",
-  prompt: "Review the current diff and name the riskiest change.",
-});
-
-const result = await agent.waitForFinish();
-console.log(result.lastMessage);
-
-await client.close();
-```
-
-See the [SDK quickstart](https://paseo.sh/docs/sdk/quickstart), [recipes](https://paseo.sh/docs/sdk/recipes), and [API reference](https://paseo.sh/docs/sdk/reference).
-
-## Skills
-
-Skills teach your agent to use Paseo to orchestrate other agents.
-
-```bash
-npx skills add getpaseo/paseo
-```
-
-Then use them in any agent conversation:
-
-- `/paseo-handoff` — hand off work between agents. I use this to plan with Claude and then handoff to Codex to implement.
-- `/paseo-advisor` — spin up a single agent as an advisor for a second opinion, without delegating the work itself.
-- `/paseo-committee` — form a committee of two contrasting agents to step back, do root cause analysis, and produce a plan.
-
-## Development
-
-Quick monorepo package map:
-
-- `packages/server`: Paseo daemon (agent process orchestration, WebSocket API, MCP server)
-- `packages/app`: Expo client (iOS, Android, web)
-- `packages/cli`: `paseo` CLI for daemon and agent workflows
-- `packages/desktop`: Electron desktop app
-- `packages/relay`: Relay transport and encryption used by the daemon and clients
-- `packages/website`: Marketing site and documentation (`paseo.sh`)
-
-Common commands:
-
-```bash
-# run all local dev services
-npm run dev
-
-# run individual surfaces
-npm run dev:server
-npm run dev:app
-npm run dev:desktop
-npm run dev:website
-
-# build the server stack
-npm run build:server
-
-# repo-wide checks
-npm run typecheck
-```
-
-## Sponsors
-
-Paseo is an independent project used by tens of thousands of developers daily, built by one person and funded by the people who use it. Support the work on [GitHub Sponsors](https://github.com/sponsors/boudra). Companies can [sponsor Paseo](https://paseo.sh/sponsor#spot) monthly and have their logo shown here and on the paseo.sh homepage.
-
-<!-- Sponsor logos go here, in the same order as packages/website/src/data/sponsors.ts -->
-
-## Related projects
-
-- [getpaseo/paseo-relay](https://github.com/getpaseo/paseo-relay) — official distributed relay, written in Elixir
-- [paseo-vscode](https://marketplace.visualstudio.com/items?itemName=hinnes.paseo-vscode) — VS Code extension
-
-## License
-
-Apache-2.0
+hizuri is built on [Paseo](https://github.com/getpaseo/paseo) by Mohamed Boudra and the Paseo contributors, under the Apache License 2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE). Paseo's own documentation is its [README](https://github.com/getpaseo/paseo#readme); Paseo's features work in hizuri unless this README says otherwise.
