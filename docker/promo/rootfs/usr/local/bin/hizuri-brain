@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+# Give this hizuri a brain of your own. Run it in hizuri's Terminal.
+#
+#   hizuri-brain claude    sign in with your Claude Pro/Max plan (Anthropic's own sign-in)
+#   hizuri-brain chatgpt   sign in with your ChatGPT plan (OpenAI's own sign-in)
+#   hizuri-brain key       paste your own Anthropic or OpenAI API key
+#   hizuri-brain status    what is connected
+#
+# Sign-in happens inside the official, unmodified `claude` and `codex` programs, on this
+# machine; hizuri never sees, copies or sends your login.
+set -euo pipefail
+
+home_flag=(--home "${PASEO_HOME:-$HOME/.paseo}")
+
+# The daemon config takes the providers object whole (its keys are dynamic).
+enable_provider() {
+  local providers
+  providers="$(node -e '
+    const fs = require("fs");
+    const file = process.argv[1] + "/config.json";
+    let config = {}; try { config = JSON.parse(fs.readFileSync(file, "utf8")); } catch {}
+    const providers = (config.agents && config.agents.providers) || {};
+    providers[process.argv[2]] = { ...(providers[process.argv[2]] || {}), enabled: true };
+    process.stdout.write(JSON.stringify(providers));
+  ' "${PASEO_HOME:-$HOME/.paseo}" "$1")"
+  paseo daemon config set agents.providers "$providers" "${home_flag[@]}" >/dev/null
+  echo "Done: start a new chat in hizuri and pick $2."
+}
+
+case "${1:-}" in
+  claude)
+    echo "Claude will show a link. Open it, sign in to your Claude account, then paste the code here."
+    claude auth login
+    claude auth status
+    enable_provider claude "Claude Code"
+    ;;
+  chatgpt)
+    echo "Codex will show a link and a short code. Open the link, sign in to ChatGPT, enter the code."
+    codex login --device-auth
+    enable_provider codex "Codex"
+    ;;
+  key)
+    read -rp "Whose key is it? [anthropic/openai] " vendor
+    read -rsp "Paste the key (it stays hidden): " key
+    echo
+    [[ -n "$key" ]] || { echo "No key given."; exit 1; }
+    case "$vendor" in
+      anthropic)
+        mkdir -p "$HOME/.config/hizuri" "$CLAUDE_CONFIG_DIR"
+        umask 077
+        printf '%s' "$key" > "$HOME/.config/hizuri/anthropic-key"
+        node -e '
+          const fs = require("fs"); const file = process.argv[1];
+          let settings = {}; try { settings = JSON.parse(fs.readFileSync(file, "utf8")); } catch {}
+          settings.apiKeyHelper = "cat " + process.argv[2];
+          fs.writeFileSync(file, JSON.stringify(settings, null, 2));
+        ' "$CLAUDE_CONFIG_DIR/settings.json" "$HOME/.config/hizuri/anthropic-key"
+        enable_provider claude "Claude Code"
+        ;;
+      openai)
+        printf '%s' "$key" | codex login --with-api-key
+        enable_provider codex "Codex"
+        ;;
+      *) echo "Type anthropic or openai."; exit 1 ;;
+    esac
+    ;;
+  status)
+    if claude auth status 2>/dev/null | grep -q '"loggedIn": true'; then echo "Claude: signed in"
+    else echo "Claude: not signed in"; fi
+    if codex login status >/dev/null 2>&1; then echo "ChatGPT/Codex: signed in"
+    else echo "ChatGPT/Codex: not signed in"; fi
+    ;;
+  *)
+    sed -n '2,11p' "$0" | sed 's/^# \{0,1\}//'
+    ;;
+esac

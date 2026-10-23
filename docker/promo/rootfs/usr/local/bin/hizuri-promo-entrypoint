@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# First start of a demo environment: seed the daemon config (Claude Code and Codex stay off until
+# their owner signs in with `hizuri-brain`) and the trial brain's install token, then hand over to
+# the stock entrypoint.
+set -euo pipefail
+
+PASEO_HOME="${PASEO_HOME:-/home/paseo/.paseo}"
+mkdir -p "$PASEO_HOME/free-brain"
+if [[ ! -f "$PASEO_HOME/config.json" ]]; then
+  cp /etc/hizuri-promo/config.json "$PASEO_HOME/config.json"
+fi
+if [[ -n "${HIZURI_TRIAL_TOKEN:-}" && -n "${PASEO_FREE_BRAIN_URL:-}" && ! -f "$PASEO_HOME/free-brain/install.json" ]]; then
+  umask 077
+  printf '{"relayUrl":"%s","token":"%s"}' "$PASEO_FREE_BRAIN_URL" "$HIZURI_TRIAL_TOKEN" \
+    > "$PASEO_HOME/free-brain/install.json"
+fi
+unset HIZURI_TRIAL_TOKEN
+chown -R paseo:paseo "$PASEO_HOME"
+
+exec /usr/local/bin/paseo-docker-entrypoint "$@"

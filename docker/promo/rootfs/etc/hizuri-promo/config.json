@@ -1,0 +1,14 @@
+{
+  "agents": {
+    "providers": {
+      "claude": { "enabled": false },
+      "codex": { "enabled": false },
+      "copilot": { "enabled": false },
+      "opencode": { "enabled": false },
+      "pi": { "enabled": false },
+      "omp": { "enabled": false },
+      "antigravity": { "enabled": false },
+      "muse": { "enabled": false }
+    }
+  }
+}

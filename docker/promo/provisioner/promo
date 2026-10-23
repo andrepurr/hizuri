@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# Admin for hizuri promo demos (run on the demo host). Talks to the provisioner's localhost-only API.
+#
+#   promo code [--envs N] [--days D | --expires YYYY-MM-DD] [--label TEXT] [--trial-usd X]
+#                          make a code (shown once; only its hash is kept)
+#   promo codes            list codes (id, label, uses, expiry)
+#   promo revoke <id>      stop a code from making more environments
+#   promo envs [--all]     list live environments (--all: also removed and failed ones)
+#   promo rm <env-id>      delete an environment now
+#   promo front            the front-door link to give visitors
+set -euo pipefail
+here="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
+env_file="${PROMO_ENV_FILE:-$here/../secrets/promo.env}"
+token="$(sed -n 's/^PROMO_ADMIN_TOKEN=//p' "$env_file")"
+port="$(sed -n 's/^PROMO_ADMIN_PORT=//p' "$env_file")"
+api="http://127.0.0.1:${port:-8781}"
+call() { curl -fsS -H "authorization: Bearer $token" -H 'content-type: application/json' "$@"; }
+
+case "${1:-}" in
+  code)
+    shift
+    body='{}'
+    while [ $# -gt 0 ]; do
+      case "$1" in
+        --envs) body=$(jq -c --argjson v "$2" '.envs=$v' <<<"$body"); shift 2 ;;
+        --days) body=$(jq -c --argjson v "$2" '.days=$v' <<<"$body"); shift 2 ;;
+        --expires) body=$(jq -c --arg v "$2" '.expires=$v' <<<"$body"); shift 2 ;;
+        --label) body=$(jq -c --arg v "$2" '.label=$v' <<<"$body"); shift 2 ;;
+        --trial-usd) body=$(jq -c --argjson v "$2" '.trialUsd=$v' <<<"$body"); shift 2 ;;
+        *) echo "unknown option $1" >&2; exit 2 ;;
+      esac
+    done
+    call -X POST "$api/admin/codes" -d "$body" | jq -r '"code:    \(.code)\nenvs:    \(.maxEnvs)\nexpires: \(.expiresAt)\nopen:    \(.front)"'
+    ;;
+  codes) call "$api/admin/codes" | jq -r '.codes[] | "\(.id)  \(.label // "-")  \(.envIds|length)/\(.maxEnvs) used  expires \(.expiresAt)\(if .revoked then "  REVOKED" else "" end)"' ;;
+  revoke) call -X DELETE "$api/admin/codes/$2" | jq -c . ;;
+  envs) all="${2:-}"; call "$api/admin/envs" | jq -r --arg all "$all" '"front: \(.front)", (.envs[] | select($all == "--all" or .status == "ready" or .status == "provisioning") | "\(.id)  \(.status)  \(.label // "-")  ready in \(.secondsToReady // "-") s  trial $\(.trial.spentUsd // 0)/\(.trial.capUsd // "-")  until \(.expiresAt[:10])  \(.url // "")\(if .error then "  error: \(.error)" else "" end)")' ;;
+  rm) call -X DELETE "$api/admin/envs/$2" | jq -c . ;;
+  front) call "$api/admin/envs" | jq -r .front ;;
+  *) sed -n '2,10p' "$0" | sed 's/^# \{0,1\}//' ;;
+esac
