@@ -4,6 +4,8 @@ import type { PersistedConfig } from "../persisted-config.js";
 import type { PaseoOpenAIConfig, PaseoSpeechConfig } from "../bootstrap.js";
 import { resolveLocalSpeechConfig } from "./providers/local/config.js";
 import { resolveOpenAiSpeechConfig } from "./providers/openai/config.js";
+import { resolveSttStreamModule } from "./providers/openai/stt-stream-module.js";
+import { resolveSttTranscriptFixes } from "./providers/openai/stt-transcript-fixes.js";
 import {
   SpeechProviderIdSchema,
   type RequestedSpeechProvider,
@@ -163,11 +165,27 @@ export function resolveSpeechConfig(params: {
     providers,
   });
 
-  const openai = resolveOpenAiSpeechConfig({
+  const resolvedOpenai = resolveOpenAiSpeechConfig({
     env: params.env,
     persisted: params.persisted,
     providers,
   });
+  // Hizuri: streaming voice recognition through a module from the user's setup folder.
+  const stream = resolveSttStreamModule(params.env);
+  // Hizuri: owner transcript fixes ride on the OpenAI-compatible STT; their files live in paseoHome.
+  const openai = resolvedOpenai?.stt
+    ? {
+        ...resolvedOpenai,
+        stt: {
+          ...resolvedOpenai.stt,
+          transcriptFixes: resolveSttTranscriptFixes({
+            paseoHome: params.paseoHome,
+            env: params.env,
+          }),
+          ...(stream ? { stream } : {}),
+        },
+      }
+    : resolvedOpenai;
 
   return {
     openai,

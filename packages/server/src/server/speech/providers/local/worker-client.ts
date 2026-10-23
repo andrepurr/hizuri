@@ -13,6 +13,7 @@ import type {
 } from "../../speech-provider.js";
 import type { TurnDetectionProvider, TurnDetectionSession } from "../../turn-detection-provider.js";
 import { applySherpaLoaderEnv } from "./sherpa/sherpa-runtime-env.js";
+import { activeVoiceSettingsFile, VOICE_SETTINGS_FILE_ENV } from "../../../voice-settings/store.js";
 import type {
   LocalSpeechCreateSessionResult,
   LocalSpeechSessionKind,
@@ -94,6 +95,11 @@ function resolveWorkerExecArgv(): string[] {
 function forkLocalSpeechWorker(): LocalSpeechWorkerProcess {
   const env = { ...process.env };
   applySherpaLoaderEnv(env);
+  // Hizuri: the worker follows the daemon's voice-settings.json (speech-detector knobs).
+  const voiceSettingsFile = activeVoiceSettingsFile();
+  if (voiceSettingsFile) {
+    env[VOICE_SETTINGS_FILE_ENV] = voiceSettingsFile;
+  }
   return fork(fileURLToPath(resolveWorkerUrl()), [], {
     env,
     execArgv: resolveWorkerExecArgv(),
@@ -412,6 +418,13 @@ export class LocalSpeechWorkerClient {
       }
       return;
     }
+    if (message.type === "voice_settings.applied") {
+      this.logger.info(
+        { workerPid: this.workerPid, changes: message.changes },
+        "voice_settings.worker_applied",
+      );
+      return;
+    }
 
     const emitter = this.sessionEmitters.get(message.sessionId);
     if (!emitter) {
@@ -429,6 +442,15 @@ export class LocalSpeechWorkerClient {
         return;
       case "session.speech_stopped":
         emitter.emit("speech_stopped");
+        return;
+      case "session.speech_dropped":
+        emitter.emit("speech_dropped", message.dropped);
+        return;
+      case "session.vad_frames":
+        // Hizuri: re-emit the worker's VAD runs as the in-process session would.
+        for (const [state, ms] of message.frames) {
+          emitter.emit("frame", state >= 1, ms, state === 2);
+        }
         return;
       case "session.error":
         emitter.emit("error", new Error(message.error));

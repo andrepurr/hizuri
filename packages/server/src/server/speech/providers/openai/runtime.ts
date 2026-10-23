@@ -4,6 +4,7 @@ import type { SpeechToTextProvider, TextToSpeechProvider } from "../../speech-pr
 import type { RequestedSpeechProviders } from "../../speech-types.js";
 import type { TurnDetectionProvider } from "../../turn-detection-provider.js";
 import { DEFAULT_OPENAI_TTS_MODEL, type OpenAiSpeechProviderConfig } from "./config.js";
+import type { SttStreamFactory } from "./stt-stream-module.js";
 import { OpenAISTT } from "./stt.js";
 import { OpenAITTS } from "./tts.js";
 
@@ -98,9 +99,20 @@ function createOpenAiStt(
   apiKey: string,
   openaiConfig: OpenAiSpeechProviderConfig | undefined,
   logger: Logger,
-): SpeechToTextProvider {
-  const { apiKey: _sttApiKey, ...sttConfig } = openaiConfig?.stt ?? {};
+): OpenAISTT {
+  const { apiKey: _sttApiKey, stream: _stream, ...sttConfig } = openaiConfig?.stt ?? {};
   return new OpenAISTT({ apiKey, ...sttConfig }, logger);
+}
+
+/** Hizuri: voice recognition streams through the user's module when one is loaded (stt-stream-module.ts). */
+function createOpenAiVoiceStt(
+  apiKey: string,
+  openaiConfig: OpenAiSpeechProviderConfig | undefined,
+  logger: Logger,
+  sttStream: SttStreamFactory | null,
+): SpeechToTextProvider {
+  const batch = createOpenAiStt(apiKey, openaiConfig, logger);
+  return sttStream?.(batch, openaiConfig?.stt?.baseUrl) ?? batch;
 }
 
 function createOpenAiTts(
@@ -126,6 +138,8 @@ export function initializeOpenAiSpeechServices(params: {
   openaiConfig: OpenAiSpeechProviderConfig | undefined;
   existing: SpeechServices;
   logger: Logger;
+  /** A streaming module for voice recognition (stt-stream-module.ts); none = REST only. */
+  sttStream?: SttStreamFactory | null;
 }): SpeechServices {
   const { providers, openaiConfig, existing, logger } = params;
   const openAiCredentials = resolveOpenAiCredentials(openaiConfig);
@@ -154,7 +168,12 @@ export function initializeOpenAiSpeechServices(params: {
     logger.info("OpenAI speech provider initialized");
 
     if (needsOpenAiStt && openAiCredentials.openaiSttApiKey) {
-      sttService = createOpenAiStt(openAiCredentials.openaiSttApiKey, openaiConfig, logger);
+      sttService = createOpenAiVoiceStt(
+        openAiCredentials.openaiSttApiKey,
+        openaiConfig,
+        logger,
+        params.sttStream ?? null,
+      );
     }
 
     if (needsOpenAiTts && openAiCredentials.openaiTtsApiKey) {

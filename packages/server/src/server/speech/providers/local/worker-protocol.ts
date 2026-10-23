@@ -3,6 +3,7 @@ import type {
   StreamingTranscriptionEvent,
   TranscriptionResult,
 } from "../../speech-provider.js";
+import type { DroppedSpeech } from "../../turn-detection-provider.js";
 import type { LocalSpeechWorkerBytes } from "./worker-bytes.js";
 
 export interface LocalSpeechWorkerConfig {
@@ -104,12 +105,36 @@ export type LocalSpeechWorkerEvent =
       sessionId: string;
     }
   | {
+      // Hizuri: voice that never opened a phrase.
+      type: "session.speech_dropped";
+      sessionId: string;
+      dropped: DroppedSpeech;
+    }
+  | {
+      // Hizuri: VAD windows for the barge-in hold, merged into runs of [state, ms]
+      // (0 no voice, 1 voice too quiet to be the user's, 2 loud voice).
+      type: "session.vad_frames";
+      sessionId: string;
+      frames: Array<[VadFrameState, number]>;
+    }
+  | {
       type: "session.error";
       sessionId: string;
       error: string;
     };
 
-export type LocalSpeechWorkerToParentMessage = LocalSpeechWorkerResponse | LocalSpeechWorkerEvent;
+export type VadFrameState = 0 | 1 | 2;
+
+/** Hizuri: the worker applied a change of voice-settings.json (voice-settings/store.ts). */
+export interface LocalSpeechWorkerSettingsApplied {
+  type: "voice_settings.applied";
+  changes: Array<{ key: string; from: string; to: string }>;
+}
+
+export type LocalSpeechWorkerToParentMessage =
+  | LocalSpeechWorkerResponse
+  | LocalSpeechWorkerEvent
+  | LocalSpeechWorkerSettingsApplied;
 
 export interface LocalSpeechCreateSessionResult {
   requiredSampleRate: number;

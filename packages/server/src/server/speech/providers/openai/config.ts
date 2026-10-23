@@ -4,6 +4,7 @@ import type { PersistedConfig } from "../../../persisted-config.js";
 import type { RequestedSpeechProviders } from "../../speech-types.js";
 import type { STTConfig } from "./stt.js";
 import type { TTSConfig } from "./tts.js";
+import { OPENAI_KEYS_SITE, resolveSecretRefs } from "../../../data-scopes/secret-refs.js";
 
 export const DEFAULT_OPENAI_TTS_MODEL = "tts-1";
 
@@ -11,10 +12,6 @@ export interface OpenAiSpeechProviderConfig {
   stt?: Partial<STTConfig> & { apiKey?: string };
   tts?: Partial<TTSConfig> & { apiKey?: string };
 }
-
-const OpenAiTtsVoiceSchema = z.enum(["alloy", "echo", "fable", "onyx", "nova", "shimmer"]);
-
-const OpenAiTtsModelSchema = z.enum(["tts-1", "tts-1-hd"]);
 
 const NumberLikeSchema = z.union([z.number(), z.string().trim().min(1)]);
 
@@ -44,14 +41,12 @@ const OpenAiSttOptionsSchema = z.object({
   sttModel: OptionalTrimmedStringSchema,
 });
 
+// Voice and model are free-form so a self-hosted server can use its own ids; the
+// OpenAI catalog is only the default. Both are sent as written, because the
+// server owns those ids and their case (rosters use ids like kokoro-v1:Q8_0).
 const OpenAiTtsOptionsSchema = z.object({
-  ttsVoice: z.string().trim().toLowerCase().pipe(OpenAiTtsVoiceSchema).default("alloy"),
-  ttsModel: z
-    .string()
-    .trim()
-    .toLowerCase()
-    .pipe(OpenAiTtsModelSchema)
-    .default(DEFAULT_OPENAI_TTS_MODEL),
+  ttsVoice: z.string().trim().default("alloy"),
+  ttsModel: z.string().trim().default(DEFAULT_OPENAI_TTS_MODEL),
 });
 
 function isOpenAiProviderActive(provider: { enabled?: boolean; provider: string }): boolean {
@@ -125,7 +120,11 @@ function buildOpenAiResolutionInput(params: {
   providers: RequestedSpeechProviders;
 }): Record<string, unknown> {
   const { env } = params;
-  const openai = params.persisted.providers?.openai;
+  // hizuri: "!secret <name>" keys get their values from the vault (data-scopes/).
+  const openai = resolveSecretRefs({
+    value: params.persisted.providers?.openai,
+    ...OPENAI_KEYS_SITE,
+  });
   return {
     sttApiKey: firstDefined<string>([
       openai?.stt?.apiKey,

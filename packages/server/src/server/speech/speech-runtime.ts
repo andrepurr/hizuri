@@ -9,6 +9,7 @@ import {
   initializeOpenAiSpeechServices,
   validateOpenAiCredentialRequirements,
 } from "./providers/openai/runtime.js";
+import { loadSttStreamModule } from "./providers/openai/stt-stream-module.js";
 import type { SpeechToTextProvider, TextToSpeechProvider } from "./speech-provider.js";
 import type { RequestedSpeechProviders } from "./speech-types.js";
 import type { TurnDetectionProvider } from "./turn-detection-provider.js";
@@ -459,9 +460,11 @@ export function createSpeechService(params: {
       speechConfig,
       logger,
     });
+    const sttStream = await loadSttStreamModule({ config: openaiConfig?.stt?.stream, logger });
     const nextOpenAiSpeech = initializeOpenAiSpeechServices({
       providers,
       openaiConfig,
+      sttStream,
       existing: {
         turnDetectionService: nextLocalSpeech.turnDetectionService,
         sttService: nextLocalSpeech.sttService,

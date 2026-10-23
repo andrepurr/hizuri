@@ -15,8 +15,10 @@ import type {
   LocalSpeechWorkerConfig,
   LocalSpeechWorkerRequest,
   LocalSpeechWorkerToParentMessage,
+  VadFrameState,
 } from "./worker-protocol.js";
 import { bufferToWorkerBytes, workerBytesToBuffer } from "./worker-bytes.js";
+import { VOICE_SETTINGS_FILE_ENV, VoiceSettingsStore } from "../../../voice-settings/store.js";
 
 process.title = "Paseo Voice";
 
@@ -46,6 +48,24 @@ function sendToParent(message: LocalSpeechWorkerToParentMessage): void {
   } catch {
     ipcClosing = true;
   }
+}
+
+// Hizuri: the speech-detector knobs (silero-vad-session.ts) follow voice-settings.json like the
+// daemon's own; the daemon logs what this copy applied (voice_settings.worker_applied).
+const voiceSettingsFile = process.env[VOICE_SETTINGS_FILE_ENV];
+if (voiceSettingsFile) {
+  new VoiceSettingsStore({
+    file: voiceSettingsFile,
+    logger,
+    onApplied: (changes) => {
+      if (changes.length > 0) {
+        sendToParent({
+          type: "voice_settings.applied",
+          changes: changes.map(({ key, from, to }) => ({ key, from, to })),
+        });
+      }
+    },
+  }).start();
 }
 
 function sttModelId(
@@ -177,12 +197,46 @@ function trackTranscriptionSession(
   unsubscribeBySessionId.set(sessionId, []);
 }
 
+function vadFrameState(detected: boolean, loud: boolean): VadFrameState {
+  if (!detected) {
+    return 0;
+  }
+  return loud ? 2 : 1;
+}
+
 function trackTurnDetectionSession(sessionId: string, session: TurnDetectionSession): void {
+  // Hizuri: the VAD runs in this worker, so its per-window frames cross the IPC to reach the
+  // barge-in hold in the daemon: merged into runs of equal state, sent once per appended chunk.
+  let runs: Array<[VadFrameState, number]> = [];
+  let flushQueued = false;
+  session.on("frame", (detected, ms, loud) => {
+    const state = vadFrameState(detected, loud);
+    const last = runs[runs.length - 1];
+    if (last && last[0] === state) {
+      last[1] += ms;
+    } else {
+      runs.push([state, ms]);
+    }
+    if (!flushQueued) {
+      flushQueued = true;
+      setImmediate(() => {
+        flushQueued = false;
+        const frames = runs;
+        runs = [];
+        if (frames.length > 0) {
+          sendToParent({ type: "session.vad_frames", sessionId, frames });
+        }
+      });
+    }
+  });
   session.on("speech_started", () => {
     sendToParent({ type: "session.speech_started", sessionId });
   });
   session.on("speech_stopped", () => {
     sendToParent({ type: "session.speech_stopped", sessionId });
+  });
+  session.on("speech_dropped", (dropped) => {
+    sendToParent({ type: "session.speech_dropped", sessionId, dropped });
   });
   session.on("error", (err) => {
     sendToParent({

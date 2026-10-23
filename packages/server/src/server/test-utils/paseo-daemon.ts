@@ -47,6 +47,7 @@ interface TestPaseoDaemonOptions {
   pushNotificationSender?: PushNotificationSender;
   serviceProxy?: PaseoDaemonConfig["serviceProxy"];
   webUi?: PaseoDaemonConfig["webUi"];
+  faceAvatarDir?: PaseoDaemonConfig["faceAvatarDir"]; // hizuri
   trustedProxies?: PaseoDaemonConfig["trustedProxies"];
   agentProfiles?: AgentProfile[];
   autoArchiveAfterMerge?: boolean;
@@ -205,6 +206,7 @@ async function prepareTestDaemonConfig(
     pushNotificationSender: options.pushNotificationSender,
     serviceProxy: options.serviceProxy,
     webUi: options.webUi,
+    faceAvatarDir: options.faceAvatarDir, // hizuri
     trustedProxies: options.trustedProxies,
     openai: options.openai,
     speech: options.speech,
