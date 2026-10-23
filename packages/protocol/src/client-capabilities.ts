@@ -43,8 +43,17 @@ export const CLIENT_CAPS = {
   timelineNotifications: "timeline_notifications",
   // COMPAT(pluginTimelineItems): added in v0.8.0, remove after 2027-03-07 once client floor >= v0.8.0.
   pluginTimelineItems: "plugin_timeline_items",
+  workspaceSetupObservation: "workspace_setup_observation",
   // COMPAT(workspaceSetupBlocked): added in v0.8.0, remove after 2027-03-07 once client floor >= v0.8.0.
   workspaceSetupBlocked: "workspace_setup_blocked",
+  // COMPAT(voiceLiveTranscript): added in hizuri. The daemon sends the user's live words
+  // (voice_live_transcript) only to clients that advertise this; older clients reject the
+  // message type. Remove the gate after 2027-04-17 once every client sends it.
+  voiceLiveTranscript: "voice_live_transcript",
+  // COMPAT(voiceThinkHint): added in hizuri. The daemon sends how long the assistant will think
+  // (voice_think_hint) only to clients that advertise this; older clients reject the message
+  // type. Remove the gate after 2027-04-21 once every client sends it.
+  voiceThinkHint: "voice_think_hint",
   browserHost: "browser_host",
 } as const;
 

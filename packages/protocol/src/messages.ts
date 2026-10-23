@@ -1,3 +1,23 @@
+import { AgentMessageSchema } from "./agent-message.js";
+import {
+  HostsListRequestSchema,
+  HostsAddRequestSchema,
+  HostsUpdateRequestSchema,
+  HostsRemoveRequestSchema,
+  HostsLinkOpenRequestSchema,
+  HostsRouteOpenRequestSchema,
+  HostsRouteFrameRequestSchema,
+  HostsRouteCloseRequestSchema,
+  HostsListResponseSchema,
+  HostsChangedSchema,
+  HostsAddResponseSchema,
+  HostsUpdateResponseSchema,
+  HostsRemoveResponseSchema,
+  HostsLinkOpenResponseSchema,
+  HostsRouteOpenResponseSchema,
+  HostsRouteFrameSchema,
+  HostsRouteClosedSchema,
+} from "./hosts.js";
 import { PluginRegistryIdentitySchema } from "./plugin-registry.js";
 import { AgentProfileSchema, AgentSkillSelectionSchema } from "./agent-profile.js";
 export {
@@ -18,6 +38,7 @@ export {
 import { TerminalProfileSchema } from "./terminal-profile.js";
 export { TerminalProfileSchema, type TerminalProfile } from "./terminal-profile.js";
 import { z } from "zod";
+import { StageChangeSchema, StageSchema } from "./stage.js";
 import { TerminalActivitySchema } from "./terminal-activity.js";
 import { CLIENT_CAPS } from "./client-capabilities.js";
 import { AGENT_LIFECYCLE_STATUSES } from "./agent-lifecycle.js";
@@ -625,6 +646,7 @@ const ToolCallDetailPayloadSchema: z.ZodType<ToolCallDetail, unknown> = z.discri
 );
 
 const ToolCallBasePayloadSchema = z.object({
+  agentMessage: AgentMessageSchema.optional(),
   type: z.literal("tool_call"),
   callId: z.string(),
   name: z.string(),
@@ -837,6 +859,8 @@ export const AgentSnapshotPayloadSchema = z.object({
   attentionTimestamp: z.string().nullable().optional(),
   archivedAt: z.string().nullable().optional(),
   providerUnavailable: z.boolean().optional(),
+  // Private helper marker, retained for exact-ID snapshots and older wire messages.
+  internal: z.boolean().optional(),
 });
 
 export type AgentSnapshotPayload = z.infer<typeof AgentSnapshotPayloadSchema>;
@@ -890,6 +914,9 @@ export const VoiceAudioChunkMessageSchema = z.object({
   audio: z.string(), // base64 encoded
   format: z.string(),
   isLast: z.boolean(),
+  // Hizuri: where the phone plays the assistant's voice now, "speaker" or "headphones" (Android's
+  // route); unset when the app does not know. A string, so a new route never breaks an older host.
+  outputRoute: z.string().optional(),
 });
 
 export const AbortRequestMessageSchema = z.object({
@@ -908,6 +935,9 @@ const AgentDirectoryFilterSchema = z.object({
   includeArchived: z.boolean().optional(),
   requiresAttention: z.boolean().optional(),
   thinkingOptionId: z.string().nullable().optional(),
+  // Retained for wire parsing; private helpers are excluded from public discovery.
+  includeInternal: z.boolean().optional(),
+  includeBackground: z.boolean().optional(),
 });
 
 export const DeleteAgentRequestMessageSchema = z.object({
@@ -1043,7 +1073,17 @@ export const SetVoiceModeMessageSchema = z.object({
   enabled: z.boolean(),
   agentId: z.string().optional(),
   requestId: z.string().optional(),
+  // Hizuri: with enabled=false, switch to text and keep the voice session (the agent stays in
+  // voice mode). Sent only when the host advertises server_info.features.voiceSessionPersist.
+  keepSession: z.boolean().optional(),
 });
+
+/**
+ * The requestId of an unsolicited set_voice_mode_response (enabled=false, agentId set): the voice
+ * session of that agent moved to another connection (another tab or device, or a reconnect), so
+ * this client switches to text and keeps the session.
+ */
+export const VOICE_MOVED_REQUEST_ID = "voice-session-moved";
 
 // COMPAT(githubAttachmentKinds): legacy wire attachment retained when
 // forge-neutral attachments shipped in v0.2.0-beta.1. Stop emitting it after
@@ -1142,7 +1182,7 @@ export const ReviewAttachmentSchema = z.object({
   type: z.literal("review"),
   mimeType: z.literal("application/paseo-review"),
   cwd: z.string(),
-  mode: z.enum(["uncommitted", "base"]),
+  mode: z.enum(["uncommitted", "base", "all"]),
   baseRef: z.string().nullable().optional(),
   comments: z.array(ReviewAttachmentCommentSchema),
 });
@@ -1235,6 +1275,7 @@ export const FetchAgentsRequestMessageSchema = z.object({
   type: z.literal("fetch_agents_request"),
   requestId: z.string(),
   scope: z.enum(["active"]).optional(),
+  includeBackground: z.boolean().optional(),
   filter: AgentDirectoryFilterSchema.optional(),
   sort: z
     .array(
@@ -1268,6 +1309,7 @@ const WorkspaceStateBucketSchema = z.enum([
 ]);
 
 export const FetchWorkspacesRequestMessageSchema = z.object({
+  includeBackground: z.boolean().optional(),
   type: z.literal("fetch_workspaces_request"),
   requestId: z.string(),
   filter: z
@@ -1276,6 +1318,9 @@ export const FetchWorkspacesRequestMessageSchema = z.object({
       projectId: z.string().optional(),
       // Unused: accepted so older clients still parse, but the server does not filter on it.
       idPrefix: z.string().optional(),
+      // Retained for wire parsing of older requests.
+      includeInternal: z.boolean().optional(),
+      includeBackground: z.boolean().optional(),
     })
     .optional(),
   sort: z
@@ -1354,6 +1399,10 @@ export const SendAgentMessageRequestSchema = z.object({
   /** Accepts full ID, unique prefix, or exact full title (server resolves). */
   agentId: z.string(),
   text: z.string(),
+  /** Opaque sender identity for agent-originated prompts. */
+  sourceAgentId: z.string().min(1).optional(),
+  sourceAgentServerId: z.string().min(1).optional(),
+  sessionMode: z.string().optional(),
   messageId: z.string().optional(), // Client-provided ID for deduplication
   activeTurnBehavior: ActiveTurnBehaviorSchema.optional(),
   images: z.array(ImageAttachmentSchema).optional(),
@@ -1409,6 +1458,94 @@ export const HubManagementDaemonPermissionsUpdateRequestSchema = z.object({
 export const DiagnosticsRequestSchema = z.object({
   type: z.literal("diagnostics.request"),
   requestId: z.string(),
+});
+
+// Zuri: the app uploads its own log lines (console warnings and errors, voice state, mic level
+// stats, reconnects). The daemon appends them to $PASEO_HOME/app-logs/YYYY-MM-DD.log.
+// `level` stays a plain string so a new level never fails parsing on an older daemon.
+export const AppLogEntrySchema = z.object({
+  ts: z.string(),
+  level: z.string(),
+  tag: z.string().optional(),
+  message: z.string(),
+});
+
+export const AppLogsUploadRequestSchema = z.object({
+  type: z.literal("app.logs.upload.request"),
+  requestId: z.string(),
+  entries: z.array(AppLogEntrySchema),
+  appVersion: z.string().optional(),
+  platform: z.string().optional(),
+});
+
+// Hizuri: the voice sessions this daemon keeps (voice-registry.ts), so a client with no saved
+// session of its own opens straight into the agent the user talks to and takes the voice over.
+export const VoiceSessionListRequestSchema = z.object({
+  type: z.literal("voice.session.list.request"),
+  requestId: z.string(),
+});
+
+// Hizuri (stage): the tabs Zuri keeps on the user's screen, owned by the daemon
+// (./stage.ts). With `subscribe` the response carries a subscriptionId and `stage.update`
+// follows every change until `subscription.release.request` or a disconnect; the app subscribes
+// again after every reconnect. An update not newer than the revision the app holds is ignored.
+export const StageGetStateRequestSchema = z.object({
+  type: z.literal("stage.get_state.request"),
+  requestId: z.string(),
+  agentId: z.string(),
+  /** The revision the client already holds; the response then omits an unchanged stage. */
+  revision: z.number().int().optional(),
+  subscribe: z.boolean().optional(),
+});
+
+/** The user closed a tab. Closing twice is harmless. */
+export const StageCloseTabRequestSchema = z.object({
+  type: z.literal("stage.close_tab.request"),
+  requestId: z.string(),
+  agentId: z.string(),
+  tabId: z.string(),
+});
+
+/** What the user has on screen now: a tab id, or null for the main tab with its view. */
+export const StageReportFocusRequestSchema = z.object({
+  type: z.literal("stage.report_focus.request"),
+  requestId: z.string(),
+  agentId: z.string(),
+  focus: z.string().nullable(),
+  view: z.string().optional(),
+});
+
+/**
+ * The user hid Zuri from the block it perched on (stage main.perch); gated on features.stagePerch.
+ */
+export const StageHidePerchRequestSchema = z.object({
+  type: z.literal("stage.hide_perch.request"),
+  requestId: z.string(),
+  agentId: z.string(),
+});
+
+/** A tap on a block's action (a choice, “buy”); it reaches the agent as a <stage-action>. */
+export const StageSendActionRequestSchema = z.object({
+  type: z.literal("stage.send_action.request"),
+  requestId: z.string(),
+  agentId: z.string(),
+  tabId: z.string(),
+  blockId: z.string(),
+  value: z.string().optional(),
+});
+
+// Hizuri (secrets through Show): the values of a secret form the agent opened with
+// secret_request (stage block `secret`). They go from the app straight to the daemon's vault and
+// never reach the agent, its timeline or the logs; the agent learns only “stored as <name>”.
+// `form` is the block's form id, so a stale or forged form stores nothing. `decline` closes the
+// form without values. Gated on features.secrets.
+export const SecretStoreRequestSchema = z.object({
+  type: z.literal("secret.store.request"),
+  requestId: z.string(),
+  agentId: z.string(),
+  form: z.string(),
+  values: z.record(z.string(), z.string().max(4096)).optional(),
+  decline: z.boolean().optional(),
 });
 
 export const PluginCatalogGetRequestSchema = z.object({
@@ -1710,6 +1847,13 @@ export const CreateAgentRequestMessageSchema = z.object({
   git: GitSetupOptionsSchema.optional(),
   worktree: CreateAgentWorktreeTargetSchema.optional(),
   autoArchive: z.boolean().optional(),
+  // An ephemeral helper: the daemon never persists, lists, flags or announces
+  // it, and plugin lifecycle hooks skip it. Lives on the request rather than
+  // in the config schema, which is reused for updates. Retained for wire parsing;
+  // public internal creation is no longer supported.
+  internal: z.boolean().optional(),
+  // Workspace creation intent, rejected when selecting an existing workspace.
+  background: z.boolean().optional(),
   labels: z.record(z.string(), z.string()).default({}),
   requestId: z.string(),
 });
@@ -2159,7 +2303,7 @@ const CheckoutErrorSchema = z.object({
 });
 
 const CheckoutDiffCompareSchema = z.object({
-  mode: z.enum(["uncommitted", "base"]),
+  mode: z.enum(["uncommitted", "base", "all"]),
   baseRef: z.string().optional(),
   ignoreWhitespace: z.boolean().optional(),
 });
@@ -2535,6 +2679,12 @@ export const WorkspaceSetupStatusRequestSchema = z.object({
   requestId: z.string(),
 });
 
+export const WorkspaceSetupSubscribeRequestSchema = z.object({
+  type: z.literal("workspace.setup.subscribe.request"),
+  workspaceId: z.string(),
+  requestId: z.string(),
+});
+
 export const WorkspaceSetupRunRequestSchema = z.object({
   type: z.literal("workspace.setup.run.request"),
   workspaceId: z.string(),
@@ -2629,6 +2779,10 @@ export const WorkspaceCreateRequestSchema = z.object({
   title: z.string().optional(),
   // Optional prompt context for workspace-level name/branch generation.
   firstAgentContext: FirstAgentContextSchema.optional(),
+  // Retained for wire parsing; public internal creation is no longer supported.
+  internal: z.boolean().optional(),
+  background: z.boolean().optional(),
+  callerAgentId: z.string().optional(),
   source: z.discriminatedUnion("kind", [
     z.object({
       kind: z.literal("directory"),
@@ -2744,6 +2898,10 @@ export const FileVersionSchema = z.discriminatedUnion("status", [
     size: z.number().int().nonnegative(),
     modifiedAt: z.string(),
     revision: z.string().optional(),
+    // Classified from the extension and the first bytes, so a client can choose how to open the
+    // file before reading it.
+    kind: z.enum(["text", "image", "binary"]).optional(),
+    mimeType: z.string().optional(),
   }),
   z.object({
     status: z.literal("missing"),
@@ -2777,6 +2935,8 @@ export const FileWriteRequestSchema = z.object({
   cwd: z.string(),
   path: z.string(),
   content: z.string(),
+  // COMPAT(fileByteWrites): added in v0.13.0. Daemons without the feature write `content` as text.
+  contentEncoding: z.enum(["utf-8", "base64"]).optional(),
   expectedModifiedAt: z.string(),
   expectedRevision: z.string().optional(),
   requestId: z.string(),
@@ -3171,6 +3331,15 @@ export const SubscriptionReleaseResponseSchema = z.object({
 });
 
 export const SessionInboundMessageSchema = z.discriminatedUnion("type", [
+  HostsListRequestSchema,
+  HostsAddRequestSchema,
+  HostsUpdateRequestSchema,
+  HostsRemoveRequestSchema,
+  HostsLinkOpenRequestSchema,
+  HostsRouteOpenRequestSchema,
+  HostsRouteFrameRequestSchema,
+  HostsRouteCloseRequestSchema,
+
   BrowserHostRegisterRequestSchema,
   SubscriptionReleaseRequestSchema,
   SessionEventsSetSubscriptionRequestSchema,
@@ -3214,6 +3383,14 @@ export const SessionInboundMessageSchema = z.discriminatedUnion("type", [
   HubManagementDaemonDisconnectRequestSchema,
   HubManagementDaemonPermissionsUpdateRequestSchema,
   DiagnosticsRequestSchema,
+  AppLogsUploadRequestSchema,
+  VoiceSessionListRequestSchema,
+  StageGetStateRequestSchema,
+  StageCloseTabRequestSchema,
+  StageReportFocusRequestSchema,
+  StageSendActionRequestSchema,
+  StageHidePerchRequestSchema,
+  SecretStoreRequestSchema,
   PluginCatalogGetRequestSchema,
   PluginListRequestSchema,
   PluginLogsGetRequestSchema,
@@ -3310,6 +3487,7 @@ export const SessionInboundMessageSchema = z.discriminatedUnion("type", [
   PaseoWorktreeArchiveRequestSchema,
   CreatePaseoWorktreeRequestSchema,
   WorkspaceSetupStatusRequestSchema,
+  WorkspaceSetupSubscribeRequestSchema,
   WorkspaceSetupRunRequestSchema,
   LegacyListAvailableEditorsRequestSchema,
   LegacyOpenInEditorRequestSchema,
@@ -3441,6 +3619,33 @@ export const VoiceInputStateMessageSchema = z.object({
   }),
 });
 
+/**
+ * Hizuri: the speech recogniser's live text of the phrase the user is saying, about once a second.
+ * Each message carries the whole text of its segment so far. Sent only to clients that advertise
+ * CLIENT_CAPS.voiceLiveTranscript, from hosts that advertise
+ * server_info.features.voiceLiveTranscript.
+ */
+export const VoiceLiveTranscriptMessageSchema = z.object({
+  type: z.literal("voice_live_transcript"),
+  payload: z.object({
+    segmentId: z.string(),
+    text: z.string(),
+  }),
+});
+
+/**
+ * Hizuri (face): how long the assistant will think before speaking, in the face page's three chains
+ * (5, 10 or 20 s), sent when the user's phrase reaches the assistant. Only to clients that
+ * advertise CLIENT_CAPS.voiceThinkHint.
+ */
+export const VoiceThinkHintMessageSchema = z.object({
+  type: z.literal("voice_think_hint"),
+  payload: z.object({
+    thinkSeconds: z.number(),
+    phraseId: z.string().optional(),
+  }),
+});
+
 export const DictationStreamAckMessageSchema = z.object({
   type: z.literal("dictation_stream_ack"),
   payload: z.object({
@@ -3539,11 +3744,18 @@ export const ServerInfoStatusPayloadSchema = z
     serverId: z.string().trim().min(1),
     hostname: ServerInfoHostnameSchema.optional(),
     version: ServerInfoVersionSchema.optional(),
+    // Authenticated producer for host registration ownership, separate from admission authority.
+    sourceId: z.string().optional(),
     // COMPAT(sessionPermissions): optional while clients support older daemons.
     permissions: z.array(DaemonPermissionSchema).optional(),
     // COMPAT(desktopManaged): added in v0.1.X, remove optional parsing after 2027-01-16.
     desktopManaged: z.boolean().optional(),
     capabilities: ServerCapabilitiesFromUnknownSchema.optional(),
+    // Hizuri: the assistant's name when the user renamed it (PASEO_ASSISTANT_NAME): `name`, and
+    // how a language writes it when that differs (by language code). Absent: the app's default.
+    assistantName: z
+      .object({ name: z.string().min(1), byLanguage: z.record(z.string(), z.string()).optional() })
+      .optional(),
     // COMPAT(providersSnapshot): added in v0.1.48, remove gating when all clients use snapshot
     features: z
       .object({
@@ -3554,7 +3766,14 @@ export const ServerInfoStatusPayloadSchema = z
         creationLifecycle: z.boolean().optional(),
         // COMPAT(hubAgentRpc): added in v0.8.0; remove gate after 2027-03-05.
         hubAgentRpc: z.boolean().optional(),
+        // COMPAT(internalAgents): added in v0.9.0; remove gate after 2027-03-17.
+        internalAgents: z.boolean().optional(),
+        // COMPAT(internalWorkspaces): added in v0.9.0; remove gate after 2027-03-17.
+        internalWorkspaces: z.boolean().optional(),
+        backgroundWorkspaces: z.boolean().optional(),
         providersSnapshot: z.boolean().optional(),
+        connectedHosts: z.boolean().optional(),
+        hostMultiplexing: z.boolean().optional(),
         usageSources: z.boolean().optional(),
         // COMPAT(providersSnapshotCwd): added in v0.3.2, remove gate after 2027-02-10.
         providersSnapshotCwd: z.boolean().optional(),
@@ -3590,6 +3809,16 @@ export const ServerInfoStatusPayloadSchema = z
         daemonStatusRpc: z.boolean().optional(),
         // COMPAT(daemonConfigReload): added in v0.4.0, remove gate after 2027-02-14.
         daemonConfigReload: z.boolean().optional(),
+        // COMPAT(voiceSessionPersist): added in hizuri 2026-10-17, remove gate after 2027-04-17.
+        voiceSessionPersist: z.boolean().optional(),
+        // COMPAT(showMedia): added in hizuri 2026-10-17, remove gate after 2027-04-17.
+        // The app plays show_media / media_control calls (Show window, media lanes).
+        showMedia: z.boolean().optional(),
+        // COMPAT(voiceLiveTranscript): added in hizuri 2026-10-17, remove gate after 2027-04-17.
+        voiceLiveTranscript: z.boolean().optional(),
+        // COMPAT(face): added in hizuri 2026-10-18, remove gate after 2027-04-18. The daemon
+        // serves Zuri's avatar page at /avatar/ on its own origin.
+        face: z.boolean().optional(),
         // COMPAT(relayConfig): added in v0.2.6, remove gate after 2027-01-31.
         relayConfig: z.boolean().optional(),
         // COMPAT(pushTokenRevocation): added in v0.3.2, remove gate after 2027-02-10.
@@ -3638,8 +3867,26 @@ export const ServerInfoStatusPayloadSchema = z
         worktreeRestore: z.boolean().optional(),
         // COMPAT(workspaceRecovery): added in v0.1.105, remove after 2027-01-11 once daemon floor >= v0.1.105.
         workspaceRecovery: z.boolean().optional(),
+        // Zuri: accepts app.logs.upload.request. Gate only; no COMPAT shim to remove.
+        appLogs: z.boolean().optional(),
+        // Hizuri: accepts voice.session.list.request. Gate only; no COMPAT shim to remove.
+        voiceSessionList: z.boolean().optional(),
+        // COMPAT(stage): added in hizuri stage v1 (2026-10-18), remove the gate after 2027-04-18
+        // once the daemon floor has features.stage. The daemon keeps the stage (stage.* RPCs).
+        stage: z.object({ version: z.number().int() }).optional(),
+        // Hizuri: Zuri perches on a block (stage main.perch, stage.hide_perch). Gate only; no
+        // COMPAT shim to remove.
+        stagePerch: z.boolean().optional(),
+        // Hizuri: Zuri flips a tab's live page to a slide (stage main.slides). Gate only; an
+        // older app ignores the field.
+        stageSlide: z.boolean().optional(),
+        // Hizuri: secret_request forms (stage block `secret`, secret.store.request). Gate only;
+        // an older app draws the block's fallback, which asks the user to update the app.
+        secrets: z.boolean().optional(),
         // COMPAT(workspaceFileEditing): added in v0.2.0, remove after 2027-01-18 once daemon floor >= v0.2.0.
         workspaceFileEditing: z.boolean().optional(),
+        // COMPAT(fileByteWrites): added in v0.13.0, remove gate after 2027-04-20.
+        fileByteWrites: z.boolean().optional(),
         // COMPAT(providerUsageList): added in v0.1.98, drop the gate when daemon floor >= v0.1.98.
         providerUsageList: z.boolean().optional(),
         // COMPAT(agentDetach): added in v0.1.98, remove gate after 2026-12-19 once daemon floor >= v0.1.98.
@@ -3695,8 +3942,11 @@ export const ServerInfoStatusPayloadSchema = z
         selectiveAgentTimeline: z.boolean().optional(),
         explicitEventSubscriptions: z.boolean().optional(),
         ownedSubscriptions: z.boolean().optional(),
+        workspaceSetupObservation: z.boolean().optional(),
         // COMPAT(canonicalSubmittedPrompts): added in v0.2.6, remove gate after 2027-01-30.
         canonicalSubmittedPrompts: z.boolean().optional(),
+        agentMessageProvenance: z.boolean().optional(),
+        agentMessageBatching: z.boolean().optional(),
         // COMPAT(agentTurnIdentity): accept peers that observed pre-release v0.2.6 through 2027-01-31.
         agentTurnIdentity: z.boolean().optional(),
         // COMPAT(stableProjectIdentity): added in v0.1.109, remove gate after 2027-01-15.
@@ -3711,6 +3961,7 @@ export const ServerInfoStatusPayloadSchema = z
         fsEntryDuplicate: z.boolean().optional(),
         // COMPAT(checkoutDiscardChanges): added in v0.3.0, remove gate after 2027-02-08.
         checkoutDiscardChanges: z.boolean().optional(),
+        checkoutDiffAll: z.boolean().optional(),
         // COMPAT(agentProfiles): added in v0.3.2, remove gate after 2027-02-11.
         // An older daemon parses its persisted config strictly, so writing
         // agentProfiles to one is silently dropped. The client hides the feature
@@ -4004,6 +4255,8 @@ export const WorkspaceDescriptorPayloadSchema = z
     projectCustomIconRevision: z.string().nullable().optional(),
     projectRootPath: z.string(),
     workspaceDirectory: z.string().optional(),
+    // COMPAT(workspaceSetupObservation): added in v0.12.0, remove optional after 2027-04-19.
+    setupStatus: z.enum(["running", "completed", "failed", "blocked"]).nullable().optional(),
     // COMPAT(worktreeSlug): added in v0.2.6, remove optional after 2027-01-31.
     // Present only for Paseo-owned worktrees; this is the basename of their root directory.
     worktreeSlug: z.string().optional(),
@@ -4021,6 +4274,9 @@ export const WorkspaceDescriptorPayloadSchema = z
     pinnedAt: z.string().nullable().optional(),
     // COMPAT(workspaceLabels): added in v0.5.0, remove optional after 2027-08-14.
     labels: z.array(z.string()).optional(),
+    // Retained for wire parsing of older daemon descriptors.
+    internal: z.boolean().optional(),
+    background: z.boolean().optional(),
     archivingAt: z.string().nullable().optional().default(null),
     status: WorkspaceStateBucketSchema,
     // Best-effort workspace status entry timestamp. Old daemons omit the
@@ -4386,6 +4642,16 @@ export const WorkspaceSetupSnapshotSchema = z.object({
       headRepository: z.string(),
     })
     .optional(),
+});
+
+export const WorkspaceSetupSubscribeResponseSchema = z.object({
+  type: z.literal("workspace.setup.subscribe.response"),
+  payload: z.object({
+    requestId: z.string(),
+    subscriptionId: z.string().optional(),
+    workspaceId: z.string(),
+    snapshot: WorkspaceSetupSnapshotSchema.nullable(),
+  }),
 });
 
 export const WorkspaceSetupRunResponseMessageSchema = z.object({
@@ -4932,6 +5198,7 @@ export const SendAgentMessageResponseMessageSchema = z.object({
     requestId: z.string(),
     agentId: z.string(),
     accepted: z.boolean(),
+    deliveryStatus: z.literal("queued").optional(),
     error: z.string().nullable(),
   }),
 });
@@ -5055,6 +5322,100 @@ export const DiagnosticsResponseSchema = z.object({
     .object({
       requestId: z.string(),
       diagnostic: z.string(),
+    })
+    .passthrough(),
+});
+
+export const AppLogsUploadResponseSchema = z.object({
+  type: z.literal("app.logs.upload.response"),
+  payload: z
+    .object({
+      requestId: z.string(),
+      accepted: z.number().int(),
+      error: z.string().nullable(),
+    })
+    .passthrough(),
+});
+
+export const StageGetStateResponseSchema = z.object({
+  type: z.literal("stage.get_state.response"),
+  payload: z
+    .object({
+      requestId: z.string(),
+      agentId: z.string(),
+      revision: z.number().int(),
+      /** The client's revision is current; `stage` is null. */
+      unchanged: z.boolean(),
+      stage: StageSchema.nullable(),
+      /** Set when subscribed; `stage.update` messages carry it. */
+      subscriptionId: z.string().nullable(),
+      error: z.string().nullable(),
+    })
+    .passthrough(),
+});
+
+export const StageCloseTabResponseSchema = z.object({
+  type: z.literal("stage.close_tab.response"),
+  payload: z
+    .object({
+      requestId: z.string(),
+      agentId: z.string(),
+      tabId: z.string(),
+      revision: z.number().int(),
+      error: z.string().nullable(),
+    })
+    .passthrough(),
+});
+
+export const StageReportFocusResponseSchema = z.object({
+  type: z.literal("stage.report_focus.response"),
+  payload: z.object({ requestId: z.string(), error: z.string().nullable() }).passthrough(),
+});
+
+export const StageHidePerchResponseSchema = z.object({
+  type: z.literal("stage.hide_perch.response"),
+  payload: z
+    .object({ requestId: z.string(), revision: z.number().int(), error: z.string().nullable() })
+    .passthrough(),
+});
+
+export const StageSendActionResponseSchema = z.object({
+  type: z.literal("stage.send_action.response"),
+  payload: z
+    .object({ requestId: z.string(), delivered: z.boolean(), error: z.string().nullable() })
+    .passthrough(),
+});
+
+export const SecretStoreResponseSchema = z.object({
+  type: z.literal("secret.store.response"),
+  payload: z
+    .object({
+      requestId: z.string(),
+      stored: z.boolean(),
+      name: z.string().nullable(),
+      error: z.string().nullable(),
+    })
+    .passthrough(),
+});
+
+/** Sent only to connections that subscribed to this agent's stage. */
+export const StageUpdateMessageSchema = z.object({
+  type: z.literal("stage.update"),
+  payload: StageChangeSchema.extend({ subscriptionId: z.string().optional() }),
+});
+
+export const VoiceSessionListEntrySchema = z.object({
+  agentId: z.string(),
+  /** A connection talks through it now; false = parked, waiting for a client to take it. */
+  held: z.boolean(),
+});
+
+export const VoiceSessionListResponseSchema = z.object({
+  type: z.literal("voice.session.list.response"),
+  payload: z
+    .object({
+      requestId: z.string(),
+      sessions: z.array(VoiceSessionListEntrySchema),
     })
     .passthrough(),
 });
@@ -6272,14 +6633,15 @@ export const UsageProblemSchema = z.discriminatedUnion("kind", [
   }),
   z.object({ kind: z.literal("no_quota"), detail: z.string() }),
 ]);
+const AvailableUsageReportSchema = z.object({
+  status: z.literal("available"),
+  planLabel: z.string().optional(),
+  windows: z.array(ProviderUsageWindowSchema),
+  balances: z.array(ProviderUsageBalanceSchema).optional(),
+  details: z.array(ProviderUsageDetailSchema).optional(),
+});
 export const UsageReportSchema = z.discriminatedUnion("status", [
-  z.object({
-    status: z.literal("available"),
-    planLabel: z.string().optional(),
-    windows: z.array(ProviderUsageWindowSchema),
-    balances: z.array(ProviderUsageBalanceSchema).optional(),
-    details: z.array(ProviderUsageDetailSchema).optional(),
-  }),
+  AvailableUsageReportSchema,
   z.object({ status: z.literal("unavailable"), problem: UsageProblemSchema }),
   z.object({ status: z.literal("error"), error: z.string() }),
 ]);
@@ -6291,6 +6653,11 @@ export const UsageReportEntrySchema = z.object({
   sourceLabel: z.string(),
   icon: z.string().optional(),
   report: UsageReportSchema,
+  // Successful completion time; fetchedAt remains the attempt timestamp for ordering.
+  successfulAt: z.string().optional(),
+  lastSuccessful: z
+    .object({ fetchedAt: z.string(), report: AvailableUsageReportSchema })
+    .optional(),
   loginErrors: z
     .array(
       z.object({
@@ -6811,6 +7178,16 @@ export const AgentSkillsImportLegacySelectionResponseSchema = z.object({
 });
 
 export const SessionOutboundMessageSchema = z.discriminatedUnion("type", [
+  HostsListResponseSchema,
+  HostsChangedSchema,
+  HostsAddResponseSchema,
+  HostsUpdateResponseSchema,
+  HostsRemoveResponseSchema,
+  HostsLinkOpenResponseSchema,
+  HostsRouteOpenResponseSchema,
+  HostsRouteFrameSchema,
+  HostsRouteClosedSchema,
+
   BrowserHostRegisterResponseSchema,
   SubscriptionReleaseResponseSchema,
   SessionEventsSetSubscriptionResponseSchema,
@@ -6846,6 +7223,8 @@ export const SessionOutboundMessageSchema = z.discriminatedUnion("type", [
   AudioOutputMessageSchema,
   TranscriptionResultMessageSchema,
   VoiceInputStateMessageSchema,
+  VoiceLiveTranscriptMessageSchema,
+  VoiceThinkHintMessageSchema,
   DictationStreamAckMessageSchema,
   DictationStreamFinishAcceptedMessageSchema,
   DictationStreamPartialMessageSchema,
@@ -6869,6 +7248,7 @@ export const SessionOutboundMessageSchema = z.discriminatedUnion("type", [
   ScriptStatusUpdateMessageSchema,
   WorkspaceSetupProgressMessageSchema,
   WorkspaceSetupStatusResponseMessageSchema,
+  WorkspaceSetupSubscribeResponseSchema,
   WorkspaceSetupRunResponseMessageSchema,
   AgentStreamMessageSchema,
   AgentStatusMessageSchema,
@@ -6918,6 +7298,15 @@ export const SessionOutboundMessageSchema = z.discriminatedUnion("type", [
   HubManagementDaemonDisconnectResponseSchema,
   HubManagementDaemonPermissionsUpdateResponseSchema,
   DiagnosticsResponseSchema,
+  AppLogsUploadResponseSchema,
+  VoiceSessionListResponseSchema,
+  StageGetStateResponseSchema,
+  StageCloseTabResponseSchema,
+  StageReportFocusResponseSchema,
+  StageSendActionResponseSchema,
+  StageHidePerchResponseSchema,
+  SecretStoreResponseSchema,
+  StageUpdateMessageSchema,
   GetDaemonConfigResponseMessageSchema,
   SetDaemonConfigResponseMessageSchema,
   ReadProjectConfigResponseMessageSchema,
@@ -7169,6 +7558,11 @@ export type DaemonGetStatusResponse = z.infer<typeof DaemonGetStatusResponseSche
 export type DaemonGetPairingOfferResponse = z.infer<typeof DaemonGetPairingOfferResponseSchema>;
 export type DaemonConfigReloadResponse = z.infer<typeof DaemonConfigReloadResponseSchema>;
 export type DiagnosticsResponse = z.infer<typeof DiagnosticsResponseSchema>;
+export type AppLogEntry = z.infer<typeof AppLogEntrySchema>;
+export type AppLogsUploadRequest = z.infer<typeof AppLogsUploadRequestSchema>;
+export type AppLogsUploadResponse = z.infer<typeof AppLogsUploadResponseSchema>;
+export type VoiceSessionListEntry = z.infer<typeof VoiceSessionListEntrySchema>;
+export type VoiceSessionListResponse = z.infer<typeof VoiceSessionListResponseSchema>;
 export type GetProvidersSnapshotResponseMessage = z.infer<
   typeof GetProvidersSnapshotResponseMessageSchema
 >;
@@ -7502,6 +7896,11 @@ export const WSPongMessageSchema = z.object({
 
 export const WSHelloMessageSchema = z.object({
   type: z.literal("hello"),
+  sessionPermissions: z.array(DaemonPermissionSchema).optional(),
+  routed: z.boolean().optional(),
+  producer: z
+    .object({ serverId: z.string().min(1).max(256), sourceId: z.string().min(1).max(1024) })
+    .optional(),
   clientId: z.string().min(1),
   clientType: z.enum(["mobile", "browser", "cli", "mcp", "hub"]),
   protocolVersion: z.number().int(),
@@ -7529,6 +7928,8 @@ export const WSHelloMessageSchema = z.object({
       [CLIENT_CAPS.providerSnapshotReferences]: z.boolean().optional(),
       [CLIENT_CAPS.timelineReplacementInvalidation]: z.boolean().optional(),
       [CLIENT_CAPS.timelineNotifications]: z.boolean().optional(),
+      [CLIENT_CAPS.voiceLiveTranscript]: z.boolean().optional(),
+      [CLIENT_CAPS.voiceThinkHint]: z.boolean().optional(),
       [CLIENT_CAPS.browserHost]: BrowserAutomationHostCapabilitySchema.optional(),
     })
     .passthrough()

@@ -167,6 +167,17 @@ export const OMP_MODES: AgentProviderModeDefinition[] = [
   },
 ];
 
+// hizuri: the free brain has one mode; it can only talk, speak and show, never touch files.
+const HIZURI_FREE_MODES: AgentProviderModeDefinition[] = [
+  {
+    id: "default",
+    label: "Free",
+    description: "hizuri's free starter brain: talks, speaks and shows, no file or shell access",
+    icon: "Shield",
+    colorTier: "safe",
+  },
+];
+
 const MOCK_LOAD_TEST_MODES: AgentProviderModeDefinition[] = [
   {
     id: "load-test",
@@ -254,6 +265,19 @@ export const AGENT_PROVIDER_DEFINITIONS: AgentProviderDefinition[] = [
     enabledByDefault: false,
     defaultModeId: "full",
     modes: OMP_MODES,
+  },
+  {
+    id: "hizuri-free",
+    label: "hizuri free",
+    description:
+      "A free starter brain paid by hizuri, with a daily limit; helps you connect Claude Code",
+    defaultModeId: "default",
+    modes: HIZURI_FREE_MODES,
+    voice: {
+      enabled: true,
+      defaultModeId: "default",
+      defaultModel: "free",
+    },
   },
 ];
 
