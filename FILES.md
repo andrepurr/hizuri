@@ -35,7 +35,7 @@ Paseo's files here: Root configuration coordinates monorepo builds, linting, tes
 - `FILES.md` — This map: every tracked file with what it holds, why it is needed and the check mark. Why: Scripts/files-map.mjs checks it on every commit and before publishing; a file without its line does not ship. checked: nothing personal
 - `LICENSE` — Paseo, unchanged. checked: nothing personal
 - `NOTICE` — The legal notice detailing project copyright, upstream project attribution, and third-party license acknowledgements. Why: Ensures compliance with open-source licenses by documenting copyright holders and original project origins. checked: nothing personal
-- `README.md` — The project overview, feature breakdown, installation guide, and relationship to Paseo. Why: Introduces the project on GitHub and npm, guiding users and coding agents through installation and architecture. checked: nothing personal
+- `README.md` — The front page: hero picture, links and badges, a table of what the assistant does, the cast clips, quick install, «How it works», install steps, what else ships, how to work on hizuri, credits. Why: introduces hizuri on GitHub to people and to coding agents that install it. checked: nothing personal
 - `install.sh` — A shell script that automates prerequisites checking, folder setup, memory database initialization, and daemon installation. Why: Executed by users to set up the assistant environment, configure Claude Code, and start the daemon. checked: nothing personal
 - `knip.json` — Knip configuration for detecting unused files, dependencies, and exports across the monorepo workspaces. Why: Used by Knip during repository linting to catch dead code and unreferenced workspace dependencies. checked: nothing personal
 - `lefthook.yml` — The Git hooks configuration for running formatters, linters, type checks, and the personal data guard. Why: Lefthook runs this during commit workflows to block personal data leaks and code style errors. checked: nothing personal
@@ -237,6 +237,10 @@ Paseo's files here: Technical documentation explains daemon architecture, testin
 ## `docs/images/`
 
 - `docs/images/readme-show.png` — Screenshot illustrating the Show interface for the project README. Why: Displays the second screen stage in documentation and repository landing pages. checked: nothing personal
+- `docs/images/cast.webp` — Five short clips of 3D characters from VRoid Hub (posing, dancing, walking), licensed for commercial use. Why: the README's «Make your agent anyone» picture. checked: nothing personal
+- `docs/images/hero.webp` — The hizuri.com hero: the headline next to a phone showing the assistant's avatar (a VRoid Hub character) speaking. Why: the README's top picture. checked: nothing personal
+- `docs/images/how-it-works-dark.svg` — Diagram: the phone or a browser talks to the hizuri daemon over an end-to-end encrypted relay or a VPN; the daemon runs Claude Code, memory and speech. Why: the README's «How it works» picture, dark theme. checked: nothing personal
+- `docs/images/how-it-works-light.svg` — The same «How it works» diagram for the light theme. Why: the README picks it when GitHub shows the light theme. checked: nothing personal
 
 ## `packages/app/`
 
@@ -8899,7 +8903,7 @@ Paseo's files here: These development and release scripts manage packaging, late
 - `scripts/npm-retry.mjs` — Paseo, unchanged. checked: nothing personal
 - `scripts/paseo-ios-simulator-service.mjs` — Paseo, unchanged. checked: nothing personal
 - `scripts/paseo-ios-simulator-service.sh` — Paseo, unchanged. checked: nothing personal
-- `scripts/personal-guard-media.txt` — Allowlist of git blob hashes and descriptions for reviewed binary media files. Why: Read by scripts/personal-guard.mjs to ensure committed media files contain no private personal content. checked: nothing personal
+- `scripts/personal-guard-media.txt` — Allowlist of reviewed pictures, videos and PDFs: blob id, path, what each shows (the brand mark, the Show demo, the README hero, cast clips and diagram). Why: scripts/personal-guard.mjs refuses any media file whose blob id is not listed here. checked: nothing personal
 - `scripts/personal-guard.mjs` — The personal-data guard: deny-list words, generic person and Cyrillic rules (letters and escapes), private paths, models and avatars by extension and bytes, the user's own files by fingerprint, media review, secret scanners and the files map. Why: The global pre-commit and pre-merge-commit hooks and lefthook run it with --staged; publishing and CI run --tree and --history. checked: nothing personal
 - `scripts/personal-guard.test.mjs` — Tests for the personal-data guard and the files map checker, each in a throwaway git repo. Why: Node --test runs it after any change to scripts/personal-guard.mjs or scripts/files-map.mjs. checked: nothing personal
 - `scripts/postinstall-patches.mjs` — Script that applies dependency patches from the patches directory. Why: Runs during postinstall to apply fixes to node_modules dependencies. checked: nothing personal

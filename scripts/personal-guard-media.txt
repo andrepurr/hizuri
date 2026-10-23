@@ -13,3 +13,7 @@ b3da7d91cfc1af6f324a36a66cda9411e549f20f packages/app/assets/images/favicon-dark
 653f1c347a7a4a1dc0fd0763fac0d21b21cbce23 packages/app/public/apple-touch-icon.png the brand dot mark
 16b454b1318a253b7ab99714870b7067b4da423f packages/app/public/pwa-icon-192.png the brand dot mark
 90c3eec12dfbe1fd1e7dea0fbdade99f4dd6b1b2 packages/app/public/pwa-icon-512.png the brand dot mark
+e88d3e66528ad12fc7f901bc4094f047ba480ef8 docs/images/hero.webp README hero: headline and a phone with a VRoid Hub character (Flame by elin, commercial licence); no names
+3e7c74fb7be0e3b99c5133c3389121dceeac20dd docs/images/cast.webp README cast: five VRoid Hub characters (Flame, Reika, Cauliflower; commercial licence) posing and dancing; no names
+09b4724320504e5456e7e82aad6a444c14cca046 docs/images/how-it-works-dark.svg README diagram: phone, relay or VPN, daemon, Claude Code, memory, speech; no names
+619a7777423d063265383d75618be4933e67063d docs/images/how-it-works-light.svg the same diagram, light theme; no names
