@@ -1,3 +1,30 @@
+import { hasVoiceOutputListeners, publishVoiceOutput } from "../voice-output";
+
+// The native two-way engine starts a chunk this long after playPCMData (Android AAudio/OpenSL
+// buffer at 16 kHz). Only an estimate, for binaries and moments without a playback timestamp: the
+// face otherwise gets the measured moment (`getOutputTiming`, AudioTrack.getTimestamp).
+const NATIVE_OUTPUT_LATENCY_MS = 60;
+
+// Hizuri: the next chunk reaches the native queue this long before the current one runs out. The JS
+// thread hands chunks over one at a time, and anything that stalls it (the face's WebView draws in
+// the app's own process) would otherwise turn into silence between chunks; now a stall shorter than
+// this only delays the hand-over, not the sound.
+export const NATIVE_PREFEED_MS = 400;
+
+/** `Date.now()` when the native queue runs dry: the end of the last chunk handed to it. */
+let nativeQueuedUntil = 0;
+
+/** Resolves once every chunk handed to the native player has had time to play. */
+export function waitForNativeOutputDrain(): Promise<void> {
+  const remainingMs = nativeQueuedUntil - Date.now();
+  if (remainingMs <= 0) return Promise.resolve();
+  return new Promise((resolve) => setTimeout(resolve, remainingMs));
+}
+
+export function nativeOutputDrainMs(): number {
+  return Math.max(0, nativeQueuedUntil - Date.now());
+}
+
 const floatToInt16 = (sample: number): number => {
   const clamped = Math.max(-1, Math.min(1, sample));
   return clamped < 0 ? Math.round(clamped * 0x8000) : Math.round(clamped * 0x7fff);
@@ -89,6 +116,18 @@ interface PcmOutput {
   resumePlayback(): void;
   playPCMData(bytes: Uint8Array): void;
   stopPlayback(): void;
+  getOutputTiming?(): { audibleInMs: number } | null;
+}
+
+/**
+ * Stops voice still queued in the native player after its chunk's promise settled (the last
+ * NATIVE_PREFEED_MS of a reply), for a stop that finds no active chunk to abort.
+ */
+export function stopQueuedPcm16(output: PcmOutput): void {
+  if (nativeQueuedUntil <= Date.now()) return;
+  nativeQueuedUntil = 0;
+  output.stopPlayback();
+  publishVoiceOutput({ type: "stop" });
 }
 
 /** Keep voice output on the native communication engine and its echo reference. */
@@ -105,17 +144,40 @@ export function playPcm16(
     let timeout: ReturnType<typeof setTimeout> | undefined;
     const abort = () => {
       clearTimeout(timeout);
+      nativeQueuedUntil = 0; // stopPlayback drops every queued chunk
       output.stopPlayback();
+      publishVoiceOutput({ type: "stop" });
       reject(new Error("Playback stopped"));
     };
     signal.addEventListener("abort", abort, { once: true });
     try {
       output.resumePlayback();
+      // Before the hand-over, so the chunk itself is not counted as ahead of it.
+      const timing = hasVoiceOutputListeners() ? (output.getOutputTiming?.() ?? null) : null;
       output.playPCMData(pcm);
-      timeout = setTimeout(() => {
-        signal.removeEventListener("abort", abort);
-        resolve(duration);
-      }, duration * 1000);
+      const now = Date.now();
+      // Behind the chunks still queued, or at once if the queue ran dry.
+      const startsAt = Math.max(now, nativeQueuedUntil);
+      nativeQueuedUntil = startsAt + duration * 1000;
+      if (hasVoiceOutputListeners()) {
+        publishVoiceOutput({
+          type: "chunk",
+          chunk: {
+            pcm,
+            sampleRate: 16000,
+            startedAt: startsAt,
+            latencyMs: NATIVE_OUTPUT_LATENCY_MS,
+            ...(timing ? { audibleAt: now + timing.audibleInMs } : {}),
+          },
+        });
+      }
+      timeout = setTimeout(
+        () => {
+          signal.removeEventListener("abort", abort);
+          resolve(duration);
+        },
+        Math.max(0, nativeQueuedUntil - NATIVE_PREFEED_MS - now),
+      );
     } catch (error) {
       signal.removeEventListener("abort", abort);
       reject(error);

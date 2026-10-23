@@ -2,10 +2,19 @@ import { getFileExtension } from "@/attachments/file-types";
 import { copyDesktopAttachmentFile } from "@/desktop/attachments/desktop-file-commands";
 import { readDesktopFileBase64 } from "@/desktop/attachments/desktop-preview-url";
 
+/** An open file read piece by piece; the upload closes it when done. */
+export interface SelectedFileSource {
+  size: number;
+  read(offset: number, length: number): Promise<Uint8Array>;
+  close(): void;
+}
+
 export interface SelectedFile {
   fileName: string;
   mimeType: string;
   readBytes(): Promise<Uint8Array>;
+  /** Pickers that can stream give this, so a phone video is never read whole into memory. */
+  openSource?(): SelectedFileSource;
 }
 
 function base64ToUint8Array(base64: string): Uint8Array {

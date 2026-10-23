@@ -9,6 +9,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { DaemonClient } from "@getpaseo/client/internal/daemon-client";
 import type { PluginListItem, PluginLogEntry } from "@getpaseo/protocol/messages";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { usePhoneLayoutStore } from "@/stores/phone-layout-store";
 import { HostPluginsPage } from "./plugins-page";
 
 void testI18n;
@@ -80,6 +81,7 @@ vi.mock("@gorhom/bottom-sheet", async () => {
     await vi.importActual<typeof import("react-native")>("react-native");
   return {
     BottomSheetBackdrop: () => null,
+    BottomSheetHandle: () => null,
     BottomSheetModal: ReactModule.forwardRef(() => null),
     BottomSheetScrollView: ScrollView,
     BottomSheetTextInput: TextInput,
@@ -145,6 +147,8 @@ function renderPage(client: PluginClient | null): void {
 
 describe("HostPluginsPage", () => {
   beforeEach(() => {
+    // The plugin menus are the desktop layout's dropdowns, not the phone's sheets.
+    usePhoneLayoutStore.setState({ phoneLayout: false });
     vi.stubGlobal("React", React);
     runtime.connected = true;
     runtime.supported = true;

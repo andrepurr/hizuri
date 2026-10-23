@@ -403,6 +403,37 @@ describe("resolveFormState", () => {
     expect(resolved.thinkingOptionId).toBe("");
   });
 
+  it("picks the free brain on first open when it is the only brain connected", () => {
+    const freeBrainMap = makeProviderMap({
+      id: "hizuri-free",
+      label: "hizuri free",
+      description: "Free starter brain",
+      defaultModeId: "default",
+      modes: [{ id: "default", label: "Free", icon: "Shield", colorTier: "safe" }],
+    });
+    const fresh = () =>
+      resolveFormState(undefined, {}, null, INITIAL_USER_MODIFIED, makeState().form, freeBrainMap);
+
+    expect(fresh().provider).toBe("hizuri-free");
+    expect(fresh().modeId).toBe("default");
+
+    const withClaude = new Map([...freeBrainMap, ...claudeProviderMap]);
+    expect(
+      resolveFormState(undefined, {}, null, INITIAL_USER_MODIFIED, makeState().form, withClaude)
+        .provider,
+    ).toBeNull();
+    expect(
+      resolveFormState(
+        undefined,
+        { provider: "claude" },
+        null,
+        INITIAL_USER_MODIFIED,
+        makeState().form,
+        freeBrainMap,
+      ).provider,
+    ).toBe("claude");
+  });
+
   it("does not auto-select a model on fresh drafts without preferences", () => {
     const resolved = resolveFormState(
       undefined,

@@ -8,7 +8,6 @@ import { fr } from "./resources/fr";
 import { ja } from "./resources/ja";
 import { ko } from "./resources/ko";
 import { ptBR } from "./resources/pt-BR";
-import { ru } from "./resources/ru";
 import { zhCN } from "./resources/zh-CN";
 
 function flattenKeys(value: unknown, prefix = ""): string[] {
@@ -18,6 +17,30 @@ function flattenKeys(value: unknown, prefix = ""): string[] {
 
   const entries = Object.entries(value);
   return entries.flatMap(([key, child]) => flattenKeys(child, prefix ? `${prefix}.${key}` : key));
+}
+
+const pluralSuffixPattern = /_(zero|one|two|few|many|other)$/;
+const arabicPluralSuffixes = ["zero", "one", "two", "few", "many", "other"] as const;
+const arabicProviderUsagePluralKeys = [
+  "providerUsage.duration.days",
+  "providerUsage.duration.hours",
+  "providerUsage.duration.minutes",
+  "providerUsage.timing.daysAgo",
+  "providerUsage.timing.hoursAgo",
+  "providerUsage.timing.minutesAgo",
+] as const;
+
+function canonicalKeys(value: unknown): string[] {
+  const keys = flattenKeys(value);
+  const keySet = new Set(keys);
+  return [
+    ...new Set(
+      keys.map((key) => {
+        const baseKey = key.replace(pluralSuffixPattern, "");
+        return baseKey !== key && keySet.has(baseKey) ? baseKey : key;
+      }),
+    ),
+  ].sort();
 }
 
 function flattenStrings(value: unknown, prefix = ""): Record<string, string> {
@@ -144,15 +167,23 @@ function findUntranslatedConnectionErrors(): string[] {
 
 describe("translation resources", () => {
   it("keeps all supported language keys in sync with English", () => {
-    const englishKeys = flattenKeys(en).sort();
-    expect(flattenKeys(ar).sort()).toEqual(englishKeys);
-    expect(flattenKeys(es).sort()).toEqual(englishKeys);
-    expect(flattenKeys(fr).sort()).toEqual(englishKeys);
-    expect(flattenKeys(ja).sort()).toEqual(englishKeys);
-    expect(flattenKeys(ko).sort()).toEqual(englishKeys);
-    expect(flattenKeys(ptBR).sort()).toEqual(englishKeys);
-    expect(flattenKeys(ru).sort()).toEqual(englishKeys);
-    expect(flattenKeys(zhCN).sort()).toEqual(englishKeys);
+    const englishKeys = canonicalKeys(en);
+    expect(canonicalKeys(ar)).toEqual(englishKeys);
+    expect(canonicalKeys(es)).toEqual(englishKeys);
+    expect(canonicalKeys(fr)).toEqual(englishKeys);
+    expect(canonicalKeys(ja)).toEqual(englishKeys);
+    expect(canonicalKeys(ko)).toEqual(englishKeys);
+    expect(canonicalKeys(ptBR)).toEqual(englishKeys);
+    expect(canonicalKeys(zhCN)).toEqual(englishKeys);
+  });
+
+  it("includes every Arabic form for provider-usage durations", () => {
+    const arabicStrings = flattenStrings(ar);
+    for (const key of arabicProviderUsagePluralKeys) {
+      for (const suffix of arabicPluralSuffixes) {
+        expect(arabicStrings[`${key}_${suffix}`]).toBeTypeOf("string");
+      }
+    }
   });
 
   it("keeps non-English supported languages translated beyond fallback labels", () => {
@@ -164,12 +195,11 @@ describe("translation resources", () => {
     expect(countMatchingEnglishStrings(ja)).toBeLessThan(maxFallbackStrings);
     expect(countMatchingEnglishStrings(ko)).toBeLessThan(maxFallbackStrings);
     expect(countMatchingEnglishStrings(ptBR)).toBeLessThan(maxFallbackStrings);
-    expect(countMatchingEnglishStrings(ru)).toBeLessThan(maxFallbackStrings);
     expect(countMatchingEnglishStrings(zhCN)).toBeLessThan(maxFallbackStrings);
   });
 
   it("localizes the pull request empty state in every supported language", () => {
-    for (const resource of [ar, es, fr, ja, ko, ptBR, ru, zhCN]) {
+    for (const resource of [ar, es, fr, ja, ko, ptBR, zhCN]) {
       expect(resource.panels.pullRequest.emptyTitle).not.toBe(en.panels.pullRequest.emptyTitle);
       expect(resource.panels.pullRequest.emptyDescription).not.toBe(
         en.panels.pullRequest.emptyDescription,
@@ -184,7 +214,6 @@ describe("translation resources", () => {
     expect(findInterpolationMismatches(ja)).toEqual([]);
     expect(findInterpolationMismatches(ko)).toEqual([]);
     expect(findInterpolationMismatches(ptBR)).toEqual([]);
-    expect(findInterpolationMismatches(ru)).toEqual([]);
     expect(findInterpolationMismatches(zhCN)).toEqual([]);
   });
 
@@ -194,11 +223,6 @@ describe("translation resources", () => {
     expect(es.settings.project.scripts.title).toBe("Scripts");
   });
 
-  it("uses the Russian term for continuing a session in copied commands", () => {
-    expect(ru.workspace.tabs.menu.copyResumeCommand).toBe("Копировать команду продолжения");
-    expect(ru.workspace.tabs.toasts.resumeCommandCopiedLabel).toBe("команда продолжения");
-  });
-
   it("keeps model count labels spaced around the count", () => {
     expect(ar.modelSelector.modelCountPlural).toBe("{{count}} نماذج");
     expect(es.modelSelector.modelCountPlural).toBe("{{count}} modelos");
@@ -206,14 +230,12 @@ describe("translation resources", () => {
     expect(ja.modelSelector.modelCountPlural).toBe("{{count}}つのモデル");
     expect(ko.modelSelector.modelCountPlural).toBe("모델 {{count}}개");
     expect(ptBR.modelSelector.modelCountPlural).toBe("{{count}} modelos");
-    expect(ru.modelSelector.modelCountPlural).toBe("{{count}} моделей");
     expect(zhCN.modelSelector.modelCountPlural).toBe("{{count}} 个模型");
     expect(ar.settings.providers.models.many).toBe("{{count}} نماذج");
     expect(es.settings.providers.models.many).toBe("{{count}} modelos");
     expect(fr.settings.providers.models.many).toBe("{{count}} modèles");
     expect(ja.settings.providers.models.many).toBe("{{count}}つのモデル");
     expect(ptBR.settings.providers.models.many).toBe("{{count}} modelos");
-    expect(ru.settings.providers.models.many).toBe("{{count}} моделей");
     expect(zhCN.settings.providers.models.many).toBe("{{count}} 个 Model");
   });
 
@@ -245,7 +267,7 @@ describe("translation resources", () => {
 
   it("keeps pull request panel and sidebar status group labels translated", () => {
     expect(findUntranslatedPullRequestPanelLabels()).toEqual([]);
-    for (const resource of [ar, es, fr, ja, ko, ptBR, ru, zhCN]) {
+    for (const resource of [ar, es, fr, ja, ko, ptBR, zhCN]) {
       const pr = resource.workspace.git.pr;
       const englishPr = en.workspace.git.pr;
       expect(pr.sections.activity).not.toBe(englishPr.sections.activity);
@@ -355,7 +377,7 @@ describe("translation resources", () => {
     expect(en.settings.host.notFound).toBe("Host not found");
     expect(en.settings.host.connections.title).toBe("Connections");
     expect(en.settings.host.daemon.restart.title).toBe("Restart daemon");
-    expect(en.settings.host.orchestration.enableTools.title).toBe("Enable Paseo tools");
+    expect(en.settings.host.orchestration.enableTools.title).toBe("Enable hizuri tools");
     expect(en.settings.providers.title).toBe("Providers");
     expect(en.settings.providers.models.addModel).toBe("Add model");
     expect(en.settings.providers.diagnostic.title).toBe("Diagnostic");
@@ -435,7 +457,7 @@ describe("translation resources", () => {
   });
 
   it("includes onboarding and direct connection keys for the Batch 4E migration", () => {
-    expect(en.onboarding.title).toBe("Welcome to Paseo");
+    expect(en.onboarding.title).toBe("Welcome to hizuri");
     expect(en.onboarding.actions.settings).toBe("Settings");
     expect(en.pairing.direct.title).toBe("Direct connection");
     expect(en.pairing.direct.fields.host).toBe("Host");
@@ -666,7 +688,7 @@ describe("translation resources", () => {
     expect(en.message.compaction.completed).toBe("Context compacted");
     expect(en.agentPanel.archived.callout).toBe("This agent is archived");
     expect(en.agentPanel.archived.unarchive).toBe("Unarchive");
-    expect(en.desktop.quitting.title).toBe("Quitting Paseo...");
+    expect(en.desktop.quitting.title).toBe("Quitting hizuri...");
     expect(en.desktop.quitting.detail).toBe("Stopping the local daemon.");
     expect(en.composer.attachments.dropImagesHere).toBe("Drop images here");
   });
@@ -727,7 +749,7 @@ describe("translation resources", () => {
     );
     expect(en.desktop.rosetta.title).toBe("Download the Apple Silicon build");
     expect(en.desktop.rosetta.runningIntel).toBe(
-      "You're running the Intel build of Paseo under Rosetta on Apple Silicon.",
+      "You're running the Intel build of hizuri under Rosetta on Apple Silicon.",
     );
     expect(en.desktop.rosetta.highCpu).toBe(
       "This causes high CPU usage. Download the Apple Silicon build to fix it.",
@@ -755,7 +777,7 @@ describe("translation resources", () => {
     expect(en.desktop.permissions.empty.notifications).toBe(
       "Notification status has not been checked yet.",
     );
-    expect(en.desktop.permissions.testNotification.title).toBe("Paseo notification test");
+    expect(en.desktop.permissions.testNotification.title).toBe("hizuri notification test");
     expect(en.desktop.permissions.testNotification.failed).toBe("Failed to send notification.");
   });
 
@@ -776,7 +798,7 @@ describe("translation resources", () => {
       "Failed to fetch daemon status: {{message}}",
     );
     expect(en.desktop.daemon.loadFailed).toBe("Unable to load desktop daemon status.");
-    expect(en.desktop.integrations.cli.installFailed).toBe("Unable to install the Paseo CLI.");
+    expect(en.desktop.integrations.cli.installFailed).toBe("Unable to install the hizuri CLI.");
   });
 
   it("includes remaining utility chrome keys for the Batch 4T migration", () => {

@@ -6,20 +6,19 @@ import { useIsCompactFormFactor } from "@/constants/layout";
 import { Check, ChevronDown, ChevronRight, Eye, EyeOff, Link2 } from "lucide-react-native";
 import type { HostProfile } from "@/types/host-connection";
 import { useHosts, useHostMutations } from "@/runtime/host-runtime";
+import { readZuriDefaultHost } from "@/runtime/zuri-default-host";
 import {
   parseConnectionUri,
   serializeConnectionUri,
   serializeConnectionUriForStorage,
 } from "@/utils/daemon-endpoints";
-import {
-  DaemonConnectionTestError,
-  getConnectionAuthFailureReason,
-} from "@/utils/test-daemon-connection";
+import { buildConnectionFailureCopy } from "./connection-failure-copy";
 import { AdaptiveModalSheet, AdaptiveTextInput, type SheetHeader } from "./adaptive-modal-sheet";
 import { Button } from "@/components/ui/button";
 import { PairingTargetTracker } from "./pair-link-credentials";
 
 const FLEX_ONE_STYLE = { flex: 1 } as const;
+const ZURI_DEFAULT_HOST = readZuriDefaultHost();
 
 interface DirectConnectionDraft {
   host: string;
@@ -195,92 +194,6 @@ function draftFromConnectionUri(uri: string): DirectConnectionDraft {
   };
 }
 
-function normalizeTransportMessage(message: string | null | undefined): string | null {
-  if (!message) return null;
-  const trimmed = message.trim();
-  if (!trimmed) return null;
-  return trimmed;
-}
-
-function formatTechnicalTransportDetails(
-  details: (string | null)[],
-  labels: DirectConnectionLabels,
-): string | null {
-  const unique = Array.from(
-    new Set(
-      details
-        .map((value) => normalizeTransportMessage(value))
-        .filter((value): value is string => Boolean(value))
-        .map((value) => value.trim())
-        .filter((value) => value.length > 0),
-    ),
-  );
-
-  if (unique.length === 0) return null;
-
-  const allGeneric = unique.every((value) => {
-    const lower = value.toLowerCase();
-    return lower === "transport error" || lower === "transport closed";
-  });
-
-  if (allGeneric) {
-    return labels.noAdditionalDetails(unique[0] ?? "");
-  }
-
-  return unique.join(" — ");
-}
-
-function buildConnectionFailureCopy(input: {
-  endpoint: string;
-  error: unknown;
-  labels: DirectConnectionLabels;
-}): { title: string; detail: string | null; raw: string | null } {
-  const { endpoint, error, labels } = input;
-  const title = labels.failedToConnect(endpoint);
-
-  const raw = (() => {
-    if (error instanceof DaemonConnectionTestError) {
-      return (
-        formatTechnicalTransportDetails([error.reason, error.lastError], labels) ??
-        normalizeTransportMessage(error.message)
-      );
-    }
-    if (error instanceof Error) {
-      return normalizeTransportMessage(error.message);
-    }
-    return null;
-  })();
-
-  const rawLower = raw?.toLowerCase() ?? "";
-  let detail: string | null = null;
-
-  if (getConnectionAuthFailureReason(error)) {
-    detail = error instanceof Error ? error.message : raw;
-  } else if (rawLower.includes("timed out")) {
-    detail = labels.timedOut;
-  } else if (
-    rawLower.includes("econnrefused") ||
-    rawLower.includes("connection refused") ||
-    rawLower.includes("err_connection_refused")
-  ) {
-    detail = labels.refused;
-  } else if (rawLower.includes("enotfound") || rawLower.includes("not found")) {
-    detail = labels.hostNotFound;
-  } else if (rawLower.includes("ehostunreach") || rawLower.includes("host is unreachable")) {
-    detail = labels.hostUnreachable;
-  } else if (
-    rawLower.includes("certificate") ||
-    rawLower.includes("tls") ||
-    rawLower.includes("ssl")
-  ) {
-    detail = labels.tlsError;
-  } else {
-    detail = labels.unableToConnect;
-  }
-
-  return { title, detail, raw };
-}
-
 export interface AddHostModalProps {
   visible: boolean;
   onClose: () => void;
@@ -315,8 +228,10 @@ function AddHostModalContent({ visible, onClose, onCancel, onSaved }: AddHostMod
 
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [host, setHost] = useState("");
-  const [port, setPort] = useState("6767");
+  // hizuri builds name their home daemon; the form opens on it so a first launch only asks
+  // for the password when the daemon has one.
+  const [host, setHost] = useState(() => ZURI_DEFAULT_HOST?.host ?? "");
+  const [port, setPort] = useState(() => String(ZURI_DEFAULT_HOST?.port ?? 6767));
   const [useTls, setUseTls] = useState(false);
   const [password, setPassword] = useState("");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);

@@ -4,7 +4,11 @@ import { File } from "expo-file-system";
 import { getDesktopHost, isElectronRuntime } from "@/desktop/host";
 import { isWeb } from "@/constants/platform";
 import { getMimeTypeFromPath } from "@/attachments/file-types";
-import { readDesktopFileBytes, type SelectedFile } from "@/attachments/selected-file";
+import {
+  readDesktopFileBytes,
+  type SelectedFile,
+  type SelectedFileSource,
+} from "@/attachments/selected-file";
 
 async function pickFilesWithDesktopDialog(): Promise<SelectedFile[] | null> {
   const dialog = getDesktopHost()?.dialog;
@@ -58,6 +62,12 @@ function pickFilesWithWebInput(): Promise<SelectedFile[] | null> {
           fileName: file.name,
           mimeType: file.type || getMimeTypeFromPath(file.name),
           readBytes: async () => new Uint8Array(await file.arrayBuffer()),
+          openSource: () => ({
+            size: file.size,
+            read: async (offset, length) =>
+              new Uint8Array(await file.slice(offset, offset + length).arrayBuffer()),
+            close: () => {},
+          }),
         });
       }
       resolve(result);
@@ -77,6 +87,23 @@ function pickFilesWithWebInput(): Promise<SelectedFile[] | null> {
   });
 }
 
+function openNativeFileSource(uri: string): SelectedFileSource {
+  const handle = new File(uri).open();
+  const size = handle.size;
+  if (size === null) {
+    handle.close();
+    throw new Error("Could not read the file size.");
+  }
+  return {
+    size,
+    read: async (offset, length) => {
+      handle.offset = offset;
+      return handle.readBytes(length);
+    },
+    close: () => handle.close(),
+  };
+}
+
 async function pickFilesWithDocumentPicker(): Promise<SelectedFile[] | null> {
   const result = await DocumentPicker.getDocumentAsync({
     multiple: true,
@@ -91,6 +118,7 @@ async function pickFilesWithDocumentPicker(): Promise<SelectedFile[] | null> {
     fileName: asset.name,
     mimeType: asset.mimeType ?? getMimeTypeFromPath(asset.name),
     readBytes: () => new File(asset.uri).bytes(),
+    openSource: () => openNativeFileSource(asset.uri),
   }));
 }
 

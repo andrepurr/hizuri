@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useClientActivity } from "@/hooks/use-client-activity";
 import { useAppVisible } from "@/hooks/use-app-visible";
+import { voiceDiagnostics } from "@/voice/voice-diagnostics";
 import { startPushNotifications } from "@/push-notifications";
 import {
   createSetAgentInitializing,
@@ -17,7 +18,7 @@ import { planTimelineTailFetch } from "@/timeline/timeline-sync-plan";
 import { requestTimelineReplacement } from "@/timeline/timeline-replacement";
 import { type ViewedTimelineOwner } from "@/timeline/viewed-timeline-sync";
 import type { SessionOutboundMessage } from "@getpaseo/protocol/messages";
-import { parseServerInfoStatusPayload } from "@getpaseo/protocol/messages";
+import { parseServerInfoStatusPayload, VOICE_MOVED_REQUEST_ID } from "@getpaseo/protocol/messages";
 import {
   buildAgentAttentionNotificationPayload,
   type AgentAttentionReason,
@@ -36,7 +37,6 @@ import {
   useSessionStore,
   type SessionState,
 } from "@/stores/session-store";
-import { useWorkspaceSetupStore } from "@/stores/workspace-setup-store";
 import { sendOsNotification } from "@/utils/os-notifications";
 import { getIsAppActivelyVisible, getIsAppVisible } from "@/utils/app-visibility";
 import {
@@ -51,16 +51,15 @@ import { toErrorMessage } from "@/utils/error-messages";
 import { showProviderNoticeToast } from "@/utils/provider-notice-toast";
 import { applyCheckoutStatusUpdateFromEvent } from "@/git/checkout-status-cache";
 import { resyncProviderSubagents, useProviderSubagentStore } from "@/subagents/provider-store";
+import { useVoiceLiveWordsStore } from "@/stores/voice-live-words-store";
+import { useVoiceThinkHintStore } from "@/stores/voice-think-hint-store";
 
 // Re-export types from session-store and draft-store for backward compatibility
 export type { DraftInput } from "@/stores/draft-store";
 export type {
   Agent,
   ExplorerEntry,
-  ExplorerFile,
   ExplorerEntryKind,
-  ExplorerFileKind,
-  ExplorerEncoding,
   AgentFileExplorerState,
 } from "@/stores/session-store";
 
@@ -168,11 +167,6 @@ function resolveAgentAttentionNotification(
   });
 }
 
-type WorkspaceSetupProgressPayload = Extract<
-  SessionOutboundMessage,
-  { type: "workspace_setup_progress" }
->["payload"];
-
 function notifyVoiceAbortFailure(
   data: Extract<SessionOutboundMessage, { type: "activity_log" }>["payload"],
   notifyError: (message: string) => void,
@@ -225,7 +219,6 @@ function SessionProviderInternal({ children, serverId, client }: SessionProvider
   const setPendingPermissions = useSessionStore((state) => state.setPendingPermissions);
   const updateSessionServerInfo = useSessionStore((state) => state.updateSessionServerInfo);
   const setViewedTimelineSync = useSessionStore((state) => state.setViewedTimelineSync);
-  const upsertWorkspaceSetupProgress = useWorkspaceSetupStore((state) => state.upsertProgress);
 
   // Track focused agent for heartbeat
   const focusedAgentId = useSessionStore(
@@ -322,17 +315,17 @@ function SessionProviderInternal({ children, serverId, client }: SessionProvider
   useEffect(() => {
     const unregister = voiceRuntime?.registerSession({
       serverId,
-      setVoiceMode: async (enabled, agentId) => {
+      setVoiceMode: async (enabled, agentId, options) => {
         if (!client) {
           throw new Error(t("common.errors.daemonUnavailable"));
         }
-        await client.setVoiceMode(enabled, agentId);
+        await client.setVoiceMode(enabled, agentId, options);
       },
-      sendVoiceAudioChunk: async (audioData, mimeType) => {
+      sendVoiceAudioChunk: async (audioData, mimeType, outputRoute) => {
         if (!client) {
           throw new Error(t("common.errors.daemonUnavailable"));
         }
-        await client.sendVoiceAudioChunk(audioData, mimeType);
+        await client.sendVoiceAudioChunk(audioData, mimeType, false, outputRoute);
       },
       audioPlayed: async (chunkId) => {
         if (!client) {
@@ -364,13 +357,6 @@ function SessionProviderInternal({ children, serverId, client }: SessionProvider
       setInitializingAgents(serverId, new Map());
     }
   }, [flushAgentLastActivity, serverId, isConnected, setInitializingAgents]);
-
-  const applyWorkspaceSetupProgress = useCallback(
-    (payload: WorkspaceSetupProgressPayload) => {
-      upsertWorkspaceSetupProgress({ serverId, payload });
-    },
-    [serverId, upsertWorkspaceSetupProgress],
-  );
 
   useEffect(() => {
     const setAgentInitializing = createSetAgentInitializing(serverId, setInitializingAgents);
@@ -508,7 +494,6 @@ function SessionProviderInternal({ children, serverId, client }: SessionProvider
         "agent_permission_resolved",
         "agent.provider_subagents.update",
         "checkout_status_update",
-        "workspace_setup_progress",
         "status.server_info",
       ],
       { notifications: true },
@@ -545,11 +530,6 @@ function SessionProviderInternal({ children, serverId, client }: SessionProvider
     const unsubCheckoutStatusUpdate = onFeed("checkout_status_update", (message) => {
       if (message.type !== "checkout_status_update") return;
       applyCheckoutStatusUpdateFromEvent({ queryClient, serverId, message });
-    });
-
-    const unsubWorkspaceSetupProgress = onFeed("workspace_setup_progress", (message) => {
-      if (message.type !== "workspace_setup_progress") return;
-      applyWorkspaceSetupProgress(message.payload);
     });
 
     const unsubStatus = onFeed("status", (message) => {
@@ -674,12 +654,45 @@ function SessionProviderInternal({ children, serverId, client }: SessionProvider
       if (message.type !== "transcription_result") return;
 
       const transcriptText = message.payload.text.trim();
+      voiceDiagnostics.recordTranscript({
+        text: transcriptText,
+        isLowConfidence: message.payload.isLowConfidence,
+      });
       voiceRuntime?.onTranscriptionResult(serverId, transcriptText);
+    });
+
+    // A host that just restarted can take longer than the RPC timeout to enable voice mode; its
+    // late answer still tells the voice runtime that microphone audio may flow again.
+    const unsubVoiceModeResponse = client.on("set_voice_mode_response", (message) => {
+      if (message.type !== "set_voice_mode_response") return;
+      const { accepted, enabled, agentId, requestId } = message.payload;
+      if (accepted && enabled) {
+        voiceRuntime?.onVoiceModeConfirmed(serverId, agentId ?? null);
+      }
+      // Hizuri (session persist): another tab, device or connection took this voice over.
+      if (accepted && !enabled && agentId && requestId === VOICE_MOVED_REQUEST_ID) {
+        voiceRuntime?.onVoiceModeMoved(serverId, agentId);
+      }
     });
 
     const unsubVoiceInputState = client.on("voice_input_state", (message) => {
       if (message.type !== "voice_input_state") return;
+      voiceDiagnostics.recordSpeechState(message.payload.isSpeaking);
       voiceRuntime?.onServerSpeechStateChanged(serverId, message.payload.isSpeaking);
+    });
+
+    // Hizuri: the user's live words while speaking (components/voice-live-words.tsx).
+    const unsubVoiceLiveTranscript = client.on("voice_live_transcript", (message) => {
+      if (message.type !== "voice_live_transcript") return;
+      useVoiceLiveWordsStore
+        .getState()
+        .hear(serverId, message.payload.segmentId, message.payload.text);
+    });
+
+    // Hizuri: how long the assistant will think before its voice (face/face-host.tsx).
+    const unsubVoiceThinkHint = client.on("voice_think_hint", (message) => {
+      if (message.type !== "voice_think_hint") return;
+      useVoiceThinkHintStore.getState().hint(serverId, message.payload.thinkSeconds);
     });
 
     const unsubTerminalAttention = onFeed("terminal_attention_required", (message) => {
@@ -710,7 +723,6 @@ function SessionProviderInternal({ children, serverId, client }: SessionProvider
       unsubProviderSubagentUpdate();
       unsubAgentAttention();
       unsubCheckoutStatusUpdate();
-      unsubWorkspaceSetupProgress();
       unsubStatus();
       unsubPermissionRequest();
       unsubPermissionResolved();
@@ -718,6 +730,9 @@ function SessionProviderInternal({ children, serverId, client }: SessionProvider
       unsubActivity();
       unsubTranscription();
       unsubVoiceInputState();
+      unsubVoiceLiveTranscript();
+      unsubVoiceThinkHint();
+      unsubVoiceModeResponse();
       unsubTerminalAttention();
     };
   }, [
@@ -732,7 +747,6 @@ function SessionProviderInternal({ children, serverId, client }: SessionProvider
     setAgents,
     setPendingPermissions,
     notifyAgentAttention,
-    applyWorkspaceSetupProgress,
     updateSessionServerInfo,
     toast,
     voiceRuntime,

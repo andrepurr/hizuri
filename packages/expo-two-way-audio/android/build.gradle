@@ -36,8 +36,18 @@ android {
   defaultConfig {
     versionCode 1
     versionName "0.1.0"
+    testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
   }
   lintOptions {
     abortOnError false
   }
+}
+
+dependencies {
+  // HeadlessJsTaskContext keeps JS timers running while voice mode is in the background.
+  implementation 'com.facebook.react:react-android'
+  // JVM tests of the voice route policy (src/test): ./gradlew :getpaseo-expo-two-way-audio:testReleaseUnitTest (from packages/app/android)
+  testImplementation 'junit:junit:4.13.2'
+  androidTestImplementation 'androidx.test:runner:1.6.2'
+  androidTestImplementation 'androidx.test.ext:junit:1.2.1'
 }

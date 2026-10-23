@@ -1,7 +1,6 @@
-import { QueryClient } from "@tanstack/react-query";
-import { describe, expect, it } from "vitest";
-import type { AgentStreamEventPayload } from "@getpaseo/protocol/messages";
+import { PluginTranslationRuntime } from "@getpaseo/plugin/client/host";
 import { runPluginClientBundle, type PluginClientRuntime } from "@/plugins/evaluate";
+import { transformTimelineItem, type TimelineItemTransform } from "@/plugins/timeline/model";
 import type { InstalledPlugin } from "@/plugins/types";
 import {
   applyStreamEvent,
@@ -10,9 +9,11 @@ import {
   type ToolCallItem,
   type UserMessageItem,
 } from "@/types/stream";
-import { transformTimelineItem, type TimelineItemTransform } from "@/plugins/timeline/model";
-import { createStreamPresentation } from "./presentation";
+import type { AgentStreamEventPayload } from "@getpaseo/protocol/messages";
+import { QueryClient } from "@tanstack/react-query";
+import { describe, expect, it } from "vitest";
 import { buildAgentStreamRenderModel } from "./model";
+import { createStreamPresentation, getStreamItemMessageId, isSpokenInput } from "./presentation";
 
 const runtime = {
   paseo: {},
@@ -29,7 +30,7 @@ const runtime = {
 } as unknown as PluginClientRuntime;
 
 function installProbe(
-  itemType: "assistant_message" | "tool_call" | "reasoning",
+  itemType: "user_message" | "assistant_message" | "tool_call" | "reasoning",
   condition = "true",
 ): InstalledPlugin {
   const clientBundle = `(function() {
@@ -61,6 +62,8 @@ function installProbe(
     serverId: "host-1",
     clientBundle,
     lifetime: new AbortController(),
+    locale: "en",
+    i18n: new PluginTranslationRuntime({ getLocale: () => "en", subscribe: () => () => {} }),
     queryClient: new QueryClient(),
     paseo: {} as InstalledPlugin["paseo"],
     invoke: async () => undefined,
@@ -123,6 +126,25 @@ function rows(result: { tail: StreamItem[]; head: StreamItem[] }): StreamItem[] 
   return [...result.tail, ...result.head];
 }
 
+describe("whole-message Markdown presentation", () => {
+  it("keeps paragraphs, fences and quotes in one progressively updated row", () => {
+    const present = createStreamPresentation();
+    const text = "First paragraph.\n\nSecond paragraph.\n\n```ts\nconst n = 1;\n```\n\n> Quote";
+    for (const length of [10, 30, text.length]) {
+      const source = hydrateStreamState([
+        { event: assistant(text.slice(0, length)), timestamp: new Date(1000) },
+      ]);
+      const result = present({
+        ...presentationOptions,
+        tail: [],
+        head: source,
+        transform: undefined,
+      });
+      expect(rows(result)).toEqual(source);
+    }
+  });
+});
+
 describe("stream presentation through installed plugins", () => {
   it("offers every source tool call to an installed transformer in Overview mode", () => {
     const calls = [toolCall("call-1", "bash"), toolCall("call-2", "read")];
@@ -160,6 +182,23 @@ describe("stream presentation through installed plugins", () => {
     },
   );
 
+  it("addresses a prompt a plugin replaced by the prompt's own id", () => {
+    const harness = streamHarness(installedTransform(installProbe("user_message")));
+    const rendered = rows(
+      harness.send({
+        type: "timeline",
+        provider: "claude",
+        item: { type: "user_message", messageId: "prompt-1", text: "Earlier prompt" },
+      }),
+    );
+    const source = rows(harness.source());
+
+    expect(source).toMatchObject([{ kind: "user_message", id: "prompt-1" }]);
+    expect(rendered).toMatchObject([{ kind: "plugin", id: "probe-plugin/prompt-1/0" }]);
+    // The chat outline jumps to the source id; the row it lands on is the plugin's.
+    expect(rendered.map(getStreamItemMessageId)).toEqual(["prompt-1"]);
+  });
+
   it("finishes one message before streaming a different message ID", () => {
     const harness = streamHarness(installedTransform(installProbe("assistant_message")));
     harness.send(assistant("First\n\nBody", "first"));
@@ -181,26 +220,17 @@ describe("stream presentation through installed plugins", () => {
       { text: "Header\n\nBody", phase: "streaming" },
     ]);
     expect(rows(harness.render(transform))).toHaveLength(1);
-    expect(rows(harness.render()).map((item) => item.kind)).toEqual([
-      "assistant_message",
-      "assistant_message",
-    ]);
+    expect(rows(harness.render()).map((item) => item.kind)).toEqual(["assistant_message"]);
   });
 
-  it("keeps completed native blocks stable while the last block grows and finishes", () => {
+  it("retains the complete message when streaming finishes", () => {
     const harness = streamHarness();
-    const first = harness.send(assistant("Intro\n\n![Image](image.png)"));
-    const growing = harness.send(assistant("\n\nAfter\n"));
-    const last = harness.send(assistant("- item"));
+    harness.send(assistant("Intro\n\n![Image](image.png)"));
+    const last = harness.send(assistant("\n\nAfter\n- item"));
     const completed = harness.send({ type: "turn_completed", provider: "claude" });
-    expect(first.tail).toMatchObject([{ text: "Intro", blockIndex: 0 }]);
-    expect(first.head).toMatchObject([{ text: "![Image](image.png)", blockIndex: 1 }]);
-    expect(growing.tail[0]).toBe(first.tail[0]);
-    expect(growing.tail[1]).toBe(first.head[0]);
-    expect(last.tail).toBe(growing.tail);
-    expect(last.head).toMatchObject([{ text: "After\n- item", blockIndex: 2 }]);
-    expect(completed.tail).toEqual(rows(last));
-    expect(completed.tail[2]).toBe(last.head[0]);
+    expect(last.tail).toEqual([]);
+    expect(last.head).toMatchObject([{ text: "Intro\n\n![Image](image.png)\n\nAfter\n- item" }]);
+    expect(completed.tail).toEqual(last.head);
     expect(completed.head).toEqual([]);
   });
 
@@ -208,8 +238,8 @@ describe("stream presentation through installed plugins", () => {
     const harness = streamHarness();
     harness.send(assistant("Intro\n\n```ts\nconst a = 1;"));
     const result = harness.send(assistant("\n\nconst b = 2;"));
-    expect(result.tail).toMatchObject([{ text: "Intro" }]);
-    expect(result.head).toMatchObject([{ text: "```ts\nconst a = 1;\n\nconst b = 2;" }]);
+    expect(result.tail).toEqual([]);
+    expect(result.head).toMatchObject([{ text: "Intro\n\n```ts\nconst a = 1;\n\nconst b = 2;" }]);
   });
 
   // Codex streams a line break and the next line's indent as their own chunks.
@@ -227,14 +257,13 @@ describe("stream presentation through installed plugins", () => {
   // which is what lets find, scroll-to-message and history reveal address it by id.
   // A link reference definition stays with the paragraph that uses it, so the split
   // never leaves an empty row behind and the reference still resolves.
-  it("splits an assistant message into the same blocks through history and through the live head", () => {
+  it("preserves source identity through history and the live head", () => {
     const source = hydrateStreamState([
       {
         event: assistant("[Link][docs]\n\n[docs]: https://example.com\n\nClosing paragraph."),
         timestamp: new Date(1000),
       },
     ]);
-    const messageId = source[0]!.id;
     const present = (placement: "tail" | "head") =>
       rows(
         createStreamPresentation()({
@@ -244,20 +273,7 @@ describe("stream presentation through installed plugins", () => {
           transform: undefined,
         }),
       );
-    expect(present("tail")).toMatchObject([
-      {
-        id: `${messageId}:block:0`,
-        blockGroupId: messageId,
-        blockIndex: 0,
-        text: "[Link][docs]\n\n[docs]: https://example.com",
-      },
-      {
-        id: `${messageId}:block:1`,
-        blockGroupId: messageId,
-        blockIndex: 1,
-        text: "Closing paragraph.",
-      },
-    ]);
+    expect(present("tail")).toEqual(source);
     const blocks = (items: StreamItem[]) =>
       items.map((item) => [item.id, item.kind === "assistant_message" ? item.text : null]);
     expect(blocks(present("head"))).toEqual(blocks(present("tail")));
@@ -265,7 +281,7 @@ describe("stream presentation through installed plugins", () => {
 
   // Rows are addressed by id from outside presentation, so the same text has to land on
   // the same ids whether the reader watched it arrive or opened the chat afterwards.
-  it("gives a streamed message the block ids its hydrated text would have had", () => {
+  it("gives a streamed message the same id as its hydrated text", () => {
     const text = "Intro paragraph.\n\n# Heading\n\n- first\n- second\n\nClosing paragraph.";
     const harness = streamHarness();
     for (let end = 8; end < text.length; end += 8) {
@@ -287,7 +303,7 @@ describe("stream presentation through installed plugins", () => {
     );
   });
 
-  it("repoints a block at the canonical source that replaced the streamed one", () => {
+  it("uses the canonical source that replaced the streamed message", () => {
     const harness = streamHarness();
     harness.send(assistant("Streamed answer"));
     const streamed = rows(harness.render());
@@ -321,15 +337,8 @@ describe("stream presentation through installed plugins", () => {
       head: [],
       transform: undefined,
     });
-    expect(result.tail).toMatchObject([
-      {
-        id: `${messageId}:block:0`,
-        blockGroupId: messageId,
-        blockIndex: 0,
-        text: "Only one paragraph.",
-      },
-    ]);
-    expect(result.tail[0]!.id).not.toBe(messageId);
+    expect(result.tail).toEqual(source);
+    expect(result.tail[0]!.id).toBe(messageId);
   });
 
   it("continues to stream inline reasoning with a stable plugin row", () => {
@@ -509,7 +518,9 @@ describe("timeline presentation", () => {
           transform: undefined,
         });
       const projected = rows(presentMessage());
-      expect(projected).toEqual([{ ...item, text: "Please fix the voice chat." }]);
+      expect(projected).toEqual([
+        { ...item, text: "Please fix the voice chat.", spoken: "phrase" },
+      ]);
       const model = buildAgentStreamRenderModel({
         tail: source === "history" ? projected : [],
         head: source === "live" ? projected : [],
@@ -519,7 +530,11 @@ describe("timeline presentation", () => {
         isMobileBreakpoint: true,
       });
       const rendered = [...model.history, ...model.segments.liveHead];
-      expect(rendered).toContainEqual({ ...item, text: "Please fix the voice chat." });
+      expect(rendered).toContainEqual({
+        ...item,
+        text: "Please fix the voice chat.",
+        spoken: "phrase",
+      });
       expect(item.text).toBe(envelope);
       expect(rows(presentMessage())[0]).toBe(projected[0]);
     },
@@ -531,8 +546,76 @@ describe("timeline presentation", () => {
       text: "<spoken-input>\nFirst line.\nSecond line with <example>XML</example>.\n</spoken-input>",
     };
     expect(projectTimelineItems([item])).toEqual([
-      { ...item, text: "First line.\nSecond line with <example>XML</example>." },
+      {
+        ...item,
+        text: "First line.\nSecond line with <example>XML</example>.",
+        spoken: "phrase",
+      },
     ]);
+  });
+
+  // The envelopes the daemon writes (packages/server/src/server/voice-config.ts wrapSpokenInput).
+  const sign = (id: string) =>
+    ` Sign for ${id} with mark_phrases: answered when it asks something (and put ${id} in speak's replyTo), task or correction with the task's id in the note, recorded, thinking, or not-for-me.`;
+  const spokenInstruction =
+    "This message was spoken by the user. Respond using the speak tool only, not normal messages, because the user may not be looking at the chat.";
+  it.each([
+    [
+      "a phrase id",
+      `<spoken-input id="p1215">\nHello, Zuri.\n</spoken-input>\n<instruction>${spokenInstruction}${sign("p1215")}</instruction>`,
+      "Hello, Zuri.",
+      "phrase",
+    ],
+    [
+      "several parts",
+      `<spoken-input id="p1216" parts="p1215 p1216">\nFirst part second part\n</spoken-input>\n<instruction>${spokenInstruction}${sign("p1216")}</instruction>`,
+      "First part second part",
+      "phrase",
+    ],
+    [
+      "a late phrase",
+      `<spoken-input id="p1217" late="true" said-before="p1218">\nThat was earlier\n</spoken-input>\n<instruction>${spokenInstruction} The user said this before p1218, which reached you first.${sign("p1217")}</instruction>`,
+      "That was earlier",
+      "phrase",
+    ],
+    [
+      "a correction",
+      `<spoken-input id="p1219" correction="true">\nAccurate text\n</spoken-input>\n<instruction>The speech recogniser's accurate text of p1219, which reached you before as a quick draft. If it changes what the user meant, act on this text; if not, carry on and do not answer it again. p1219 needs no second sign.</instruction>`,
+      "Accurate text",
+      "correction",
+    ],
+    [
+      "a correction without an id",
+      `<spoken-input correction="true">\nAccurate text\n</spoken-input>\n<instruction>The speech recogniser's accurate text of the user's previous phrase, which reached you before as a quick draft. If it changes what the user meant, act on this text; if not, carry on and do not answer it again.</instruction>`,
+      "Accurate text",
+      "correction",
+    ],
+    [
+      "agent notes after the user's words",
+      `<spoken-input id="p1220">\nAnd what next?\n\n[The user interrupted you while you were saying: “First we…”. The user heard only: “First”. Give one answer that covers both.]\n\n[Your quick voice already said aloud: “One second”. Do not repeat it; go straight to the substance.]\n</spoken-input>\n<instruction>${spokenInstruction}${sign("p1220")}</instruction>`,
+      "And what next?",
+      "phrase",
+    ],
+    [
+      "short-phrase notes after the user's parts",
+      `<spoken-input id="p1221" parts="p1220 p1221">\nAnd what is a molecule? [short phrase 2.9 s — voice match 0.30 (the user's long ones 0.4+), room before it unknown — judge by context] Stop. [short phrase 0.6 s — voice match not measured (too short), right after the user's own phrase, room before it quiet -52 dBFS, its words match what you said just now (maybe your echo) — judge by context]\n</spoken-input>\n<instruction>${spokenInstruction}${sign("p1221")}</instruction>`,
+      "And what is a molecule? Stop.",
+      "phrase",
+    ],
+  ])("shows only the user's words for %s", (_name, text, words, spoken) => {
+    const item = { ...userMessage(`spoken-${words}`, 1), text };
+    expect(projectTimelineItems([item])).toEqual([{ ...item, text: words, spoken }]);
+    expect(item.text).toBe(text);
+  });
+
+  it("shows a typed message's words without the voice mark", () => {
+    const text = `<spoken-input id="p7">\nCheck the build\n</spoken-input>\n<instruction>The user typed this message in the chat.${sign("p7")}</instruction>`;
+    const item = { ...userMessage("typed", 1), text };
+    expect(projectTimelineItems([item])).toEqual([{ ...item, text: "Check the build" }]);
+    // The live words on screen land in the user's next spoken message, never in a typed one.
+    expect(isSpokenInput(text)).toBe(false);
+    expect(isSpokenInput(envelope)).toBe(true);
+    expect(isSpokenInput("<spoken-input>unfinished")).toBe(false);
   });
 
   it("leaves ordinary messages, assistant examples and incomplete wrappers unchanged", () => {
@@ -546,13 +629,7 @@ describe("timeline presentation", () => {
         text: "<spoken-input>Example</spoken-input><instruction>Explain this XML.</instruction>",
       },
     ];
-    expect(projectTimelineItems(items)).toEqual(
-      items.map((item) =>
-        item.kind === "assistant_message"
-          ? { ...item, id: `${item.id}:block:0`, blockGroupId: item.id, blockIndex: 0 }
-          : item,
-      ),
-    );
+    expect(projectTimelineItems(items)).toEqual(items);
     expect(projectTimelineItems(items)[0]).toBe(items[0]);
   });
 
@@ -575,7 +652,7 @@ describe("timeline presentation", () => {
     expect(inputs).toEqual([envelope]);
     expect(transformed).toMatchObject([{ kind: "plugin", data: { text: "Custom voice row" } }]);
     expect(projectTimelineItems([source], () => undefined)).toEqual([
-      { ...source, text: "Please fix the voice chat." },
+      { ...source, text: "Please fix the voice chat.", spoken: "phrase" },
     ]);
     expect(projectTimelineItems([source], () => [])).toEqual([]);
   });

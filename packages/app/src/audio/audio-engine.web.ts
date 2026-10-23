@@ -1,8 +1,14 @@
 import { parsePcmSampleRate, resampleToPcm16 } from "./pcm";
 import { isElectronRuntime } from "@/desktop/host";
-import type { AudioEngine, AudioEngineCallbacks, AudioPlaybackSource } from "./audio-engine-types";
+import type {
+  AudioEngine,
+  AudioEngineCallbacks,
+  AudioEngineOptions,
+  AudioPlaybackSource,
+} from "./audio-engine-types";
 
 import { createPlaybackQueue } from "./playback";
+import { hasVoiceOutputListeners, publishVoiceOutput } from "./voice-output";
 
 function getAudioContextCtor(): typeof AudioContext | null {
   if (typeof window === "undefined") {
@@ -46,7 +52,7 @@ async function decodeAudioData(context: AudioContext, buffer: ArrayBuffer): Prom
 
 export function createAudioEngine(
   callbacks: AudioEngineCallbacks,
-  _options?: { traceLabel?: string },
+  _options?: AudioEngineOptions,
 ): AudioEngine {
   const refs: {
     playbackContext: AudioContext | null;
@@ -94,6 +100,19 @@ export function createAudioEngine(
     return context;
   }
 
+  // Hizuri (session persist): a voice session resumed after a reload starts before any tap, and
+  // browsers keep its playback context suspended until one; the user's first tap or key unlocks it.
+  function unlockPlayback(): void {
+    const context = refs.playbackContext;
+    if (context && context.state === "suspended") {
+      void context.resume().catch(() => undefined);
+    }
+  }
+  const unlockEvents = ["pointerdown", "keydown", "touchend"] as const;
+  if (typeof window !== "undefined") {
+    for (const event of unlockEvents) window.addEventListener(event, unlockPlayback, true);
+  }
+
   async function ensureCaptureContext(): Promise<AudioContext> {
     if (refs.captureContext) {
       if (refs.captureContext.state === "suspended") {
@@ -119,12 +138,10 @@ export function createAudioEngine(
     const context = await ensurePlaybackContext();
     const arrayBuffer = await audio.arrayBuffer();
     const type = (audio.type || "").toLowerCase();
-    const audioBuffer = type.startsWith("audio/pcm")
-      ? pcm16LeToAudioBuffer(
-          context,
-          new Uint8Array(arrayBuffer),
-          parsePcmSampleRate(type) ?? 24000,
-        )
+    const isPcm = type.startsWith("audio/pcm");
+    const pcmRate = parsePcmSampleRate(type) ?? 24000;
+    const audioBuffer = isPcm
+      ? pcm16LeToAudioBuffer(context, new Uint8Array(arrayBuffer), pcmRate)
       : await decodeAudioData(context, arrayBuffer);
 
     if (signal.aborted) throw new Error("Playback stopped");
@@ -137,6 +154,7 @@ export function createAudioEngine(
       const abort = () => {
         source.stop();
         source.disconnect();
+        if (isPcm) publishVoiceOutput({ type: "stop" });
         reject(new Error("Playback stopped"));
       };
       signal.addEventListener("abort", abort, { once: true });
@@ -151,6 +169,18 @@ export function createAudioEngine(
       );
       try {
         source.start();
+        // Voice is PCM; files (plugin audio) never move the face.
+        if (isPcm && hasVoiceOutputListeners()) {
+          publishVoiceOutput({
+            type: "chunk",
+            chunk: {
+              pcm: new Uint8Array(arrayBuffer),
+              sampleRate: pcmRate,
+              startedAt: Date.now(),
+              latencyMs: ((context.baseLatency ?? 0) + (context.outputLatency ?? 0)) * 1000,
+            },
+          });
+        }
       } catch (error) {
         signal.removeEventListener("abort", abort);
         source.disconnect();
@@ -202,6 +232,9 @@ export function createAudioEngine(
     },
 
     async destroy() {
+      if (typeof window !== "undefined") {
+        for (const event of unlockEvents) window.removeEventListener(event, unlockPlayback, true);
+      }
       playback.destroy();
       await stopCapture();
 

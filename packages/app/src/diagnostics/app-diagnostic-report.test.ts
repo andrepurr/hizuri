@@ -3,6 +3,7 @@ import {
   formatHostRuntimeSection,
   formatServerInfoSection,
   redactAppDiagnosticReport,
+  redactAppLogMessage,
 } from "./app-diagnostic-report";
 import type { HostRuntimeSnapshot } from "@/runtime/host-runtime";
 import type { HostProfile } from "@/types/host-connection";
@@ -120,5 +121,15 @@ describe("app diagnostics report", () => {
     expect(redacted).not.toContain("\\\\.\\pipe\\paseo-secret");
     expect(redacted).not.toContain("tcp-password");
     expect(redacted).not.toContain("pairing-secret");
+  });
+});
+
+describe("redactAppLogMessage", () => {
+  test("drops passwords and tokens but keeps the endpoint a reconnect line needs", () => {
+    const message =
+      "reconnect secret.example.test:6767 failed: password=tcp-password token: abc123 (tcp-password)";
+    expect(redactAppLogMessage(message, [makeHost()])).toBe(
+      "reconnect secret.example.test:6767 failed: password=[redacted] token: [redacted] ([redacted])",
+    );
   });
 });

@@ -259,16 +259,27 @@ export function buildProviderDefinitionMapForStatuses(args: {
   );
 }
 
+/**
+ * hizuri: the free starter brain our relay pays for. With no other brain connected it is the
+ * default, so a new user has someone to talk to from the first minute.
+ */
+export const FREE_BRAIN_PROVIDER: AgentProvider = "hizuri-free";
+
 function resolveProvider(input: {
   currentProvider: AgentProvider | null;
   userModified: boolean;
   initialValues: FormInitialValues | undefined;
   preferences: FormPreferences | null;
+  allowedProviderMap: Map<AgentProvider, AgentProviderDefinition>;
 }): AgentProvider | null {
-  const { currentProvider, userModified, initialValues, preferences } = input;
+  const { currentProvider, userModified, initialValues, preferences, allowedProviderMap } = input;
   // Discovery readiness does not change the user's saved or explicit choice.
   if (userModified) return currentProvider;
-  return initialValues?.provider ?? preferences?.provider ?? currentProvider;
+  const chosen = initialValues?.provider ?? preferences?.provider ?? currentProvider;
+  if (chosen) return chosen;
+  const onlyFreeBrain =
+    allowedProviderMap.size === 1 && allowedProviderMap.has(FREE_BRAIN_PROVIDER);
+  return onlyFreeBrain ? FREE_BRAIN_PROVIDER : null;
 }
 
 function resolveModeId(input: {
@@ -373,6 +384,7 @@ export function resolveFormState(
     userModified: userModified.provider,
     initialValues,
     preferences,
+    allowedProviderMap,
   });
 
   const providerDef = result.provider ? allowedProviderMap.get(result.provider) : undefined;

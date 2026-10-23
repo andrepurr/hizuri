@@ -47,7 +47,7 @@ const ThemePreferenceSchema = z.enum([
   PLUGIN_THEME_PREFERENCE,
 ]);
 /** Where the theme picker lands when the persisted preference cannot be honoured. */
-export const DEFAULT_THEME_PREFERENCE = "auto" satisfies ThemePreference;
+export const DEFAULT_THEME_PREFERENCE = "dark" satisfies ThemePreference;
 export const DEFAULT_TERMINAL_SCROLLBACK_LINES = 10_000;
 export const MIN_TERMINAL_SCROLLBACK_LINES = 0;
 export const MAX_TERMINAL_SCROLLBACK_LINES = 1_000_000;
@@ -78,6 +78,16 @@ export interface AppSettings {
   /** Which contributed theme `theme: "plugin"` selects. */
   pluginThemeId: string | null;
   language: AppLanguage;
+  /**
+   * hizuri: the simple version (on by default) shows only Zuri and settings; the full version
+   * brings back workspaces, history, search, schedules and the rest (simple-mode/).
+   */
+  simpleMode: boolean;
+  /**
+   * hizuri: a wide window (a browser on a laptop, a tablet) gets the phone layout, only bigger:
+   * the assistant's face, the chat and Show as three swiped pages, no header (constants/layout.ts).
+   */
+  phoneLayout: boolean;
   sendBehavior: SendBehavior;
   serviceUrlBehavior: ServiceUrlBehavior;
   terminalScrollbackLines: number;
@@ -104,10 +114,22 @@ export interface AppSettings {
   toolCallDetailLevel: ToolCallDetailLevel;
   chatOutlineEnabled: boolean;
   vimKeybindings: boolean;
+  filePanelAssociations: Record<string, string>;
   /** Desktop-only preferences for implicit opens into the ordinary side pane. */
   openInSidePane: OpenInSidePanePreferences;
   pullRequestOpenLocation: PullRequestOpenLocation;
+  /** hizuri: send app logs to the host ($PASEO_HOME/app-logs). */
+  uploadAppLogs: boolean;
+  /** hizuri: Zuri's face above the chat in voice mode (face/face-host.tsx). */
+  faceInVoiceMode: boolean;
+  /** hizuri: Zuri floats over other apps while hizuri is in the background (float/, Android). */
+  floatOverApps: boolean;
+  /** hizuri: how the user moves between Zuri's Show tabs (stage/tabs/). */
+  showTabSwitcher: ShowTabSwitcher;
 }
+
+export const SHOW_TAB_SWITCHERS = ["capsule", "deck", "rail", "inside"] as const;
+export type ShowTabSwitcher = (typeof SHOW_TAB_SWITCHERS)[number];
 
 export type AppSettingsUpdate =
   | Partial<AppSettings>
@@ -138,6 +160,8 @@ export const DEFAULT_CLIENT_SETTINGS: AppSettings = {
   theme: DEFAULT_THEME_PREFERENCE,
   pluginThemeId: null,
   language: "system",
+  simpleMode: true,
+  phoneLayout: true,
   sendBehavior: "steer",
   serviceUrlBehavior: "ask",
   terminalScrollbackLines: DEFAULT_TERMINAL_SCROLLBACK_LINES,
@@ -160,8 +184,13 @@ export const DEFAULT_CLIENT_SETTINGS: AppSettings = {
   toolCallDetailLevel: "detailed",
   chatOutlineEnabled: true,
   vimKeybindings: false,
+  filePanelAssociations: {},
   openInSidePane: DEFAULT_OPEN_IN_SIDE_PANE_PREFERENCES,
   pullRequestOpenLocation: "explorer",
+  uploadAppLogs: true,
+  faceInVoiceMode: true,
+  floatOverApps: false,
+  showTabSwitcher: "capsule",
 };
 
 export const DEFAULT_APP_SETTINGS: Settings = {
@@ -214,8 +243,10 @@ const StoredAppSettingsSchema = z
     theme: ThemePreferenceSchema.catch(DEFAULT_THEME_PREFERENCE),
     pluginThemeId: z.string().nullable().catch(null),
     language: z
-      .enum(["system", "ar", "en", "es", "fr", "ja", "ko", "pt-BR", "ru", "zh-CN"])
+      .enum(["system", "ar", "en", "es", "fr", "ja", "ko", "pt-BR", "zh-CN"])
       .catch("system"),
+    simpleMode: z.boolean().catch(true),
+    phoneLayout: z.boolean().catch(true),
     sendBehavior: z.enum(["interrupt", "steer", "queue"]).catch("steer"),
     serviceUrlBehavior: z.enum(["ask", "in-app", "external"]).catch("ask"),
     terminalScrollbackLines: clampedNumber(
@@ -261,6 +292,7 @@ const StoredAppSettingsSchema = z
     compactToolCalls: z.boolean().optional().catch(undefined),
     chatOutlineEnabled: z.boolean().catch(true),
     vimKeybindings: z.boolean().catch(false),
+    filePanelAssociations: z.record(z.string(), z.string()).catch({}),
     openInSidePane: z
       .object({
         explorerFiles: z.boolean().catch(false),
@@ -284,6 +316,10 @@ const StoredAppSettingsSchema = z
         legacyPullRequestsInSidePane: undefined,
       }),
     pullRequestOpenLocation: z.enum(["main", "side", "explorer"]).optional(),
+    uploadAppLogs: z.boolean().catch(true),
+    faceInVoiceMode: z.boolean().catch(true),
+    floatOverApps: z.boolean().catch(false),
+    showTabSwitcher: z.enum(SHOW_TAB_SWITCHERS).catch("capsule"),
     // COMPAT(explorerSidebarRouting): replaced by source-specific side-pane preferences in v0.6.
     openSupportingTabsInSidePanel: z.boolean().optional().catch(undefined),
     // COMPAT(rendererDesktopSettings): these fields used to share this renderer-owned key.
@@ -522,7 +558,24 @@ export function sanitizeFontFamily(value: unknown): string | null {
   if ([...trimmed].some((char) => char.charCodeAt(0) <= 0x1f)) {
     return null; // control chars would corrupt the font-family string
   }
-  return trimmed; // quotes/commas are legit in stacks
+  // Unistyles serializes theme values into one shared stylesheet. An unfinished
+  // string, escape, comment, or block consumes the declarations that follow.
+  let quote: string | null = null;
+  let escaped = false;
+  for (const char of trimmed) {
+    if (escaped) {
+      escaped = false;
+    } else if (char === "\\") {
+      escaped = true;
+    } else if (quote !== null) {
+      if (char === quote) quote = null;
+    } else if (char === "'" || char === '"') {
+      quote = char;
+    } else if (/[()[\]/*]/.test(char)) {
+      return null;
+    }
+  }
+  return quote === null && !escaped ? trimmed : null;
 }
 
 async function loadLegacyDesktopSettingsFromStorage(storage: KeyValueStorage): Promise<{

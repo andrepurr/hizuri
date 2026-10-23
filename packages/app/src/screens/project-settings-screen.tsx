@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { Pressable, Text, View } from "react-native";
-import { useFocusEffect } from "@react-navigation/native";
+import { useFocusEffect } from "expo-router/react-navigation";
 import { StyleSheet } from "react-native-unistyles";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, MoreVertical, Pencil, Plus } from "lucide-react-native";
@@ -21,7 +21,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Alert } from "@/components/ui/alert";
-import { ExternalLink } from "@/components/ui/external-link";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Switch } from "@/components/ui/switch";
 import { AdaptiveModalSheet, type SheetHeader } from "@/components/adaptive-modal-sheet";
@@ -86,8 +85,6 @@ const METADATA_PROMPT_FIELDS: Record<MetadataPromptKey, MetadataPromptField> = {
     inputTestID: "metadata-prompt-pull-request-input",
   },
 };
-
-const WORKTREE_DOCS_URL = "https://paseo.sh/docs/worktrees";
 
 type ReadProjectConfigData = Awaited<ReturnType<DaemonClient["readProjectConfig"]>>;
 
@@ -661,29 +658,6 @@ function ProjectConfigForm({
     [handleAddScript, t],
   );
 
-  const setupDocsLink = useMemo(
-    () => (
-      <ExternalLink
-        href={WORKTREE_DOCS_URL}
-        label={t("settings.project.worktree.docs")}
-        tooltip={t("settings.project.worktree.docsTooltip")}
-        testID="worktree-setup-docs-link"
-      />
-    ),
-    [t],
-  );
-  const teardownDocsLink = useMemo(
-    () => (
-      <ExternalLink
-        href={WORKTREE_DOCS_URL}
-        label={t("settings.project.worktree.docs")}
-        tooltip={t("settings.project.worktree.docsTooltip")}
-        testID="worktree-teardown-docs-link"
-      />
-    ),
-    [t],
-  );
-
   const isStale = writeError?.code === "stale_project_config";
   const isWriteFailed = writeError?.code === "write_failed";
   const saveDisabled = saveMutation.isPending || isStale || hasInvalidScripts;
@@ -698,7 +672,6 @@ function ProjectConfigForm({
         <SettingsSection
           title={t("settings.project.worktree.setup")}
           testID="worktree-setup-section"
-          trailing={setupDocsLink}
         >
           {hasUncommittedWorktreeSetupChanges ? (
             <Alert
@@ -720,7 +693,6 @@ function ProjectConfigForm({
         <SettingsSection
           title={t("settings.project.worktree.teardown")}
           testID="worktree-teardown-section"
-          trailing={teardownDocsLink}
           flush
         >
           <SettingsTextAreaCard

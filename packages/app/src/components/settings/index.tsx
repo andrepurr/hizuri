@@ -28,6 +28,17 @@ export { SettingsGroup } from "./headings/settings-group";
 export { SettingsSection } from "./headings/settings-section";
 export { SettingsCollapsibleRow } from "./collapsible-row";
 
+interface SettingsSelectOption<Value extends string> {
+  label: string;
+  value: Value;
+  /** One line under the label in the menu. */
+  description?: string;
+}
+
+interface AppSettingsSelectProps<Value extends string> extends SettingsSelectProps<Value> {
+  options: readonly SettingsSelectOption<Value>[];
+}
+
 interface AppSettingsRowProps extends Omit<SettingsRowProps, "hint"> {
   hint?: ReactNode;
   labelAccessory?: ReactNode;
@@ -99,13 +110,13 @@ function SettingsOption<Value extends string>({
   selected,
   onValueChange,
 }: {
-  option: { label: string; value: Value };
+  option: SettingsSelectOption<Value>;
   selected: boolean;
   onValueChange(value: Value): void;
 }) {
   const select = useCallback(() => onValueChange(option.value), [onValueChange, option.value]);
   return (
-    <DropdownMenuItem selected={selected} onSelect={select}>
+    <DropdownMenuItem selected={selected} onSelect={select} description={option.description}>
       {option.label}
     </DropdownMenuItem>
   );
@@ -117,7 +128,7 @@ export function SettingsSelect<Value extends string>({
   onValueChange,
   disabled,
   ...row
-}: SettingsSelectProps<Value>) {
+}: AppSettingsSelectProps<Value>) {
   const selectedLabel = options.find((option) => option.value === value)?.label ?? value;
   return (
     <SettingsRow {...row}>
@@ -129,7 +140,11 @@ export function SettingsSelect<Value extends string>({
         >
           {selectedLabel}
         </DropdownTrigger>
-        <DropdownMenuContent side="bottom" align="end" width={220}>
+        <DropdownMenuContent
+          side="bottom"
+          align="end"
+          width={options.some((option) => option.description) ? 300 : 220}
+        >
           {options.map((option) => (
             <SettingsOption
               key={option.value}

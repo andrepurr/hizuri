@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from "react";
-import { View } from "react-native";
+import { Alert, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import {
   SettingsCard,
@@ -7,7 +7,7 @@ import {
   SettingsSelect,
   SettingsSwitch,
 } from "@/components/settings";
-import { isNative } from "@/constants/platform";
+import { floatNative } from "@/float/float-native";
 import { useAppSettings, type AppSettings } from "@/hooks/use-settings";
 
 const TOOL_CALL_DETAIL_LEVELS: readonly AppSettings["toolCallDetailLevel"][] = [
@@ -37,36 +37,74 @@ export function ChatSection() {
     (autoExpandReasoning: boolean) => void updateSettings({ autoExpandReasoning }),
     [updateSettings],
   );
-  const changeChatOutline = useCallback(
-    (chatOutlineEnabled: boolean) => void updateSettings({ chatOutlineEnabled }),
+  const changeFaceInVoiceMode = useCallback(
+    (faceInVoiceMode: boolean) => void updateSettings({ faceInVoiceMode }),
     [updateSettings],
   );
 
+  // Floating Zuri needs the "Display over other apps" switch; turning it on without it says so
+  // and opens that page. It starts once the user comes back with it allowed.
+  const changeFloatOverApps = useCallback(
+    (floatOverApps: boolean) => {
+      void updateSettings({ floatOverApps });
+      if (!floatOverApps || !floatNative || floatNative.canDrawOverlays()) return;
+      Alert.alert(t("face.float.permissionTitle"), t("face.float.permissionMessage"), [
+        { text: t("common.actions.cancel"), style: "cancel" },
+        {
+          text: t("face.float.permissionOpen"),
+          onPress: () => {
+            floatNative?.openOverlaySettings();
+          },
+        },
+      ]);
+    },
+    [t, updateSettings],
+  );
+
+  // hizuri: the simple version keeps only Zuri's own switches; how an agent's work is drawn in
+  // the timeline belongs to the full version.
+  const simple = settings.simpleMode;
+  const timelineRows = simple
+    ? null
+    : [
+        <SettingsSwitch
+          key="reasoning"
+          label={t("settings.general.autoExpandReasoning.label")}
+          hint={t("settings.general.autoExpandReasoning.description")}
+          value={settings.autoExpandReasoning}
+          onValueChange={changeAutoExpandReasoning}
+        />,
+        <SettingsSelect
+          key="tool-calls"
+          label={t("settings.general.toolCallDetail.label")}
+          hint={t("settings.general.toolCallDetail.description")}
+          value={settings.toolCallDetailLevel}
+          options={toolCallDetailOptions}
+          onValueChange={changeToolCallDetailLevel}
+        />,
+      ];
+
   return (
     <View>
-      <SettingsSection title={t("settings.appearance.detailLevel.title")}>
+      <SettingsSection
+        title={simple ? t("simpleMode.menu.assistant") : t("settings.appearance.detailLevel.title")}
+      >
         <SettingsCard>
+          {timelineRows}
           <SettingsSwitch
-            label={t("settings.general.autoExpandReasoning.label")}
-            hint={t("settings.general.autoExpandReasoning.description")}
-            value={settings.autoExpandReasoning}
-            onValueChange={changeAutoExpandReasoning}
+            label={t("face.inVoiceMode.label")}
+            hint={t("face.inVoiceMode.description")}
+            value={settings.faceInVoiceMode}
+            onValueChange={changeFaceInVoiceMode}
           />
-          <SettingsSelect
-            label={t("settings.general.toolCallDetail.label")}
-            hint={t("settings.general.toolCallDetail.description")}
-            value={settings.toolCallDetailLevel}
-            options={toolCallDetailOptions}
-            onValueChange={changeToolCallDetailLevel}
-          />
-          {isNative ? null : (
+          {floatNative ? (
             <SettingsSwitch
-              label={t("settings.appearance.chatOutline.title")}
-              hint={t("settings.appearance.chatOutline.description")}
-              value={settings.chatOutlineEnabled}
-              onValueChange={changeChatOutline}
+              label={t("face.float.label")}
+              hint={t("face.float.description")}
+              value={settings.floatOverApps}
+              onValueChange={changeFloatOverApps}
             />
-          )}
+          ) : null}
         </SettingsCard>
       </SettingsSection>
     </View>

@@ -9,8 +9,8 @@ import {
 describe("parseAppLanguage", () => {
   it("accepts system and all supported language locales", () => {
     expect(
-      ["system", "ar", "en", "es", "fr", "ja", "ko", "pt-BR", "ru", "zh-CN"].map(parseAppLanguage),
-    ).toEqual(["system", "ar", "en", "es", "fr", "ja", "ko", "pt-BR", "ru", "zh-CN"]);
+      ["system", "ar", "en", "es", "fr", "ja", "ko", "pt-BR", "zh-CN"].map(parseAppLanguage),
+    ).toEqual(["system", "ar", "en", "es", "fr", "ja", "ko", "pt-BR", "zh-CN"]);
   });
 
   it("returns null for unknown values", () => {
@@ -28,7 +28,6 @@ describe("parseAppLanguage", () => {
       "ja",
       "ko",
       "pt-BR",
-      "ru",
       "zh-CN",
     ]);
   });
@@ -100,7 +99,6 @@ describe("resolveSupportedLocale", () => {
     expect(resolveSupportedLocale("ja", ["en-US"])).toBe("ja");
     expect(resolveSupportedLocale("ko", ["en-US"])).toBe("ko");
     expect(resolveSupportedLocale("pt-BR", ["en-US"])).toBe("pt-BR");
-    expect(resolveSupportedLocale("ru", ["en-US"])).toBe("ru");
     expect(resolveSupportedLocale("zh-CN", ["en-US"])).toBe("zh-CN");
   });
 
@@ -113,7 +111,6 @@ describe("resolveSupportedLocale", () => {
     expect(resolveSupportedLocale("system", ["ko-KR"])).toBe("ko");
     expect(resolveSupportedLocale("system", ["pt-BR"])).toBe("pt-BR");
     expect(resolveSupportedLocale("system", ["pt"])).toBe("pt-BR");
-    expect(resolveSupportedLocale("system", ["ru-RU"])).toBe("ru");
   });
 
   it("maps Korean system locales to Korean", () => {

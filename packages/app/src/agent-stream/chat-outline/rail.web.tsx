@@ -1,17 +1,25 @@
 import { memo, useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
-import { Pressable, Text, View, type PointerEvent as RNPointerEvent } from "react-native";
+import {
+  Pressable,
+  Text,
+  View,
+  type LayoutChangeEvent,
+  type PointerEvent as RNPointerEvent,
+} from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 import { useReducedMotion } from "react-native-reanimated";
 import { useContainerWidthBelow } from "@/hooks/use-container-width";
 import { inlineUnistylesStyle } from "@/styles/unistyles-inline-style";
 import { createChatOutlineHoverIntent } from "./hover-intent";
-import { promptTickMagnification } from "./model";
+import { promptTickMagnification, resolveActivePromptSeq, sampleOutlineTicks } from "./model";
 import type { ChatOutlineRailProps } from "./rail";
 
 // Hover tracking lives on the rail and the slots, never on the Pressable inside them:
 // magnifying a slot must not move the box the pointer is resting on. See docs/hover.md.
 const RAIL_WIDTH = 36;
 const SLOT_HEIGHT = 8;
+// Below this a slot is too thin to aim at, so the rail samples prompts instead of squeezing.
+const MIN_SLOT_HEIGHT = 3;
 const MIN_PANEL_WIDTH = 918;
 const RESTING_PILL_HEIGHT = 2;
 const MAGNIFIED_PILL_HEIGHT = 4;
@@ -32,6 +40,25 @@ export const ChatOutlineRail = memo(function ChatOutlineRail({
   const activeSeq = useSyncExternalStore(activePrompt.subscribe, activePrompt.getActiveSeq);
   const prefersReducedMotion = useReducedMotion();
   const { onLayout, isBelow: isPanelNarrow } = useContainerWidthBelow(MIN_PANEL_WIDTH);
+  const [railHeight, setRailHeight] = useState(0);
+  const handleRailLayout = useCallback((event: LayoutChangeEvent) => {
+    const { height } = event.nativeEvent.layout;
+    if (height > 0) setRailHeight(height);
+  }, []);
+  // Until the rail is measured it draws no ticks: mounting all of a long index for one
+  // frame costs more than the empty frame.
+  const ticks = useMemo(
+    () => sampleOutlineTicks(prompts, Math.floor(railHeight / MIN_SLOT_HEIGHT)),
+    [prompts, railHeight],
+  );
+  const activeTickSeq = useMemo(
+    () =>
+      resolveActivePromptSeq(
+        ticks.map((tick) => tick.prompt),
+        activeSeq,
+      ),
+    [activeSeq, ticks],
+  );
 
   const hoverIntent = useMemo(
     () =>
@@ -83,18 +110,19 @@ export const ChatOutlineRail = memo(function ChatOutlineRail({
           style={styles.rail}
           role="tablist"
           testID="chat-outline-rail"
+          onLayout={handleRailLayout}
           onPointerEnter={handlePointerEnterRail}
           onPointerMove={handlePointerMoveRail}
           onPointerLeave={handlePointerLeaveRail}
         >
-          {prompts.map((prompt, index) => (
+          {ticks.map(({ prompt, index: promptIndex }, index) => (
             <ChatOutlineTick
               key={prompt.seq}
               index={index}
               seq={prompt.seq}
               preview={prompt.preview}
-              label={`${index + 1} of ${prompts.length}: ${prompt.preview}`}
-              isActive={prompt.seq === activeSeq}
+              label={`${promptIndex + 1} of ${prompts.length}: ${prompt.preview}`}
+              isActive={prompt.seq === activeTickSeq}
               hasAttention={index === attentionIndex}
               magnification={
                 prefersReducedMotion || attentionIndex === null

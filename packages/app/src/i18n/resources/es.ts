@@ -2,6 +2,9 @@ import { en, type TranslationResources } from "./en";
 import { pluginSettings } from "./plugin-settings";
 
 export const es: TranslationResources = {
+  assistant: {
+    name: "Zuri",
+  },
   paneFind: {
     connectionFailure:
       "No se pudo buscar en este chat. Comprueba la conexión con el host y vuelve a intentarlo.",
@@ -26,11 +29,154 @@ export const es: TranslationResources = {
     position: "{{current}} de {{total}}",
     total: "{{total}} coincidencias",
   },
+  freeBrain: {
+    title: "Cerebro",
+    label: "Cerebro gratuito de hizuri",
+    description:
+      "Un cerebro inicial gratuito que paga hizuri, con un límite diario. Habla contigo desde el primer minuto y te ayuda a conectar Claude Code.",
+    status: {
+      ready: "Listo",
+      off: "Desactivado",
+      checking: "Comprobando",
+      unavailable: "Aún no disponible",
+    },
+    claudeCode: {
+      label: "Claude Code",
+      connected: "Conectado: abre un chat nuevo con Claude para trabajar sin nuestro límite.",
+      howTo:
+        "Tu propio cerebro, sin límite nuestro. Pregunta al cerebro gratuito: te guía para conectarlo.",
+    },
+    error: "No se pudo cambiar el cerebro gratuito.",
+  },
+  phoneLayout: {
+    label: "Diseño de móvil en pantallas anchas",
+    description:
+      "En un navegador o una tableta: la cara de $t(assistant.name), el chat y Show como en el móvil, solo que más grandes. Desactívalo para el diseño de escritorio con cabecera y paneles laterales.",
+  },
+  simpleMode: {
+    label: "Versión simple",
+    description:
+      "Solo $t(assistant.name) y los ajustes. Desactívala para la app completa con espacios de trabajo, historial, búsqueda y programaciones.",
+    menu: {
+      assistant: "$t(assistant.name)",
+      face: "Rostro",
+      chat: "Chat",
+    },
+  },
+  face: {
+    title: "El rostro de $t(assistant.name)",
+    loading: {
+      starting: "Cargando el rostro de $t(assistant.name)…",
+      downloading: "Descargando el rostro de $t(assistant.name) · {{percent}}%",
+      preparing: "Preparando el rostro de $t(assistant.name) en 3D…",
+      failed: "El rostro de $t(assistant.name) no se pudo cargar: {{message}}",
+      noWebgl:
+        "El rostro de $t(assistant.name) necesita WebGL y este navegador lo tiene desactivado. Permite WebGL para este sitio (en LibreWolf: el icono de la barra de direcciones) y pulsa Reintentar.",
+      retry: "Reintentar",
+    },
+    inVoiceMode: {
+      label: "Rostro en modo de voz",
+      description:
+        "Muestra el rostro de $t(assistant.name): en el teléfono, en la primera página; en una pantalla ancha, sobre el chat mientras hablas. Desactívalo si su voz se entrecorta.",
+    },
+    float: {
+      label: "$t(assistant.name) sobre otras apps",
+      description:
+        "Al salir de hizuri, $t(assistant.name) se queda en tu pantalla sobre cualquier app: arrastra al asistente con el dedo, tócalo, mantén pulsado para Abrir y Ocultar. El asistente se oculta al abrir hizuri.",
+      permissionTitle: "Permite a $t(assistant.name) sobre otras apps",
+      permissionMessage:
+        "Activa «Mostrar sobre otras apps» para hizuri. Si el interruptor está gris: Información de la app → ⋮ → Permitir ajustes restringidos, y vuelve a intentarlo.",
+      permissionOpen: "Abrir ajustes",
+      open: "Abrir hizuri",
+      hide: "Ocultar a $t(assistant.name)",
+      notification: "$t(assistant.name) está en tu pantalla",
+    },
+  },
+  agentPages: {
+    sessionMenu: "Sesión",
+    tabs: {
+      face: "$t(assistant.name)",
+      chat: "Chat",
+      show: "Show",
+    },
+  },
+  show: {
+    title: "Show",
+    closeTab: "Cerrar pestaña",
+    hidePerch: "Quitar a $t(assistant.name) de la tarjeta",
+    open: "Abrir Show",
+    close: "Volver al chat",
+    windows: "Ventanas de Show",
+    defaultWindow: "Show",
+    limitsWindow: "Límites",
+    screenWindow: "Pantalla",
+    liveWindow: "Ahora",
+    screenWatch: "Ver",
+    screenTakeOver: "Tomar el control",
+    screenConnecting: "Conectando con la pantalla…",
+    secret: {
+      optional: "opcional",
+      note: "Va directo a tu bóveda. Tu agente nunca lo ve, solo el nombre.",
+      save: "Guardar",
+      saving: "Guardando…",
+      notNow: "Ahora no",
+      saved: "Guardado como «{{name}}»",
+      closed: "Cerrado sin guardar",
+      notSent: "No enviado. Revisa la conexión.",
+      fields: {
+        username: "Usuario",
+        password: "Contraseña",
+        address: "Correo",
+        holder: "Nombre en la tarjeta",
+        number: "Número de tarjeta",
+        expiry: "Vencimiento",
+        cvc: "CVC",
+        value: "Valor",
+        perPayment: "Máximo por pago",
+        perMonth: "Máximo al mes",
+        currency: "Moneda",
+      },
+    },
+    tabs: {
+      kind: {
+        page: "Página web",
+        picture: "Imagen",
+        video: "Vídeo",
+        player: "Reproductor",
+        screen: "Pantalla",
+        live: "En vivo",
+        canvas: "Lienzo",
+      },
+      allTabs: "Todas las pestañas · {{count}}",
+      closeCards: "Ocultar las tarjetas",
+      position: "Pestaña {{index}} de {{count}}",
+      capsuleHint: "Desliza de lado para cambiar de pestaña, toca para ver todas",
+      deckHint: "Toca o desliza hacia arriba para ver todas las pestañas",
+      releaseToCancel: "Suelta para cancelar",
+      insideEdgeHint: "La página se pasa desde el borde izquierdo",
+    },
+    page: {
+      empty: "Nada que mostrar todavía",
+      loading: "Cargando…",
+      resetsAt: "Reinicio: {{time}}",
+      inTime: "en {{time}}",
+      updated: "Actualizado {{time}}",
+      used: "usado",
+      noData: "Sin datos de uso",
+      widgetError: "No se pudo dibujar",
+      days: "d",
+      hours: "h",
+      minutes: "min",
+      fiveHour: "5 horas",
+      weekly: "Semana",
+    },
+  },
   common: {
     bottomSheetBackdrop: "Fondo del panel inferior",
     back: "Atrás",
     loading: "Cargando...",
     actions: {
+      save: "Guardar",
       back: "Atrás",
       cancel: "Cancelar",
       close: "Cerrar",
@@ -124,6 +270,8 @@ export const es: TranslationResources = {
     input: {
       accessibilityLabel: "Agente de mensajes...",
       terminalAccessibilityLabel: "Terminal prompt",
+      fullscreen: "Pantalla completa",
+      exitFullscreen: "Salir de pantalla completa",
       focusHint: "{{shortcut}}para enfocar",
       addAttachment: "Agregar archivo adjunto",
       interruptAgent: "agente de interrupción",
@@ -140,8 +288,6 @@ export const es: TranslationResources = {
       interrupt: "Interrumpir",
     },
     voice: {
-      enableVoiceMode: "Habilitar el modo de voz",
-      voiceMode: "Modo de voz",
       unmuteVoiceMode: "Activar el modo de voz",
       muteVoiceMode: "Modo de voz silenciosa",
       stopDictation: "detener el dictado",
@@ -149,7 +295,6 @@ export const es: TranslationResources = {
       unmuteVoice: "Activar voz",
       muteVoice: "voz muda",
       dictation: "Dictado",
-      interruptBeforeVoice: "Interrumpir al agente antes de iniciar el modo de voz.",
     },
     attachments: {
       addImage: "Agregar imagen",
@@ -358,10 +503,20 @@ export const es: TranslationResources = {
     speak: {
       header: "Habló",
     },
+    spoken: {
+      phrase: "Dicho",
+      correction: "Dicho · corregido",
+    },
+    guardian: {
+      header: "Nota del guardián",
+      fix: "Qué hacer: {{fix}}",
+      rule: "Regla: {{rule}}",
+    },
     activity: {
       details: "Detalles",
     },
     dictation: {
+      paused: "Micrófono interrumpido. Esperando para reanudar…",
       start: "Iniciar dictado de voz",
       cancel: "Cancelar dictado",
       retry: "Reintentar el dictado",
@@ -371,6 +526,7 @@ export const es: TranslationResources = {
       failedRetry: "El dictado falló. Toca reintentar.",
     },
     question: {
+      responseFailed: "No se pudo enviar tu respuesta. Inténtalo de nuevo.",
       submit: "Entregar",
       next: "Siguiente",
       answerPlaceholder: "Escribe tu respuesta...",
@@ -539,6 +695,7 @@ export const es: TranslationResources = {
       },
     },
     setup: {
+      updateHost: "Actualiza el host para ver los detalles de configuración del espacio de trabajo",
       descriptor: {
         label: "Configuración",
         completed: "Configuración completada",
@@ -616,6 +773,9 @@ export const es: TranslationResources = {
       updateHost: "Actualiza el host para usar el renderizador de terminal nativo.",
       unableToSubscribe: "No se puede suscribir al terminal",
     },
+    sheet: {
+      openAsTab: "Abrir como pestaña",
+    },
     tabs: {
       loading: "Cargando...",
       modified: "Cambios sin guardar",
@@ -631,7 +791,7 @@ export const es: TranslationResources = {
       },
       switcher: {
         trigger: "Cambiar pestañas ({{count}}abierto)",
-        title: "Cambiar pestaña",
+        title: "Pestañas del workspace",
         searchPlaceholder: "Pestañas de búsqueda",
       },
       menu: {
@@ -730,6 +890,7 @@ export const es: TranslationResources = {
     header: {
       actions: {
         workspaceActions: "AccionesWorkspace",
+        workspaceActionsUnhealthy: "Acciones del workspace, hay un servicio con problemas",
         newAgent: "Nuevo agente",
         newTerminal: "Nueva terminal",
         newBrowser: "Nueva pestaña del navegador",
@@ -778,6 +939,8 @@ export const es: TranslationResources = {
         exitCode: "salir de{{code}}",
         startFailed: "No se pudo iniciar{{scriptName}}",
         stopFailed: "No se pudo detener{{scriptName}}",
+        running: "En ejecución",
+        runningCount: "{{count}} en ejecución",
       },
     },
     tree: {
@@ -896,7 +1059,7 @@ export const es: TranslationResources = {
           mergePrNoGithub:
             "FusionarPRno está disponible en este momento porqueGitHubno está conectado",
           archiveNotWorktree:
-            "El archivo no está disponible aquí porque este espacio de trabajo no se creó como un árbol de trabajoPaseo",
+            "El archivo no está disponible aquí porque este espacio de trabajo no se creó como un árbol de trabajo hizuri",
           mergePrNoForge:
             "Fusionar {{noun}} no está disponible en este momento porque {{brand}} no está conectado",
           mergePrMissing:
@@ -977,6 +1140,7 @@ export const es: TranslationResources = {
         checkingRepository: "Comprobando repositorio...",
         notRepository: "No es un repositorio de git",
         diffMode: "modo diferencial",
+        all: "Todos los cambios",
         uncommitted: "No comprometido",
         committed: "Comprometido",
         branchUnknown: "Desconocido",
@@ -1183,6 +1347,7 @@ export const es: TranslationResources = {
       done: "Terminado",
     },
     display: {
+      showBackground: "Mostrar espacios en segundo plano",
       trigger: "Preferencias de visualización",
       heading: "Visualización",
       grouping: {
@@ -1254,7 +1419,7 @@ export const es: TranslationResources = {
       discord: "Discord",
       github: "Crear incidencia en GitHub",
       whatsNew: "Novedades",
-      appName: "Paseo",
+      appName: "hizuri",
     },
     sections: {
       sessions: "Historial",
@@ -1358,8 +1523,9 @@ export const es: TranslationResources = {
     },
     fields: {
       project: "Proyecto",
-      base: "Base",
+      branch: "Rama",
       baseNotApplicable: "No aplicable",
+      host: "Host",
     },
     titlePlaceholder: "Título (opcional)",
     errors: {
@@ -1401,7 +1567,7 @@ export const es: TranslationResources = {
       close: "Cerrar ventana",
     },
     quitting: {
-      title: "Saliendo dePaseo...",
+      title: "Saliendo de hizuri...",
       detail: "Deteniendo el demonio local.",
     },
     daemon: {
@@ -1416,20 +1582,20 @@ export const es: TranslationResources = {
       },
       management: {
         title: "Administrar demonio incorporado",
-        hint: "Deje quePaseoinicie y detenga el demonio incorporado",
+        hint: "Deje que hizuri inicie y detenga el demonio incorporado",
         pauseTitle: "Pausar el demonio incorporado",
         pauseMessage:
           "Esto detendrá el demonio incorporado inmediatamente. Se detendrán los agentes en ejecución y los terminales conectados al demonio integrado.",
         pauseAndStop: "Pausa y para",
         registrationFailed:
-          "Built-in daemon started, but Paseo could not save the localhost connection. Toggle daemon management off and on again, or add localhost manually.",
+          "Built-in daemon started, but hizuri could not save the localhost connection. Toggle daemon management off and on again, or add localhost manually.",
         pausedStopFailed:
-          "La gestión del demonio integrado se pausó, peroPaseono pudo detener el demonio.",
+          "La gestión del demonio integrado se pausó, pero hizuri no pudo detener el demonio.",
         updateFailed: "No se puede actualizar la gestión de demonios integrada.",
       },
       keepRunning: {
         title: "Mantener el demonio en ejecución después de salir",
-        hint: "Daemonsigue ejecutándose cuando sales dePaseo",
+        hint: "El daemon sigue ejecutándose cuando sales de hizuri",
       },
       logs: {
         title: "Archivo de registro",
@@ -1444,7 +1610,7 @@ export const es: TranslationResources = {
       fullStatus: {
         title: "Estado completo",
         modalTitle: "EstadoDaemon",
-        hint: "Ejecuta`paseo daemon status`y muestra la salida.",
+        hint: "Muestra el informe de estado completo del servidor.",
         view: "Ver estado",
         copied: "Estado copiado al portapapeles.",
         fetchFailed: "No se pudo recuperar el estado del demonio:{{message}}",
@@ -1499,7 +1665,7 @@ export const es: TranslationResources = {
     },
     rosetta: {
       title: "Descargue la compilaciónApple Silicon",
-      runningIntel: "Estás ejecutando la compilaciónInteldePaseoenRosettaenApple Silicon.",
+      runningIntel: "Estás ejecutando la compilación Intel de hizuri en Rosetta en Apple Silicon.",
       highCpu:
         "Esto provoca un uso elevado de la CPU. Descargue la compilaciónApple Siliconpara solucionarlo.",
       download: "Descargar",
@@ -1546,7 +1712,7 @@ export const es: TranslationResources = {
         microphone: "El estado del micrófono aún no se ha comprobado.",
       },
       testNotification: {
-        title: "Prueba de notificaciónPaseo",
+        title: "Prueba de notificación hizuri",
         body: "Si puede ver esto, las notificaciones de escritorio funcionan.",
         notDelivered:
           "La notificación no fue entregada. Verifique Configuración del sistema> Notificaciones.",
@@ -1556,19 +1722,19 @@ export const es: TranslationResources = {
     integrations: {
       cli: {
         statusFailed: "No se puede verificar el estado de instalación deCLI.",
-        installFailed: "No se puede instalar elPaseoCLI.",
+        installFailed: "No se puede instalar el hizuri CLI.",
       },
     },
   },
   rootError: {
-    title: "Paseo tuvo un problema.",
+    title: "hizuri tuvo un problema.",
     body: "Vuelve a intentarlo para recargar la app. Si sigue ocurriendo, incluye los detalles de abajo al reportarlo.",
     details: "Detalles",
   },
   startup: {
     errorTitle: "algo salió mal",
     errorDescription:
-      "El servidor local no pudo iniciarse. Si esto continúa sucediendo, informe el problema enGitHube incluya los registros a continuación.",
+      "El servidor local no pudo iniciarse. Si esto continúa sucediendo, copie los registros a continuación.",
     logs: {
       loading: "Cargando registros de demonio...",
       unavailable: "No hay registros de demonios disponibles.",
@@ -1658,7 +1824,7 @@ export const es: TranslationResources = {
     },
   },
   onboarding: {
-    title: "Bienvenido aPaseo",
+    title: "Bienvenido a hizuri",
     subtitle: "Conecte su computadora para comenzar",
     actions: {
       settings: "Ajustes",
@@ -1766,7 +1932,7 @@ export const es: TranslationResources = {
     },
     direct: {
       title: "Conexión directa",
-      helper: "Ingrese la dirección de un servidorPaseo.",
+      helper: "Ingrese la dirección de un servidor hizuri.",
       fields: {
         host: "Host",
         port: "Puerto",
@@ -1809,7 +1975,7 @@ export const es: TranslationResources = {
     },
     remoteSsh: {
       title: "SSH remoto",
-      helper: "Conéctate a un daemon de Paseo en el host remoto.",
+      helper: "Conéctate a un daemon de hizuri en el host remoto.",
       fields: {
         target: "Host SSH",
         password: "Contraseña del daemon",
@@ -1872,15 +2038,15 @@ export const es: TranslationResources = {
       enableDescription:
         "El relé permite conectar este dispositivo desde cualquier lugar. El tráfico de emparejamiento está cifrado de extremo a extremo.",
       relayDocs: "Cómo funciona el relé",
-      relayDocsAccessibility: "Leer cómo funciona el relé de Paseo",
+      relayDocsAccessibility: "Leer cómo funciona el relé de hizuri",
       enableRelay: "Habilitar relé",
       enablingRelay: "Habilitando...",
       notNow: "Ahora no",
       directConnectionHint:
         "Sin relé, conéctese directamente por TCP, Tailscale u otra VPN. No se crea ningún código QR.",
-      updateRequired: "Actualice el host para habilitar el relé desde Paseo Desktop.",
+      updateRequired: "Actualice el host para habilitar el relé desde hizuri Desktop.",
       unavailable: "Oferta de maridaje no disponible.",
-      hint: "Escanee este códigoQRconPaseoen su teléfono o copie el enlace a continuación.",
+      hint: "Escanee este código QR con hizuri en su teléfono o copie el enlace a continuación.",
       securityWarning:
         "Trata este enlace de emparejamiento como una contraseña. Cualquiera que lo tenga puede acceder a este daemon.",
       qrUnavailable: "CódigoQRno disponible.",
@@ -1892,9 +2058,28 @@ export const es: TranslationResources = {
   },
   realtimeVoice: {
     actions: {
+      startSession: "Empezar sesión",
       mute: "Silenciar voz en tiempo real",
       unmute: "Activar voz en tiempo real",
-      stop: "Detener la voz en tiempo real e interrumpir el turno.",
+      switchToText: "Cambiar a texto y mantener la sesión",
+      switchToVoice: "Volver a voz",
+      endSession: "Terminar sesión",
+      attachPhoto: "Enviar una foto",
+    },
+    endSessionConfirm: {
+      title: "¿Terminar la sesión?",
+      message: "Se cierran la voz, el modo de voz del agente y la sesión guardada.",
+    },
+    live: {
+      updateHost: "Actualiza el host para ver tus palabras mientras hablas",
+    },
+    status: {
+      starting: "Activando la voz...",
+      stopping: "Desactivando la voz...",
+    },
+    moved: "La voz se ha movido aquí",
+    errors: {
+      noSession: "Empieza una sesión primero",
     },
   },
   rewind: {
@@ -1915,7 +2100,7 @@ export const es: TranslationResources = {
   serviceUrl: {
     title: "Servicio abiertoURL",
     message: "¿Abrir{{url}}?",
-    inPaseo: "EnPaseo",
+    inPaseo: "En hizuri",
     externalBrowser: "Navegador externo",
     dontAskAgain: "no vuelvas a preguntar",
   },
@@ -1952,12 +2137,32 @@ export const es: TranslationResources = {
       creatingAgent: "Agente creador",
     },
     file: {
+      filePanels: {
+        pickerTitleExtension: "Abrir archivos .{{extension}} con",
+        pickerTitleFilename: "Abrir {{filename}} con",
+        dontAskAgain: "No volver a preguntar",
+        use: "Usar",
+        openWith: "Abrir con…",
+        alwaysUseExtension: "Usar siempre para .{{extension}}",
+        alwaysUseFilename: "Usar siempre para {{filename}}",
+        option: "{{title}} — {{owner}}",
+        actions: "Acciones del archivo",
+        builtin: {
+          owner: "Paseo",
+          markdown: "Markdown",
+          html: "HTML",
+          image: "Imagen",
+          source: "Código fuente",
+        },
+      },
       directoryMissing: "No se encontró el directorio de Workspace.",
       loading: "Cargando archivo...",
       noPreview: "No hay vista previa disponible",
       binaryPreviewUnavailable: "Vista previa binaria no disponible",
       tooLargeToDisplay: "Este archivo es demasiado grande para mostrarlo",
+      documentUnsupported: "Los archivos {{type}} no se pueden mostrar en este dispositivo",
       failedToLoad: "No se pudo cargar el archivo",
+      notFound: "No se encontró el archivo",
       failedToLoadPreview: "No se pudo cargar la vista previa del archivo",
       editor: {
         fileSize: "Tamaño {{size}}",
@@ -1969,10 +2174,7 @@ export const es: TranslationResources = {
         changedOnDisk: "Cambiado en disco",
         vimMode: "Modo Vim {{mode}}",
         cursor: "Línea {{line}}, columna {{column}}",
-        preview: "Vista previa",
-        source: "Código fuente",
         deletedTitle: "Archivo eliminado del disco",
-        checkFailedTitle: "No se pudo comprobar el archivo en disco",
         preservedDescription: "La copia abierta se ha conservado.",
         conflictDescription: "Se conservó el búfer local. Elige qué versión mantener.",
         overwrite: "Sobrescribir",
@@ -2035,10 +2237,28 @@ export const es: TranslationResources = {
       other: "usó {{count}} herramientas adicionales",
     },
     paseoCalls: {
-      one: "llamó a Paseo {{count}} vez",
-      other: "llamó a Paseo {{count}} veces",
+      one: "llamó a hizuri {{count}} vez",
+      other: "llamó a hizuri {{count}} veces",
     },
     and: "y",
+  },
+  showMedia: {
+    youtube: "YouTube",
+    audio: "Audio",
+    playerWindow: "Reproductor",
+    play: "Reproducir",
+    pause: "Pausa",
+    back15: "Retroceder 15 segundos",
+    forward15: "Avanzar 15 segundos",
+    openInYoutube: "Abrir en YouTube",
+    onlyInYoutube: "YouTube no reproduce este vídeo aquí",
+    cannotPlay: "No se puede reproducir: {{reason}}",
+    needsDirectConnection: "Esto necesita una conexión directa con el host",
+    accessTitle: "Deja que hizuri controle tu multimedia",
+    accessMessage:
+      "Para pausar, saltar o rebobinar música y películas en tus propias apps, hizuri necesita acceso a las notificaciones. hizuri no lee notificaciones; Android solo concede el control multimedia con este interruptor.",
+    accessConfirm: "Abrir ajustes",
+    accessCancel: "Ahora no",
   },
   renameModal: {
     rename: "Rebautizar",
@@ -2057,6 +2277,17 @@ export const es: TranslationResources = {
     accessibility: "Ventana de contexto{{percentage}}% utilizada",
   },
   review: {
+    feedback: {
+      send: "Enviar comentarios ({{count}})",
+      sending: "Enviando comentarios ({{count}})",
+      chooseAgent: "Elegir un agente",
+      sent: "Comentarios enviados a {{recipient}}",
+      "no-agents": "Abre una pestaña de agente en este espacio de trabajo para enviar comentarios.",
+      disconnected: "Conéctate al host para enviar comentarios.",
+      "no-context": "Los comentarios guardados ya no coinciden con este diff.",
+      failed: "No se pudieron enviar los comentarios. Inténtalo de nuevo.",
+      prompt: "Por favor, atiende esta revisión de código.",
+    },
     comment: {
       add: "Agregar comentario de revisión",
       edit: "Editar comentario de revisión",
@@ -2067,6 +2298,70 @@ export const es: TranslationResources = {
       cancelAccessibility: "Cancelar comentario de revisión",
       save: "Comentario",
       saveAccessibility: "Guardar comentario de revisión",
+    },
+  },
+  providerUsage: {
+    options: "Configuración",
+    refreshFailed: "No se pudo actualizar el uso",
+    noHosts: "No hay hosts conectados",
+    agentError: "No se pudo cargar el uso: {{reason}}",
+    pin: "Fijar",
+    unpin: "Desfijar",
+    displayAs: "Porcentajes",
+    displayUsed: "Usado",
+    displayRemaining: "Restante",
+    showInSidebar: "Resumen en la barra lateral",
+    showInSidebarHint: "Los períodos fijados aparecen al pie de la barra lateral",
+    runToRefresh: "Ejecuta {{command}} para actualizar.",
+    signInAgain: "Vuelve a iniciar sesión.",
+    loginRejected: "Inicio de sesión rechazado (HTTP {{status}}). {{remedy}}",
+    loginExpired: "La sesión caducó {{relativeTime}}. {{remedy}}",
+    title: "Uso del plan",
+    refresh: "Actualizar",
+    refreshAll: "Actualizar todo",
+    refreshing: "Actualizando...",
+    loading: "Cargando uso...",
+    empty: "No hay datos de uso",
+    errorTitle: "No se pudo cargar el uso",
+    hostUnavailable: "Conéctate a {{host}} para ver el uso del proveedor",
+    hostUpgradeRequired: "Actualiza {{host}} para ver el uso del proveedor",
+    clientUnavailable: "La conexión con el host no está lista",
+    retry: "Intentar de nuevo",
+    tooltipLoading: "Cargando uso del plan...",
+    status: {
+      error: "Error",
+      unavailable: "No disponible",
+    },
+    values: {
+      used: "Usado: {{percentage}}",
+      remaining: "Quedan {{amount}}",
+    },
+    labels: {
+      session: "Sesión",
+      weekly: "Semanal",
+      monthly: "Mensual",
+      codeReview: "Revisión de código",
+      credits: "Créditos",
+      monthlyCredits: "Créditos mensuales",
+    },
+    duration: {
+      days: "{{value}} d",
+      hours: "{{value}} h",
+      minutes: "{{value}} min",
+    },
+    timing: {
+      lastUpdated: "Última actualización {{relativeTime}}",
+      noSuccessfulUpdate: "No hay actualizaciones correctas",
+      resetTimePassed: "Pasó la hora de restablecimiento",
+      resettingNow: "se restablece ahora",
+      resetsIn: "se restablece en {{duration}}",
+      runsOutNow: "se agota ahora",
+      runsOutIn: "se agota en {{duration}}",
+      justNow: "ahora mismo",
+      daysAgo: "hace {{value}} d",
+      hoursAgo: "hace {{value}} h",
+      minutesAgo: "hace {{value}} min",
+      updated: "Actualizado {{relativeTime}}",
     },
   },
   settings: {
@@ -2097,6 +2392,7 @@ export const es: TranslationResources = {
       terminal: "Terminal",
       browser: "Navegador",
       editor: "Editor",
+      files: "Archivos",
       shortcuts: "Atajos",
       integrations: "Integraciones",
       notifications: "Notificaciones",
@@ -2110,6 +2406,14 @@ export const es: TranslationResources = {
       vimKeybindings: "Atajos de Vim",
       vimHint: "Se aplica a archivos fuente en web y escritorio.",
     },
+    files: {
+      title: "Archivos",
+      askEveryTime: "Preguntar siempre",
+      askAgain: "Volver a preguntar",
+      askAgainFor: "Volver a preguntar para {{label}}",
+      unavailable: "No está en un host conectado",
+      empty: "Los paneles de archivo aparecen aquí cuando un plugin añade uno",
+    },
     notifications: {
       title: "Notificaciones",
       permission: "Permiso de notificaciones",
@@ -2122,7 +2426,7 @@ export const es: TranslationResources = {
       send: "Enviar",
       sending: "Enviando...",
       sentTitle: "Notificación de prueba enviada",
-      sentDescription: "Paseo entregó la notificación al sistema operativo.",
+      sentDescription: "hizuri entregó la notificación al sistema operativo.",
       sendFailedTitle: "No se pudo enviar la notificación de prueba",
     },
     hostSections: {
@@ -2141,14 +2445,14 @@ export const es: TranslationResources = {
     metadataGeneration: {
       title: "Generación de metadatos",
       description:
-        "Elige el modelo que Paseo usa para títulos de espacios de trabajo, nombres de ramas, mensajes de commit y borradores de pull requests",
+        "Elige el modelo que hizuri usa para títulos de espacios de trabajo, nombres de ramas, mensajes de commit y borradores de pull requests",
       selection: "Selección de modelo",
       automatic: "Automática",
       preferred: "Manual",
-      automaticHint: "Paseo elige un modelo rápido disponible",
-      preferredHint: "Elige el modelo que usa Paseo",
+      automaticHint: "hizuri elige un modelo rápido disponible",
+      preferredHint: "Elige el modelo que usa hizuri",
       model: "Modelo",
-      fallbackHint: "Si no está disponible, Paseo usa otro modelo disponible",
+      fallbackHint: "Si no está disponible, hizuri usa otro modelo disponible",
       docs: "Documentación",
       saveError: "No se pudo actualizar la generación de metadatos",
     },
@@ -2159,7 +2463,7 @@ export const es: TranslationResources = {
         title: "Datos del navegador",
         siteData: "Cookies y datos de sitios",
         description:
-          "Las pestañas del navegador comparten inicios de sesión y datos de sitios en Paseo.",
+          "Las pestañas del navegador comparten inicios de sesión y datos de sitios en hizuri.",
         clear: "Borrar datos del navegador",
         clearing: "Borrando...",
         confirmTitle: "¿Borrar los datos del navegador?",
@@ -2187,7 +2491,7 @@ export const es: TranslationResources = {
       serviceUrls: {
         options: {
           ask: "Preguntar",
-          inApp: "EnPaseo",
+          inApp: "En hizuri",
           external: "Navegador externo",
         },
       },
@@ -2221,13 +2525,16 @@ export const es: TranslationResources = {
           ja: "日本語",
           ko: "한국어",
           ptBR: "Português brasileiro",
-          ru: "Русский",
           zhCN: "中文",
         },
       },
     },
     diagnostics: {
       title: "Diagnóstico",
+      uploadLogs: {
+        label: "Enviar registros de la app al host",
+        description: "Avisos, estado de voz y niveles del micrófono van a app-logs en el host",
+      },
       legacyTerminalRenderer: {
         label: "Usar el renderizador de terminal anterior",
         description: "Usa el terminal WebView anterior al volver a abrir un terminal",
@@ -2272,7 +2579,7 @@ export const es: TranslationResources = {
         label: "Actualizaciones de aplicaciones",
         readyToInstall: "Listo para instalar:{{version}}",
         installTitle: "Instalar actualización de escritorio",
-        installMessage: "Esto actualizaPaseoen esta computadora.",
+        installMessage: "Esto actualiza hizuri en esta computadora.",
         installConfirm: "Instalar actualización",
         update: "Actualizar",
         updateTo: "Actualización a{{version}}",
@@ -2348,6 +2655,30 @@ export const es: TranslationResources = {
         reset: "Restablecer",
         resetAccessibility: "Restablecer el ancho del contenido",
       },
+      show: {
+        title: "Show",
+        switcher: {
+          title: "Selector de pestañas",
+          capsule: {
+            label: "Cápsula",
+            description:
+              "Una píldora abajo: deslízala para cambiar de pestaña, tócala para ver todas",
+          },
+          deck: {
+            label: "Baraja",
+            description:
+              "Un botón abajo: toca, desliza hacia arriba o pellizca para ver todas como tarjetas",
+          },
+          rail: {
+            label: "Riel de puntos",
+            description: "Puntos en el borde derecho: mantén y desliza arriba o abajo",
+          },
+          inside: {
+            label: "Deslizar dentro",
+            description: "Desliza la propia pestaña; la página se pasa desde el borde izquierdo",
+          },
+        },
+      },
       syntax: {
         title: "Sintaxis",
         highlightTheme: "Tema destacado",
@@ -2363,6 +2694,7 @@ export const es: TranslationResources = {
       searchPlaceholder: "Buscar atajos",
       unavailableOnMobile: "Los atajos de teclado solo están disponibles en el escritorio",
       capturePrompt: "Presione el acceso directo...",
+      captureIndexPrompt: "Termina con un número del 1 al 9.",
       unassigned: "Sin asignar",
       actions: {
         menu: "Acciones para {{name}}",
@@ -2522,11 +2854,11 @@ export const es: TranslationResources = {
         title: "Habilidades de orquestación",
         description: "Enseñe a sus agentes a orquestar a través delCLI",
         updateAvailable: "Actualización disponible",
-        updateTitle: "¿Actualizar las habilidades dePaseo?",
+        updateTitle: "¿Actualizar las habilidades de hizuri?",
         updateFallback: "Sincronice las habilidades incluidas con su máquina.",
-        uninstallTitle: "¿Desinstalar las habilidadesPaseo?",
+        uninstallTitle: "¿Desinstalar las habilidades hizuri?",
         uninstallMessage:
-          "Elimina todas las habilidades de orquestaciónPaseode ~/.agents, ~/.claude, ~/.codex.",
+          "Elimina todas las habilidades de orquestación hizuri de ~/.agents, ~/.claude, ~/.codex.",
         choose: "Elegir habilidades",
         chooseAll: "Todas las habilidades",
         chooseAllHint:
@@ -2563,9 +2895,9 @@ export const es: TranslationResources = {
         title: "Orquestación",
         unavailable: "Conéctese a este host para administrar la orquestación",
         enableTools: {
-          title: "Habilitar herramientasPaseo",
+          title: "Habilitar herramientas hizuri",
           hint: "Los agentes podrán gestionar árboles de trabajo, agentes y horarios.",
-          accessibilityLabel: "Inyectar herramientasPaseo",
+          accessibilityLabel: "Inyectar herramientas hizuri",
         },
         systemPrompt: {
           title: "Aviso del sistema",
@@ -2669,16 +3001,16 @@ export const es: TranslationResources = {
             "Este host no está conectado. Espere a que se conecte antes de reiniciar.",
           offlineTitle: "Hostfuera de línea",
           offlineMessage:
-            "Este anfitrión está desconectado.Paseose vuelve a conectar automáticamente; espere hasta que vuelva a estar en línea antes de reiniciar.",
+            "Este anfitrión está desconectado. hizuri se vuelve a conectar automáticamente; espere hasta que vuelva a estar en línea antes de reiniciar.",
           requestFailedTitle: "Error",
           requestFailedMessage:
-            "No se pudo enviar la solicitud de reinicio.Paseose vuelve a conectar automáticamente; inténtelo nuevamente una vez que el host se muestre en línea.",
+            "No se pudo enviar la solicitud de reinicio. hizuri se vuelve a conectar automáticamente; inténtelo nuevamente una vez que el host se muestre en línea.",
           dialogFailedMessage:
             "No se puede abrir el cuadro de diálogo de confirmación de reinicio.",
         },
         update: {
           desktopManagedHint:
-            "Este daemon está administrado por Paseo Desktop. Actualiza Paseo Desktop en el host.",
+            "Este daemon está administrado por hizuri Desktop. Actualiza hizuri Desktop en el host.",
           title: "Update daemon",
           hint: "Update the daemon to the latest version and restart it",
           confirm: "Update",
@@ -2839,7 +3171,7 @@ export const es: TranslationResources = {
         newScript: "Nuevo guión",
         editScript: "Editar{{name}}",
         runAsService: "Ejecutar como servicio",
-        serviceHint: "Paseosupervisa el proceso y asigna un puerto vía $PASEO_PORT",
+        serviceHint: "hizuri supervisa el proceso y asigna un puerto vía $PASEO_PORT",
         actions: {
           add: "Agregar guión",
           edit: "Editar",
@@ -2848,7 +3180,7 @@ export const es: TranslationResources = {
       },
       metadata: {
         title: "Generación de metadatos",
-        info: "Instrucciones específicas del proyecto inyectadas en los mensajes de IA quePaseoutiliza para generar metadatos; úselas para hacer cumplir las convenciones de su equipo, como la denominación de ramas, el estilo de confirmación o el formatoPR.",
+        info: "Instrucciones específicas del proyecto inyectadas en los mensajes de IA que hizuri utiliza para generar metadatos; úselas para hacer cumplir las convenciones de su equipo, como la denominación de ramas, el estilo de confirmación o el formatoPR.",
         branchName: "Nombres de sucursales",
         branchNamePlaceholder: "Prefijo ramas con feat/ o fix/, mb/ para ramas personales",
         commitMessage: "Confirmar mensajes",

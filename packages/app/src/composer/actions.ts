@@ -1,4 +1,4 @@
-import type { SelectedFile } from "@/attachments/selected-file";
+import type { SelectedFile, SelectedFileSource } from "@/attachments/selected-file";
 import type { ForgeSearchItem } from "@getpaseo/protocol/messages";
 import type { ActiveTurnBehavior } from "@getpaseo/protocol/messages";
 import type {
@@ -54,8 +54,13 @@ export interface ComposerSendClient {
       images: Array<{ data: string; mimeType: string }>;
       attachments: ReturnType<typeof splitComposerAttachmentsForSubmit>["attachments"];
     },
-  ) => Promise<void>;
-  uploadFile: (input: { fileName: string; mimeType: string; bytes: Uint8Array }) => Promise<{
+  ) => Promise<unknown>;
+  uploadFile: (input: {
+    fileName: string;
+    mimeType: string;
+    bytes?: Uint8Array;
+    source?: { size: number; read(offset: number, length: number): Promise<Uint8Array> };
+  }) => Promise<{
     requestId: string;
     file: {
       type: "uploaded_file";
@@ -127,28 +132,43 @@ export async function uploadFileAttachments(input: {
   files: SelectedFile[];
 }): Promise<Extract<ComposerAttachment, { kind: "file" }>[]> {
   const result: Extract<ComposerAttachment, { kind: "file" }>[] = [];
-  const prepared: Array<{ fileName: string; mimeType: string; bytes: Uint8Array }> = [];
+  const prepared: Array<{
+    fileName: string;
+    mimeType: string;
+    bytes?: Uint8Array;
+    source?: SelectedFileSource;
+  }> = [];
 
-  for (const file of input.files) {
-    const bytes = await file.readBytes();
-    if (bytes.byteLength > 50 * 1024 * 1024) {
-      throw new Error(
-        i18n.t("composer.errors.fileTooLarge", { size: "50MB", fileName: file.fileName }),
-      );
+  try {
+    // Open every file before sending any, so one unreadable file stops the whole batch. There is
+    // no size cap: streamed files go up in pieces and never sit whole in memory.
+    for (const file of input.files) {
+      if (file.openSource) {
+        prepared.push({
+          fileName: file.fileName,
+          mimeType: file.mimeType,
+          source: file.openSource(),
+        });
+        continue;
+      }
+      prepared.push({
+        fileName: file.fileName,
+        mimeType: file.mimeType,
+        bytes: await file.readBytes(),
+      });
     }
-    prepared.push({
-      fileName: file.fileName,
-      mimeType: file.mimeType,
-      bytes,
-    });
-  }
 
-  for (const file of prepared) {
-    const response = await input.client.uploadFile(file);
-    if (response.error || !response.file) {
-      throw new Error(response.error ?? "Upload failed.");
+    for (const file of prepared) {
+      const response = await input.client.uploadFile(file);
+      if (response.error || !response.file) {
+        throw new Error(response.error ?? "Upload failed.");
+      }
+      result.push({ kind: "file", attachment: response.file });
     }
-    result.push({ kind: "file", attachment: response.file });
+  } finally {
+    for (const file of prepared) {
+      file.source?.close();
+    }
   }
 
   return result;

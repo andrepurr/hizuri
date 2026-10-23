@@ -1,0 +1,18 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <!-- Floating assistant (FloatService): a window over other apps ("Display over other apps"). -->
+  <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+
+  <application>
+    <!-- Foreground only while no voice session keeps the process alive (VoiceForegroundService). -->
+    <service
+      android:name="com.hizuri.floating.FloatService"
+      android:exported="false"
+      android:foregroundServiceType="specialUse">
+      <property
+        android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+        android:value="The user's assistant character floats over other apps; the user drags, taps and hides it." />
+    </service>
+  </application>
+</manifest>

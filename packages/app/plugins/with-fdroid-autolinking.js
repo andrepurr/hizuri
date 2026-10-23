@@ -75,6 +75,9 @@ function withFdroidAutolinking(config) {
           ...expo,
           autolinking: {
             ...autolinking,
+            // Hizuri: the overlay lives in android/fdroid-autolinking, so the default ./modules
+            // would point there and the app's local native modules would not be linked.
+            nativeModulesDir: path.join(modConfig.modRequest.projectRoot, "modules"),
             android: {
               ...android,
               buildFromSource: [".*"],

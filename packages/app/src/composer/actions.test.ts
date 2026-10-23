@@ -1089,37 +1089,86 @@ describe("file upload preparation", () => {
     await expect(upload).resolves.toEqual([{ kind: "file", attachment: file }]);
   });
 
-  it.each(["unreadable", "oversized"])(
-    "does not upload a batch containing a later %s file",
-    async (failure) => {
-      let sends = 0;
-      await expect(
-        uploadFileAttachments({
-          client: {
-            sendAgentMessage: async () => {},
-            uploadFile: async () => {
-              sends++;
-              throw new Error("unexpected send");
+  it("does not upload a batch containing a later unreadable file", async () => {
+    let sends = 0;
+    await expect(
+      uploadFileAttachments({
+        client: {
+          sendAgentMessage: async () => {},
+          uploadFile: async () => {
+            sends++;
+            throw new Error("unexpected send");
+          },
+        },
+        files: [
+          {
+            fileName: "valid.bin",
+            mimeType: "application/octet-stream",
+            readBytes: async () => new Uint8Array([1]),
+          },
+          {
+            fileName: "missing.bin",
+            mimeType: "application/octet-stream",
+            readBytes: async () => {
+              throw new Error("read failed");
             },
           },
-          files: [
-            {
-              fileName: "valid.bin",
-              mimeType: "application/octet-stream",
-              readBytes: async () => new Uint8Array([1]),
+        ],
+      }),
+    ).rejects.toThrow("read failed");
+    expect(sends).toBe(0);
+  });
+
+  it("streams a file over 50 MB without reading it whole, then closes it", async () => {
+    const size = 200 * 1024 * 1024;
+    let closed = false;
+    let streamedSize = 0;
+    const uploaded = await uploadFileAttachments({
+      client: {
+        sendAgentMessage: async () => {},
+        uploadFile: async (file) => {
+          expect(file.bytes).toBeUndefined();
+          streamedSize = file.source?.size ?? 0;
+          const firstPiece = await file.source?.read(0, 4);
+          expect(firstPiece).toEqual(new Uint8Array([7, 7, 7, 7]));
+          return {
+            requestId: "req-video",
+            file: {
+              type: "uploaded_file",
+              id: "file-video",
+              fileName: "screen.mp4",
+              mimeType: "video/mp4",
+              size,
+              path: "/uploads/screen.mp4",
             },
-            {
-              fileName: "missing.bin",
-              mimeType: "application/octet-stream",
-              readBytes: async () => {
-                if (failure === "oversized") return new Uint8Array(50 * 1024 * 1024 + 1);
-                throw new Error("read failed");
-              },
+            error: null,
+          };
+        },
+      },
+      files: [
+        {
+          fileName: "screen.mp4",
+          mimeType: "video/mp4",
+          readBytes: async () => {
+            throw new Error("a large video must not be read whole");
+          },
+          openSource: () => ({
+            size,
+            read: async (_offset, length) => new Uint8Array(length).fill(7),
+            close: () => {
+              closed = true;
             },
-          ],
-        }),
-      ).rejects.toThrow(failure === "unreadable" ? "read failed" : "too large");
-      expect(sends).toBe(0);
-    },
-  );
+          }),
+        },
+      ],
+    });
+    expect(streamedSize).toBe(size);
+    expect(uploaded).toEqual([
+      {
+        kind: "file",
+        attachment: expect.objectContaining({ id: "file-video", size }),
+      },
+    ]);
+    expect(closed).toBe(true);
+  });
 });

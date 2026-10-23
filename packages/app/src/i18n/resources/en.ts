@@ -1,4 +1,7 @@
 export const en = {
+  assistant: {
+    name: "Zuri",
+  },
   paneFind: {
     connectionFailure: "Could not search this chat. Check the host connection and retry.",
     historyChangedFailure: "The chat changed while searching. Search again.",
@@ -21,11 +24,154 @@ export const en = {
     position: "{{current}} of {{total}}",
     total: "{{total}} matches",
   },
+  freeBrain: {
+    title: "Brain",
+    label: "hizuri free brain",
+    description:
+      "A free starter brain that hizuri pays for, with a daily limit. It talks with you from the first minute and helps you connect Claude Code.",
+    status: {
+      ready: "Ready",
+      off: "Off",
+      checking: "Checking",
+      unavailable: "Not available yet",
+    },
+    claudeCode: {
+      label: "Claude Code",
+      connected: "Connected: start a new chat with Claude to work without our limit.",
+      howTo:
+        "Your own brain, with no limit from us. Ask the free brain: it walks you through connecting it.",
+    },
+    error: "Couldn't change the free brain.",
+  },
+  phoneLayout: {
+    label: "Phone layout on wide screens",
+    description:
+      "In a browser or on a tablet: $t(assistant.name)'s face, the chat and Show as on the phone, only bigger. Turn it off for the desktop layout with the header and side panels.",
+  },
+  simpleMode: {
+    label: "Simple version",
+    description:
+      "Only $t(assistant.name) and settings. Turn it off for the full app with workspaces, history, search and schedules.",
+    menu: {
+      assistant: "$t(assistant.name)",
+      face: "Face",
+      chat: "Chat",
+    },
+  },
+  face: {
+    title: "$t(assistant.name)'s face",
+    loading: {
+      starting: "Loading $t(assistant.name)'s face…",
+      downloading: "Downloading $t(assistant.name)'s face · {{percent}}%",
+      preparing: "Preparing $t(assistant.name)'s face in 3D…",
+      failed: "$t(assistant.name)'s face could not load: {{message}}",
+      noWebgl:
+        "$t(assistant.name)'s face needs WebGL, and this browser has it off. Allow WebGL for this site (in LibreWolf: the icon in the address bar), then press Try again.",
+      retry: "Try again",
+    },
+    inVoiceMode: {
+      label: "Face in voice mode",
+      description:
+        "Show $t(assistant.name)'s face: on a phone on the first page, on a wide screen above the chat while you talk. Turn it off if the assistant's voice stutters.",
+    },
+    float: {
+      label: "$t(assistant.name) over other apps",
+      description:
+        "When you leave hizuri, $t(assistant.name) stays on your screen over any app: drag the assistant with a finger, tap it, long-press for Open and Hide. The assistant hides when you open hizuri.",
+      permissionTitle: "Allow $t(assistant.name) over other apps",
+      permissionMessage:
+        "Turn on «Display over other apps» for hizuri. If the switch is grey: App info → ⋮ → Allow restricted settings, then try again.",
+      permissionOpen: "Open settings",
+      open: "Open hizuri",
+      hide: "Hide $t(assistant.name)",
+      notification: "$t(assistant.name) is on your screen",
+    },
+  },
+  agentPages: {
+    sessionMenu: "Session",
+    tabs: {
+      face: "$t(assistant.name)",
+      chat: "Chat",
+      show: "Show",
+    },
+  },
+  show: {
+    title: "Show",
+    closeTab: "Close tab",
+    hidePerch: "Hide $t(assistant.name) from the card",
+    open: "Open Show",
+    close: "Back to chat",
+    windows: "Show windows",
+    defaultWindow: "Show",
+    limitsWindow: "Limits",
+    screenWindow: "Screen",
+    liveWindow: "Now",
+    screenWatch: "Watch",
+    screenTakeOver: "Take over",
+    screenConnecting: "Connecting to the screen…",
+    secret: {
+      optional: "optional",
+      note: "Goes straight to your vault. Your agent never sees it, only the name.",
+      save: "Save",
+      saving: "Saving…",
+      notNow: "Not now",
+      saved: "Saved as «{{name}}»",
+      closed: "Closed without saving",
+      notSent: "Not sent. Check the connection.",
+      fields: {
+        username: "Login",
+        password: "Password",
+        address: "E-mail",
+        holder: "Name on card",
+        number: "Card number",
+        expiry: "Expiry",
+        cvc: "CVC",
+        value: "Value",
+        perPayment: "Most per payment",
+        perMonth: "Most per month",
+        currency: "Currency",
+      },
+    },
+    tabs: {
+      kind: {
+        page: "Web page",
+        picture: "Picture",
+        video: "Video",
+        player: "Player",
+        screen: "Screen",
+        live: "Live",
+        canvas: "Canvas",
+      },
+      allTabs: "All tabs · {{count}}",
+      closeCards: "Hide the cards",
+      position: "Tab {{index}} of {{count}}",
+      capsuleHint: "Swipe sideways to change tabs, tap for all tabs",
+      deckHint: "Tap or pull up for all tabs",
+      releaseToCancel: "Release to cancel",
+      insideEdgeHint: "The page turns from the left edge",
+    },
+    page: {
+      empty: "Nothing to show yet",
+      loading: "Loading…",
+      resetsAt: "Resets {{time}}",
+      inTime: "in {{time}}",
+      updated: "Updated {{time}}",
+      used: "used",
+      noData: "No usage data",
+      widgetError: "Could not draw this",
+      days: "d",
+      hours: "h",
+      minutes: "min",
+      fiveHour: "5 hours",
+      weekly: "Week",
+    },
+  },
   common: {
     bottomSheetBackdrop: "Bottom sheet backdrop",
     back: "Back",
     loading: "Loading...",
     actions: {
+      save: "Save",
       back: "Back",
       cancel: "Cancel",
       close: "Close",
@@ -119,6 +265,8 @@ export const en = {
     input: {
       accessibilityLabel: "Message agent...",
       terminalAccessibilityLabel: "Terminal prompt",
+      fullscreen: "Fullscreen",
+      exitFullscreen: "Exit fullscreen",
       focusHint: "{{shortcut}} to focus",
       addAttachment: "Add attachment",
       interruptAgent: "Interrupt agent",
@@ -135,8 +283,6 @@ export const en = {
       interrupt: "Interrupt",
     },
     voice: {
-      enableVoiceMode: "Enable Voice mode",
-      voiceMode: "Voice mode",
       unmuteVoiceMode: "Unmute Voice mode",
       muteVoiceMode: "Mute Voice mode",
       stopDictation: "Stop dictation",
@@ -144,7 +290,6 @@ export const en = {
       unmuteVoice: "Unmute voice",
       muteVoice: "Mute voice",
       dictation: "Dictation",
-      interruptBeforeVoice: "Interrupt the agent before starting voice mode",
     },
     attachments: {
       addImage: "Add image",
@@ -350,10 +495,20 @@ export const en = {
     speak: {
       header: "Spoke",
     },
+    spoken: {
+      phrase: "Said",
+      correction: "Said · corrected",
+    },
+    guardian: {
+      header: "Guardian note",
+      fix: "Fix: {{fix}}",
+      rule: "Rule: {{rule}}",
+    },
     activity: {
       details: "Details",
     },
     dictation: {
+      paused: "Microphone interrupted. Waiting to resume…",
       start: "Start voice dictation",
       cancel: "Cancel dictation",
       retry: "Retry dictation",
@@ -363,6 +518,7 @@ export const en = {
       failedRetry: "Dictation failed. Tap retry.",
     },
     question: {
+      responseFailed: "Could not send your response. Try again.",
       submit: "Submit",
       next: "Next",
       answerPlaceholder: "Type your answer...",
@@ -530,6 +686,7 @@ export const en = {
       },
     },
     setup: {
+      updateHost: "Update the host to view workspace setup details",
       descriptor: {
         label: "Setup",
         completed: "Setup completed",
@@ -607,6 +764,9 @@ export const en = {
       updateHost: "Update the host to use the native terminal renderer.",
       unableToSubscribe: "Unable to subscribe to terminal",
     },
+    sheet: {
+      openAsTab: "Open as tab",
+    },
     tabs: {
       loading: "Loading...",
       modified: "Unsaved changes",
@@ -622,7 +782,7 @@ export const en = {
       },
       switcher: {
         trigger: "Switch tabs ({{count}} open)",
-        title: "Switch tab",
+        title: "Workspace tabs",
         searchPlaceholder: "Search tabs",
       },
       menu: {
@@ -718,6 +878,7 @@ export const en = {
     header: {
       actions: {
         workspaceActions: "Workspace actions",
+        workspaceActionsUnhealthy: "Workspace actions, a service is unhealthy",
         newAgent: "New agent",
         newTerminal: "New terminal",
         newBrowser: "New browser tab",
@@ -765,6 +926,8 @@ export const en = {
         exitCode: "exit {{code}}",
         startFailed: "Failed to start {{scriptName}}",
         stopFailed: "Failed to stop {{scriptName}}",
+        running: "Running",
+        runningCount: "{{count}} running",
       },
     },
     tree: {
@@ -878,7 +1041,7 @@ export const en = {
             "Update isn't available because this branch is already up to date with {{baseRef}}",
           mergePrNoGithub: "Merge PR isn't available right now because GitHub isn't connected",
           archiveNotWorktree:
-            "Archive isn't available here because this workspace was not created as a Paseo worktree",
+            "Archive isn't available here because this workspace was not created as a hizuri worktree",
           mergePrNoForge:
             "Merge {{noun}} isn't available right now because {{brand}} isn't connected",
           mergePrMissing: "Merge PR isn't available because there isn't a pull request yet",
@@ -952,6 +1115,7 @@ export const en = {
         checkingRepository: "Checking repository...",
         notRepository: "Not a git repository",
         diffMode: "Diff mode",
+        all: "All changes",
         uncommitted: "Uncommitted",
         committed: "Committed",
         branchUnknown: "Unknown",
@@ -1155,6 +1319,7 @@ export const en = {
       done: "Done",
     },
     display: {
+      showBackground: "Show background",
       trigger: "Display preferences",
       heading: "Display",
       grouping: {
@@ -1226,7 +1391,7 @@ export const en = {
       discord: "Discord",
       github: "Create GitHub issue",
       whatsNew: "What's new",
-      appName: "Paseo",
+      appName: "hizuri",
     },
     sections: {
       sessions: "History",
@@ -1330,8 +1495,9 @@ export const en = {
     },
     fields: {
       project: "Project",
-      base: "Base",
+      branch: "Branch",
       baseNotApplicable: "Not applicable",
+      host: "Host",
     },
     titlePlaceholder: "Title (optional)",
     errors: {
@@ -1373,7 +1539,7 @@ export const en = {
       close: "Close window",
     },
     quitting: {
-      title: "Quitting Paseo...",
+      title: "Quitting hizuri...",
       detail: "Stopping the local daemon.",
     },
     daemon: {
@@ -1404,20 +1570,20 @@ export const en = {
       },
       management: {
         title: "Manage built-in daemon",
-        hint: "Let Paseo start and stop the built-in daemon",
+        hint: "Let hizuri start and stop the built-in daemon",
         pauseTitle: "Pause built-in daemon",
         pauseMessage:
           "This will stop the built-in daemon immediately. Running agents and terminals connected to the built-in daemon will be stopped.",
         pauseAndStop: "Pause and stop",
         registrationFailed:
-          "Built-in daemon started, but Paseo could not save the localhost connection. Toggle daemon management off and on again, or add localhost manually.",
+          "Built-in daemon started, but hizuri could not save the localhost connection. Toggle daemon management off and on again, or add localhost manually.",
         pausedStopFailed:
-          "Built-in daemon management was paused, but Paseo could not stop the daemon.",
+          "Built-in daemon management was paused, but hizuri could not stop the daemon.",
         updateFailed: "Unable to update built-in daemon management.",
       },
       keepRunning: {
         title: "Keep daemon running after quit",
-        hint: "Daemon keeps running when you quit Paseo",
+        hint: "Daemon keeps running when you quit hizuri",
       },
       logs: {
         title: "Log file",
@@ -1432,7 +1598,7 @@ export const en = {
       fullStatus: {
         title: "Full status",
         modalTitle: "Daemon status",
-        hint: "Runs `paseo daemon status` and shows the output",
+        hint: "Shows the server's full status report",
         view: "View status",
         copied: "Status copied to clipboard.",
         fetchFailed: "Failed to fetch daemon status: {{message}}",
@@ -1484,7 +1650,7 @@ export const en = {
     },
     rosetta: {
       title: "Download the Apple Silicon build",
-      runningIntel: "You're running the Intel build of Paseo under Rosetta on Apple Silicon.",
+      runningIntel: "You're running the Intel build of hizuri under Rosetta on Apple Silicon.",
       highCpu: "This causes high CPU usage. Download the Apple Silicon build to fix it.",
       download: "Download",
     },
@@ -1526,7 +1692,7 @@ export const en = {
         microphone: "Microphone status has not been checked yet.",
       },
       testNotification: {
-        title: "Paseo notification test",
+        title: "hizuri notification test",
         body: "If you can see this, desktop notifications work.",
         notDelivered: "Notification was not delivered. Check System Settings > Notifications.",
         failed: "Failed to send notification.",
@@ -1535,19 +1701,19 @@ export const en = {
     integrations: {
       cli: {
         statusFailed: "Unable to check CLI install status.",
-        installFailed: "Unable to install the Paseo CLI.",
+        installFailed: "Unable to install the hizuri CLI.",
       },
     },
   },
   rootError: {
-    title: "Paseo ran into a problem.",
+    title: "hizuri ran into a problem.",
     body: "Try again to reload the app. If this keeps happening, include the details below when you report it.",
     details: "Details",
   },
   startup: {
     errorTitle: "Something went wrong",
     errorDescription:
-      "The local server failed to start. If this keeps happening, please report the issue on GitHub and include the logs below.",
+      "The local server failed to start. If this keeps happening, copy the logs below.",
     logs: {
       loading: "Loading daemon logs...",
       unavailable: "No daemon logs available.",
@@ -1637,7 +1803,7 @@ export const en = {
     },
   },
   onboarding: {
-    title: "Welcome to Paseo",
+    title: "Welcome to hizuri",
     subtitle: "Connect your computer to get started",
     actions: {
       settings: "Settings",
@@ -1745,7 +1911,7 @@ export const en = {
     },
     direct: {
       title: "Direct connection",
-      helper: "Enter the address of a Paseo server.",
+      helper: "Enter the address of a hizuri server.",
       fields: {
         host: "Host",
         port: "Port",
@@ -1787,7 +1953,7 @@ export const en = {
     },
     remoteSsh: {
       title: "Remote SSH",
-      helper: "Connect to a Paseo daemon running on the remote host.",
+      helper: "Connect to a hizuri daemon running on the remote host.",
       fields: {
         target: "SSH host",
         password: "Daemon password",
@@ -1849,15 +2015,15 @@ export const en = {
       enableDescription:
         "Relay lets this device connect from anywhere. Pairing traffic is end-to-end encrypted.",
       relayDocs: "How relay works",
-      relayDocsAccessibility: "Read how Paseo relay works",
+      relayDocsAccessibility: "Read how hizuri relay works",
       enableRelay: "Enable relay",
       enablingRelay: "Enabling...",
       notNow: "Not now",
       directConnectionHint:
         "Without relay, connect directly over TCP, Tailscale, or another VPN. No QR code is created.",
-      updateRequired: "Update the host to enable relay from Paseo Desktop.",
+      updateRequired: "Update the host to enable relay from hizuri Desktop.",
       unavailable: "Pairing offer unavailable.",
-      hint: "Scan this QR code with Paseo on your phone, or copy the link below.",
+      hint: "Scan this QR code with hizuri on your phone, or copy the link below.",
       securityWarning:
         "Treat this pairing link like a password. Anyone with it can access this daemon.",
       qrUnavailable: "QR code unavailable.",
@@ -1869,9 +2035,28 @@ export const en = {
   },
   realtimeVoice: {
     actions: {
+      startSession: "Start session",
       mute: "Mute realtime voice",
       unmute: "Unmute realtime voice",
-      stop: "Stop realtime voice and interrupt turn",
+      switchToText: "Switch to text, keep the session",
+      switchToVoice: "Back to voice",
+      endSession: "End session",
+      attachPhoto: "Send a photo",
+    },
+    endSessionConfirm: {
+      title: "End session?",
+      message: "Voice, the agent's voice mode and the saved session all close.",
+    },
+    live: {
+      updateHost: "Update the host to see your words as you speak",
+    },
+    status: {
+      starting: "Turning voice on...",
+      stopping: "Turning voice off...",
+    },
+    moved: "Voice moved here",
+    errors: {
+      noSession: "Start a session first",
     },
   },
   rewind: {
@@ -1892,7 +2077,7 @@ export const en = {
   serviceUrl: {
     title: "Open service URL",
     message: "Open {{url}}?",
-    inPaseo: "In Paseo",
+    inPaseo: "In hizuri",
     externalBrowser: "External browser",
     dontAskAgain: "Don't ask again",
   },
@@ -1929,12 +2114,32 @@ export const en = {
       creatingAgent: "Creating agent",
     },
     file: {
+      filePanels: {
+        pickerTitleExtension: "Open .{{extension}} files with",
+        pickerTitleFilename: "Open {{filename}} with",
+        dontAskAgain: "Don't ask me again",
+        use: "Use",
+        openWith: "Open with…",
+        alwaysUseExtension: "Always use for .{{extension}}",
+        alwaysUseFilename: "Always use for {{filename}}",
+        option: "{{title}} — {{owner}}",
+        actions: "File actions",
+        builtin: {
+          owner: "Paseo",
+          markdown: "Markdown",
+          html: "HTML",
+          image: "Image",
+          source: "Source",
+        },
+      },
       directoryMissing: "Workspace directory not found.",
       loading: "Loading file...",
       noPreview: "No preview available",
       binaryPreviewUnavailable: "Binary preview unavailable",
       tooLargeToDisplay: "This file is too large to display",
+      documentUnsupported: "{{type}} files can't be shown on this device",
       failedToLoad: "Failed to load file",
+      notFound: "File not found",
       failedToLoadPreview: "Failed to load file preview",
       editor: {
         fileSize: "File size {{size}}",
@@ -1946,10 +2151,7 @@ export const en = {
         changedOnDisk: "Changed on disk",
         vimMode: "Vim mode {{mode}}",
         cursor: "Line {{line}}, column {{column}}",
-        preview: "Preview",
-        source: "Source",
         deletedTitle: "File deleted on disk",
-        checkFailedTitle: "Couldn't check file on disk",
         preservedDescription: "The open copy is preserved.",
         conflictDescription: "The local buffer was preserved. Choose which version to keep.",
         overwrite: "Overwrite",
@@ -2012,10 +2214,28 @@ export const en = {
       other: "used {{count}} other tools",
     },
     paseoCalls: {
-      one: "called Paseo {{count}} time",
-      other: "called Paseo {{count}} times",
+      one: "called hizuri {{count}} time",
+      other: "called hizuri {{count}} times",
     },
     and: "and",
+  },
+  showMedia: {
+    youtube: "YouTube",
+    audio: "Audio",
+    playerWindow: "Player",
+    play: "Play",
+    pause: "Pause",
+    back15: "Back 15 seconds",
+    forward15: "Forward 15 seconds",
+    openInYoutube: "Open in YouTube",
+    onlyInYoutube: "YouTube does not play this video here",
+    cannotPlay: "Can't play this: {{reason}}",
+    needsDirectConnection: "This needs a direct connection to the host",
+    accessTitle: "Let hizuri control your media",
+    accessMessage:
+      "To pause, skip or rewind music and films in your own apps, hizuri needs Notification access. hizuri reads no notifications; Android grants media control only through this switch.",
+    accessConfirm: "Open settings",
+    accessCancel: "Not now",
   },
   renameModal: {
     rename: "Rename",
@@ -2034,6 +2254,17 @@ export const en = {
     accessibility: "Context window {{percentage}}% used",
   },
   review: {
+    feedback: {
+      send: "Send feedback ({{count}})",
+      sending: "Sending feedback ({{count}})",
+      chooseAgent: "Choose an agent",
+      sent: "Feedback sent to {{recipient}}",
+      "no-agents": "Open an agent tab in this workspace to send feedback.",
+      disconnected: "Connect to the host to send feedback.",
+      "no-context": "Saved comments no longer match this diff.",
+      failed: "Failed to send feedback. Try again.",
+      prompt: "Please address this code review.",
+    },
     comment: {
       add: "Add review comment",
       edit: "Edit review comment",
@@ -2044,6 +2275,70 @@ export const en = {
       cancelAccessibility: "Cancel review comment",
       save: "Comment",
       saveAccessibility: "Save review comment",
+    },
+  },
+  providerUsage: {
+    options: "Settings",
+    refreshFailed: "Unable to refresh usage",
+    noHosts: "No connected hosts",
+    agentError: "Unable to load usage: {{reason}}",
+    pin: "Pin",
+    unpin: "Unpin",
+    displayAs: "Percentages",
+    displayUsed: "Used",
+    displayRemaining: "Remaining",
+    showInSidebar: "Summary in sidebar",
+    showInSidebarHint: "Pinned windows show in the sidebar footer",
+    runToRefresh: "Run {{command}} to refresh it.",
+    signInAgain: "Sign in again.",
+    loginRejected: "Login rejected (HTTP {{status}}). {{remedy}}",
+    loginExpired: "Login expired {{relativeTime}}. {{remedy}}",
+    title: "Plan usage",
+    refresh: "Refresh",
+    refreshAll: "Refresh all",
+    refreshing: "Refreshing...",
+    loading: "Loading usage...",
+    empty: "No usage data",
+    errorTitle: "Unable to load usage",
+    hostUnavailable: "Connect to {{host}} to see usage",
+    hostUpgradeRequired: "Update {{host}} to see usage",
+    clientUnavailable: "Host connection is not ready",
+    retry: "Try again",
+    tooltipLoading: "Loading plan usage...",
+    status: {
+      error: "Error",
+      unavailable: "Unavailable",
+    },
+    values: {
+      used: "{{percentage}} used",
+      remaining: "{{amount}} left",
+    },
+    labels: {
+      session: "Session",
+      weekly: "Weekly",
+      monthly: "Monthly",
+      codeReview: "Code review",
+      credits: "Credits",
+      monthlyCredits: "Monthly credits",
+    },
+    duration: {
+      days: "{{value}}d",
+      hours: "{{value}}h",
+      minutes: "{{value}}m",
+    },
+    timing: {
+      lastUpdated: "Last updated {{relativeTime}}",
+      noSuccessfulUpdate: "No successful update",
+      resetTimePassed: "Reset time passed",
+      resettingNow: "resetting now",
+      resetsIn: "resets {{duration}}",
+      runsOutNow: "runs out now",
+      runsOutIn: "runs out {{duration}}",
+      justNow: "just now",
+      daysAgo: "{{value}}d ago",
+      hoursAgo: "{{value}}h ago",
+      minutesAgo: "{{value}}m ago",
+      updated: "Updated {{relativeTime}}",
     },
   },
   settings: {
@@ -2072,6 +2367,7 @@ export const en = {
       appearance: "Appearance",
       sidebar: "Sidebar",
       editor: "Editor",
+      files: "Files",
       terminal: "Terminal",
       browser: "Browser",
       shortcuts: "Shortcuts",
@@ -2125,6 +2421,14 @@ export const en = {
       vimKeybindings: "Vim keybindings",
       vimHint: "Applies to source files on web and desktop.",
     },
+    files: {
+      title: "Files",
+      askEveryTime: "Ask every time",
+      askAgain: "Ask again",
+      askAgainFor: "Ask again for {{label}}",
+      unavailable: "Not on a connected host",
+      empty: "File panels appear here when a plugin adds one",
+    },
     notifications: {
       title: "Notifications",
       permission: "Notification permission",
@@ -2137,7 +2441,7 @@ export const en = {
       send: "Send",
       sending: "Sending...",
       sentTitle: "Test notification sent",
-      sentDescription: "Paseo handed the notification to the operating system.",
+      sentDescription: "hizuri handed the notification to the operating system.",
       sendFailedTitle: "Unable to send test notification",
     },
     hostSections: {
@@ -2218,14 +2522,14 @@ export const en = {
     metadataGeneration: {
       title: "Metadata generation",
       description:
-        "Choose the model Paseo uses for workspace titles, branch names, commit messages, and pull request drafts",
+        "Choose the model hizuri uses for workspace titles, branch names, commit messages, and pull request drafts",
       selection: "Model selection",
       automatic: "Automatic",
       preferred: "Manual",
-      automaticHint: "Paseo picks a fast available model",
-      preferredHint: "Choose the model Paseo uses",
+      automaticHint: "hizuri picks a fast available model",
+      preferredHint: "Choose the model hizuri uses",
       model: "Model",
-      fallbackHint: "If it is unavailable, Paseo falls back to another available model",
+      fallbackHint: "If it is unavailable, hizuri falls back to another available model",
       docs: "Docs",
       saveError: "Unable to update metadata generation",
     },
@@ -2235,7 +2539,7 @@ export const en = {
       browserData: {
         title: "Browser data",
         siteData: "Cookies and site data",
-        description: "Browser tabs share sign-ins and site data across Paseo.",
+        description: "Browser tabs share sign-ins and site data across hizuri.",
         clear: "Clear browser data",
         clearing: "Clearing...",
         confirmTitle: "Clear browser data?",
@@ -2260,7 +2564,7 @@ export const en = {
       serviceUrls: {
         options: {
           ask: "Ask",
-          inApp: "In Paseo",
+          inApp: "In hizuri",
           external: "External browser",
         },
       },
@@ -2293,13 +2597,16 @@ export const en = {
           ja: "Japanese",
           ko: "Korean",
           ptBR: "Brazilian Portuguese",
-          ru: "Russian",
           zhCN: "Simplified Chinese",
         },
       },
     },
     diagnostics: {
       title: "Diagnostics",
+      uploadLogs: {
+        label: "Send app logs to the host",
+        description: "Warnings, voice state and mic levels go to app-logs on the host",
+      },
       legacyTerminalRenderer: {
         label: "Use legacy terminal renderer",
         description: "Use the previous WebView terminal after reopening a terminal",
@@ -2344,7 +2651,7 @@ export const en = {
         label: "App updates",
         readyToInstall: "Ready to install: {{version}}",
         installTitle: "Install desktop update",
-        installMessage: "This updates Paseo on this computer",
+        installMessage: "This updates hizuri on this computer",
         installConfirm: "Install update",
         update: "Update",
         updateTo: "Update to {{version}}",
@@ -2418,6 +2725,28 @@ export const en = {
         reset: "Reset",
         resetAccessibility: "Reset content width to default",
       },
+      show: {
+        title: "Show",
+        switcher: {
+          title: "Tab switcher",
+          capsule: {
+            label: "Capsule",
+            description: "A pill at the bottom: swipe it to change tabs, tap it for all tabs",
+          },
+          deck: {
+            label: "Deck",
+            description: "A chip at the bottom: tap, pull up or pinch for all tabs as cards",
+          },
+          rail: {
+            label: "Dot rail",
+            description: "Dots on the right edge: hold and slide up or down",
+          },
+          inside: {
+            label: "Swipe inside",
+            description: "Swipe the tab itself; the page turns from the left edge",
+          },
+        },
+      },
       syntax: {
         title: "Syntax",
         highlightTheme: "Highlight theme",
@@ -2432,6 +2761,7 @@ export const en = {
       searchPlaceholder: "Search shortcuts",
       unavailableOnMobile: "Keyboard shortcuts are only available on desktop",
       capturePrompt: "Press shortcut...",
+      captureIndexPrompt: "End with a number from 1 to 9.",
       unassigned: "Not set",
       actions: {
         menu: "Actions for {{name}}",
@@ -2598,11 +2928,11 @@ export const en = {
         uninstallFailed: "Unable to uninstall orchestration skills.",
         saveSelectionFailed: "Unable to save the orchestration skills selection.",
         updateAvailable: "Update available",
-        updateTitle: "Update Paseo skills?",
+        updateTitle: "Update hizuri skills?",
         updateFallback: "Sync bundled skills to this host.",
-        uninstallTitle: "Uninstall Paseo skills?",
+        uninstallTitle: "Uninstall hizuri skills?",
         uninstallMessage:
-          "Removes all Paseo orchestration skills from ~/.agents, ~/.claude, ~/.codex on this host.",
+          "Removes all hizuri orchestration skills from ~/.agents, ~/.claude, ~/.codex on this host.",
         choose: "Choose skills",
         chooseAll: "All skills",
         chooseAllHint: "Keep every bundled skill installed, including ones added later.",
@@ -2634,9 +2964,9 @@ export const en = {
         title: "Orchestration",
         unavailable: "Connect to this host to manage orchestration",
         enableTools: {
-          title: "Enable Paseo tools",
+          title: "Enable hizuri tools",
           hint: "Agents will be able to manage worktrees, agents and schedules",
-          accessibilityLabel: "Inject Paseo tools",
+          accessibilityLabel: "Inject hizuri tools",
         },
         systemPrompt: {
           title: "System prompt",
@@ -2739,15 +3069,15 @@ export const en = {
             "This host is not connected. Wait for it to come online before restarting.",
           offlineTitle: "Host offline",
           offlineMessage:
-            "This host is offline. Paseo reconnects automatically-wait until it's back online before restarting.",
+            "This host is offline. hizuri reconnects automatically-wait until it's back online before restarting.",
           requestFailedTitle: "Error",
           requestFailedMessage:
-            "Failed to send the restart request. Paseo reconnects automatically-try again once the host shows as online.",
+            "Failed to send the restart request. hizuri reconnects automatically-try again once the host shows as online.",
           dialogFailedMessage: "Unable to open the restart confirmation dialog.",
         },
         update: {
           desktopManagedHint:
-            "This daemon is managed by Paseo Desktop. Update Paseo Desktop on the host.",
+            "This daemon is managed by hizuri Desktop. Update hizuri Desktop on the host.",
           title: "Update daemon",
           hint: "Update the daemon to the latest version and restart it",
           confirm: "Update",
@@ -2908,7 +3238,7 @@ export const en = {
         newScript: "New script",
         editScript: "Edit {{name}}",
         runAsService: "Run as a service",
-        serviceHint: "Paseo supervises the process and assigns a port via $PASEO_PORT",
+        serviceHint: "hizuri supervises the process and assigns a port via $PASEO_PORT",
         actions: {
           add: "Add script",
           edit: "Edit",
@@ -2917,7 +3247,7 @@ export const en = {
       },
       metadata: {
         title: "Metadata generation",
-        info: "Project-specific instructions injected into the AI prompts Paseo uses to generate metadata - use them to enforce your team's conventions like branch naming, commit style, or PR format",
+        info: "Project-specific instructions injected into the AI prompts hizuri uses to generate metadata - use them to enforce your team's conventions like branch naming, commit style, or PR format",
         branchName: "Branch names",
         branchNamePlaceholder: "Prefix branches with feat/ or fix/, mb/ for personal branches",
         commitMessage: "Commit messages",
@@ -2947,4 +3277,18 @@ type WidenStringLeaves<T> = {
   [K in keyof T]: T[K] extends string ? string : WidenStringLeaves<T[K]>;
 };
 
-export type TranslationResources = WidenStringLeaves<typeof en>;
+type TranslationResourcesBase = WidenStringLeaves<typeof en>;
+type PluralCategory = "zero" | "one" | "two" | "few" | "many" | "other";
+type DurationPluralKey = `${"days" | "hours" | "minutes"}_${PluralCategory}`;
+type AgoPluralKey = `${"daysAgo" | "hoursAgo" | "minutesAgo"}_${PluralCategory}`;
+
+// i18next plural categories differ by locale, so locale catalogs may add the
+// explicit v4 suffixes they need while retaining the canonical fallback keys.
+export type TranslationResources = TranslationResourcesBase & {
+  providerUsage: TranslationResourcesBase["providerUsage"] & {
+    duration: TranslationResourcesBase["providerUsage"]["duration"] &
+      Partial<Record<DurationPluralKey, string>>;
+    timing: TranslationResourcesBase["providerUsage"]["timing"] &
+      Partial<Record<AgoPluralKey, string>>;
+  };
+};

@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ProviderSnapshotEntry } from "@getpaseo/protocol/agent-types";
 import type { MutableDaemonConfig } from "@getpaseo/protocol/messages";
 import { ToastApiProvider } from "@/contexts/toast-api-context";
+import { usePhoneLayoutStore } from "@/stores/phone-layout-store";
 
 const { theme, snapshotState, configState, patchConfigMock, openProviderSettingsMock } = vi.hoisted(
   () => ({
@@ -343,6 +344,8 @@ describe("ProvidersSection", () => {
   let container: HTMLElement | null = null;
 
   beforeEach(() => {
+    // These rows are the desktop layout: a wide window with the phone layout turned off.
+    usePhoneLayoutStore.setState({ phoneLayout: false });
     vi.stubGlobal("React", React);
     vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
 

@@ -2,6 +2,9 @@ import { en, type TranslationResources } from "./en";
 import { pluginSettings } from "./plugin-settings";
 
 export const ja: TranslationResources = {
+  assistant: {
+    name: "ズリ",
+  },
   paneFind: {
     connectionFailure:
       "このチャットを検索できませんでした。ホストへの接続を確認して再試行してください。",
@@ -26,11 +29,153 @@ export const ja: TranslationResources = {
     position: "{{current}} / {{total}}",
     total: "{{total}} 件の一致",
   },
+  freeBrain: {
+    title: "ブレイン",
+    label: "hizuri 無料ブレイン",
+    description:
+      "hizuri が費用を負担する無料のスターターブレインです（1日の上限あり）。最初の1分から会話でき、Claude Code の接続を手伝います。",
+    status: {
+      ready: "準備完了",
+      off: "オフ",
+      checking: "確認中",
+      unavailable: "まだ利用できません",
+    },
+    claudeCode: {
+      label: "Claude Code",
+      connected: "接続済み：Claude と新しいチャットを始めると、上限なしで使えます。",
+      howTo: "上限のない、あなた自身のブレインです。無料ブレインに聞けば接続手順を案内します。",
+    },
+    error: "無料ブレインを変更できませんでした。",
+  },
+  phoneLayout: {
+    label: "ワイド画面でもスマホのレイアウト",
+    description:
+      "ブラウザやタブレットでも、$t(assistant.name) の顔・チャット・Show をスマホと同じ形で大きく表示します。オフにするとヘッダーとサイドパネルのあるデスクトップ表示に戻ります。",
+  },
+  simpleMode: {
+    label: "シンプル版",
+    description:
+      "$t(assistant.name)と設定だけを表示します。オフにすると、ワークスペース、履歴、検索、スケジュールを含む完全版に戻ります。",
+    menu: {
+      assistant: "$t(assistant.name)",
+      face: "顔",
+      chat: "チャット",
+    },
+  },
+  face: {
+    title: "$t(assistant.name)の顔",
+    loading: {
+      starting: "$t(assistant.name)の顔を読み込み中…",
+      downloading: "$t(assistant.name)の顔をダウンロード中 · {{percent}}%",
+      preparing: "$t(assistant.name)の顔を3Dで準備中…",
+      failed: "$t(assistant.name)の顔を読み込めませんでした: {{message}}",
+      noWebgl:
+        "$t(assistant.name)の顔にはWebGLが必要ですが、このブラウザではオフです。このサイトでWebGLを許可して（LibreWolfではアドレスバーのアイコン）、「再試行」を押してください。",
+      retry: "再試行",
+    },
+    inVoiceMode: {
+      label: "音声モードで顔を表示",
+      description:
+        "$t(assistant.name)の顔を表示します。スマートフォンでは最初のページに、広い画面では話している間チャットの上に表示します。声が途切れる場合はオフにしてください。",
+    },
+    float: {
+      label: "他のアプリの上に$t(assistant.name)",
+      description:
+        "hizuri を離れても、$t(assistant.name)はどのアプリの上にも表示されます。指でドラッグ、タップ、長押しで「開く」「隠す」。hizuri を開くと隠れます。",
+      permissionTitle: "$t(assistant.name)を他のアプリの上に表示",
+      permissionMessage:
+        "hizuri の「他のアプリの上に重ねて表示」をオンにしてください。スイッチが灰色なら：アプリ情報 → ⋮ → 制限付き設定を許可、のあと再試行。",
+      permissionOpen: "設定を開く",
+      open: "hizuri を開く",
+      hide: "$t(assistant.name)を隠す",
+      notification: "$t(assistant.name)が画面にいます",
+    },
+  },
+  agentPages: {
+    sessionMenu: "セッション",
+    tabs: {
+      face: "$t(assistant.name)",
+      chat: "チャット",
+      show: "Show",
+    },
+  },
+  show: {
+    title: "Show",
+    closeTab: "タブを閉じる",
+    hidePerch: "カードから$t(assistant.name)を隠す",
+    open: "Show を開く",
+    close: "チャットに戻る",
+    windows: "Show ウィンドウ",
+    defaultWindow: "Show",
+    limitsWindow: "上限",
+    screenWindow: "画面",
+    liveWindow: "今",
+    screenWatch: "見る",
+    screenTakeOver: "操作する",
+    screenConnecting: "画面に接続中…",
+    secret: {
+      optional: "任意",
+      note: "あなたの保管庫に直接保存されます。エージェントには名前だけが見えます。",
+      save: "保存",
+      saving: "保存中…",
+      notNow: "今はしない",
+      saved: "「{{name}}」として保存しました",
+      closed: "保存せずに閉じました",
+      notSent: "送信できませんでした。接続を確認してください。",
+      fields: {
+        username: "ログイン",
+        password: "パスワード",
+        address: "メール",
+        holder: "カード名義",
+        number: "カード番号",
+        expiry: "有効期限",
+        cvc: "CVC",
+        value: "値",
+        perPayment: "1回の上限",
+        perMonth: "月の上限",
+        currency: "通貨",
+      },
+    },
+    tabs: {
+      kind: {
+        page: "ウェブページ",
+        picture: "画像",
+        video: "動画",
+        player: "プレーヤー",
+        screen: "画面",
+        live: "ライブ",
+        canvas: "キャンバス",
+      },
+      allTabs: "すべてのタブ · {{count}}",
+      closeCards: "カードを隠す",
+      position: "タブ {{index}} / {{count}}",
+      capsuleHint: "横にスワイプでタブを切り替え、タップですべてのタブ",
+      deckHint: "タップか上に引くとすべてのタブ",
+      releaseToCancel: "離すとキャンセル",
+      insideEdgeHint: "ページは左端からめくれます",
+    },
+    page: {
+      empty: "まだ表示するものがありません",
+      loading: "読み込み中…",
+      resetsAt: "リセット: {{time}}",
+      inTime: "あと {{time}}",
+      updated: "{{time}} に更新",
+      used: "使用済み",
+      noData: "使用状況データがありません",
+      widgetError: "表示できませんでした",
+      days: "日",
+      hours: "時間",
+      minutes: "分",
+      fiveHour: "5時間",
+      weekly: "週",
+    },
+  },
   common: {
     bottomSheetBackdrop: "ボトムシートの背景",
     back: "戻る",
     loading: "読み込み中...",
     actions: {
+      save: "保存",
       back: "戻る",
       cancel: "キャンセル",
       close: "閉じる",
@@ -124,6 +269,8 @@ export const ja: TranslationResources = {
     input: {
       accessibilityLabel: "エージェントにメッセージ...",
       terminalAccessibilityLabel: "Terminal prompt",
+      fullscreen: "全画面表示",
+      exitFullscreen: "全画面表示を終了",
       focusHint: "{{shortcut}}でフォーカス",
       addAttachment: "添付ファイルを追加",
       interruptAgent: "エージェントを中断",
@@ -140,8 +287,6 @@ export const ja: TranslationResources = {
       interrupt: "中断",
     },
     voice: {
-      enableVoiceMode: "音声モードを有効にする",
-      voiceMode: "音声モード",
       unmuteVoiceMode: "音声モードのミュートを解除",
       muteVoiceMode: "音声モードをミュート",
       stopDictation: "音声入力を停止",
@@ -149,7 +294,6 @@ export const ja: TranslationResources = {
       unmuteVoice: "音声のミュートを解除",
       muteVoice: "音声をミュート",
       dictation: "音声入力",
-      interruptBeforeVoice: "音声モードを開始する前にエージェントを中断してください",
     },
     attachments: {
       addImage: "画像を追加",
@@ -358,10 +502,20 @@ export const ja: TranslationResources = {
     speak: {
       header: "読み上げ済み",
     },
+    spoken: {
+      phrase: "発話",
+      correction: "発話 · 修正済み",
+    },
+    guardian: {
+      header: "ガーディアンのメモ",
+      fix: "対処: {{fix}}",
+      rule: "ルール: {{rule}}",
+    },
     activity: {
       details: "詳細",
     },
     dictation: {
+      paused: "マイクが中断されました。再開を待っています…",
       start: "音声入力を開始",
       cancel: "音声入力をキャンセル",
       retry: "音声入力を再試行",
@@ -371,6 +525,7 @@ export const ja: TranslationResources = {
       failedRetry: "音声入力に失敗しました。再試行をタップしてください。",
     },
     question: {
+      responseFailed: "回答を送信できませんでした。もう一度お試しください。",
       submit: "送信",
       next: "次へ",
       answerPlaceholder: "回答を入力...",
@@ -539,6 +694,7 @@ export const ja: TranslationResources = {
       },
     },
     setup: {
+      updateHost: "ワークスペースのセットアップ詳細を表示するにはホストを更新してください",
       descriptor: {
         label: "セットアップ",
         completed: "セットアップ完了",
@@ -616,6 +772,9 @@ export const ja: TranslationResources = {
       updateHost: "ネイティブターミナルを使用するにはホストを更新してください。",
       unableToSubscribe: "ターミナルに接続できません",
     },
+    sheet: {
+      openAsTab: "タブで開く",
+    },
     tabs: {
       loading: "読み込み中...",
       modified: "未保存の変更",
@@ -631,7 +790,7 @@ export const ja: TranslationResources = {
       },
       switcher: {
         trigger: "タブを切り替え（{{count}}件開いています）",
-        title: "タブを切り替え",
+        title: "ワークスペースのタブ",
         searchPlaceholder: "タブを検索",
       },
       menu: {
@@ -727,6 +886,7 @@ export const ja: TranslationResources = {
     header: {
       actions: {
         workspaceActions: "ワークスペースアクション",
+        workspaceActionsUnhealthy: "ワークスペースアクション、異常なサービスがあります",
         newAgent: "新しいエージェント",
         newTerminal: "新しいターミナル",
         newBrowser: "新しいブラウザタブ",
@@ -774,6 +934,8 @@ export const ja: TranslationResources = {
         exitCode: "終了コード: {{code}}",
         startFailed: "{{scriptName}}の起動に失敗しました",
         stopFailed: "{{scriptName}}の停止に失敗しました",
+        running: "実行中",
+        runningCount: "{{count}} 件実行中",
       },
     },
     tree: {
@@ -882,7 +1044,7 @@ export const ja: TranslationResources = {
           updateCurrent: "このブランチはすでに{{baseRef}}と最新の状態のため、更新は利用できません",
           mergePrNoGithub: "GitHubが接続されていないため、PRのマージは現在利用できません",
           archiveNotWorktree:
-            "このワークスペースはPaseoワークツリーとして作成されていないため、アーカイブはここでは利用できません",
+            "このワークスペースはhizuriワークツリーとして作成されていないため、アーカイブはここでは利用できません",
           mergePrNoForge: "{{brand}}が接続されていないため、{{noun}}のマージは現在利用できません",
           mergePrMissing: "プルリクエストがまだないため、PRのマージは利用できません",
           mergePrDraft: "プルリクエストがまだドラフトのため、PRのマージは利用できません",
@@ -957,6 +1119,7 @@ export const ja: TranslationResources = {
         checkingRepository: "リポジトリを確認中...",
         notRepository: "gitリポジトリではありません",
         diffMode: "差分モード",
+        all: "すべての変更",
         uncommitted: "未コミット",
         committed: "コミット済み",
         branchUnknown: "不明",
@@ -1160,6 +1323,7 @@ export const ja: TranslationResources = {
       done: "完了",
     },
     display: {
+      showBackground: "バックグラウンドを表示",
       trigger: "表示設定",
       heading: "表示",
       grouping: {
@@ -1232,7 +1396,7 @@ export const ja: TranslationResources = {
       discord: "Discord",
       github: "GitHub Issueを作成",
       whatsNew: "新着情報",
-      appName: "Paseo",
+      appName: "hizuri",
     },
     sections: {
       sessions: "履歴",
@@ -1336,8 +1500,9 @@ export const ja: TranslationResources = {
     },
     fields: {
       project: "プロジェクト",
-      base: "ベース",
+      branch: "ブランチ",
       baseNotApplicable: "該当なし",
+      host: "ホスト",
     },
     titlePlaceholder: "タイトル（任意）",
     errors: {
@@ -1379,7 +1544,7 @@ export const ja: TranslationResources = {
       close: "ウィンドウを閉じる",
     },
     quitting: {
-      title: "Paseoを終了中...",
+      title: "hizuriを終了中...",
       detail: "ローカルデーモンを停止中。",
     },
     daemon: {
@@ -1394,20 +1559,20 @@ export const ja: TranslationResources = {
       },
       management: {
         title: "組み込みデーモンを管理",
-        hint: "Paseoが組み込みデーモンを起動・停止できるようにする",
+        hint: "hizuriが組み込みデーモンを起動・停止できるようにする",
         pauseTitle: "組み込みデーモンを一時停止",
         pauseMessage:
           "これにより組み込みデーモンが即座に停止します。組み込みデーモンに接続されている実行中のエージェントとターミナルが停止されます。",
         pauseAndStop: "一時停止して停止",
         registrationFailed:
-          "組み込みデーモンは起動しましたが、Paseoがlocalhostの接続を保存できませんでした。デーモン管理をオフにしてから再度オンにするか、localhostを手動で追加してください。",
+          "組み込みデーモンは起動しましたが、hizuriがlocalhostの接続を保存できませんでした。デーモン管理をオフにしてから再度オンにするか、localhostを手動で追加してください。",
         pausedStopFailed:
-          "組み込みデーモン管理は一時停止されましたが、Paseoがデーモンを停止できませんでした。",
+          "組み込みデーモン管理は一時停止されましたが、hizuriがデーモンを停止できませんでした。",
         updateFailed: "組み込みデーモン管理を更新できません。",
       },
       keepRunning: {
         title: "終了後もデーモンを実行し続ける",
-        hint: "Paseoを終了してもデーモンは実行し続けます",
+        hint: "hizuriを終了してもデーモンは実行し続けます",
       },
       logs: {
         title: "ログファイル",
@@ -1422,7 +1587,7 @@ export const ja: TranslationResources = {
       fullStatus: {
         title: "詳細ステータス",
         modalTitle: "デーモンのステータス",
-        hint: "`paseo daemon status`を実行して出力を表示します",
+        hint: "サーバーの完全なステータスレポートを表示します",
         view: "ステータスを表示",
         copied: "ステータスをクリップボードにコピーしました。",
         fetchFailed: "デーモンのステータスの取得に失敗しました: {{message}}",
@@ -1475,7 +1640,7 @@ export const ja: TranslationResources = {
     },
     rosetta: {
       title: "Apple Siliconビルドをダウンロード",
-      runningIntel: "Apple Silicon上のRosettaでPaseoのIntelビルドを実行しています。",
+      runningIntel: "Apple Silicon上のRosettaでhizuriのIntelビルドを実行しています。",
       highCpu:
         "これにより高いCPU使用率が発生します。修正するにはApple Siliconビルドをダウンロードしてください。",
       download: "ダウンロード",
@@ -1518,7 +1683,7 @@ export const ja: TranslationResources = {
         microphone: "マイクのステータスはまだ確認されていません。",
       },
       testNotification: {
-        title: "Paseo通知テスト",
+        title: "hizuri通知テスト",
         body: "これが見えれば、デスクトップ通知は機能しています。",
         notDelivered: "通知が届きませんでした。システム設定 > 通知を確認してください。",
         failed: "通知の送信に失敗しました。",
@@ -1527,19 +1692,19 @@ export const ja: TranslationResources = {
     integrations: {
       cli: {
         statusFailed: "CLIのインストール状態を確認できません。",
-        installFailed: "Paseo CLIをインストールできません。",
+        installFailed: "hizuri CLIをインストールできません。",
       },
     },
   },
   rootError: {
-    title: "Paseo で問題が発生しました。",
+    title: "hizuri で問題が発生しました。",
     body: "アプリを再読み込みするにはもう一度お試しください。繰り返し発生する場合は、以下の詳細を添えて報告してください。",
     details: "詳細",
   },
   startup: {
     errorTitle: "問題が発生しました",
     errorDescription:
-      "ローカルサーバーの起動に失敗しました。この問題が続く場合は、以下のログを添えてGitHubでIssueを作成してください。",
+      "ローカルサーバーの起動に失敗しました。この問題が続く場合は、以下のログをコピーしてください。",
     logs: {
       loading: "デーモンログを読み込み中...",
       unavailable: "利用可能なデーモンログがありません。",
@@ -1629,7 +1794,7 @@ export const ja: TranslationResources = {
     },
   },
   onboarding: {
-    title: "Paseoへようこそ",
+    title: "hizuriへようこそ",
     subtitle: "始めるにはコンピューターに接続してください",
     actions: {
       settings: "設定",
@@ -1737,7 +1902,7 @@ export const ja: TranslationResources = {
     },
     direct: {
       title: "直接接続",
-      helper: "Paseoサーバーのアドレスを入力してください。",
+      helper: "hizuriサーバーのアドレスを入力してください。",
       fields: {
         host: "ホスト",
         port: "ポート",
@@ -1779,7 +1944,7 @@ export const ja: TranslationResources = {
     },
     remoteSsh: {
       title: "リモート SSH",
-      helper: "リモートホストで動作する Paseo デーモンに接続します。",
+      helper: "リモートホストで動作する hizuri デーモンに接続します。",
       fields: {
         target: "SSH ホスト",
         password: "デーモンのパスワード",
@@ -1843,15 +2008,15 @@ export const ja: TranslationResources = {
       enableDescription:
         "リレーを使うと、このデバイスからどこでも接続できます。ペアリング通信はエンドツーエンドで暗号化されます。",
       relayDocs: "リレーの仕組み",
-      relayDocsAccessibility: "Paseo リレーの仕組みを読む",
+      relayDocsAccessibility: "hizuri リレーの仕組みを読む",
       enableRelay: "リレーを有効にする",
       enablingRelay: "有効化中...",
       notNow: "今はしない",
       directConnectionHint:
         "リレーを使わない場合は、TCP、Tailscale、または別の VPN で直接接続してください。QR コードは作成されません。",
-      updateRequired: "Paseo Desktop からリレーを有効にするにはホストを更新してください。",
+      updateRequired: "hizuri Desktop からリレーを有効にするにはホストを更新してください。",
       unavailable: "ペアリングオファーが利用できません。",
-      hint: "スマートフォンのPaseoでこのQRコードをスキャンするか、以下のリンクをコピーしてください。",
+      hint: "スマートフォンのhizuriでこのQRコードをスキャンするか、以下のリンクをコピーしてください。",
       securityWarning:
         "このペアリングリンクはパスワードと同様に扱ってください。リンクを知っている人は誰でもこのデーモンにアクセスできます。",
       qrUnavailable: "QRコードが利用できません。",
@@ -1863,9 +2028,28 @@ export const ja: TranslationResources = {
   },
   realtimeVoice: {
     actions: {
+      startSession: "セッションを開始",
       mute: "リアルタイム音声をミュート",
       unmute: "リアルタイム音声のミュートを解除",
-      stop: "リアルタイム音声を停止してターンを中断",
+      switchToText: "テキストに切り替え（セッションは継続）",
+      switchToVoice: "音声に戻る",
+      endSession: "セッションを終了",
+      attachPhoto: "写真を送る",
+    },
+    endSessionConfirm: {
+      title: "セッションを終了しますか？",
+      message: "音声、エージェントの音声モード、保存されたセッションがすべて閉じます。",
+    },
+    live: {
+      updateHost: "話している言葉を表示するにはホストを更新してください",
+    },
+    status: {
+      starting: "音声をオンにしています...",
+      stopping: "音声をオフにしています...",
+    },
+    moved: "音声モードがここに移りました",
+    errors: {
+      noSession: "先にセッションを開始してください",
     },
   },
   rewind: {
@@ -1886,7 +2070,7 @@ export const ja: TranslationResources = {
   serviceUrl: {
     title: "サービスURLを開く",
     message: "{{url}}を開きますか？",
-    inPaseo: "Paseoで",
+    inPaseo: "hizuriで",
     externalBrowser: "外部ブラウザ",
     dontAskAgain: "次回から確認しない",
   },
@@ -1923,12 +2107,32 @@ export const ja: TranslationResources = {
       creatingAgent: "エージェントを作成中",
     },
     file: {
+      filePanels: {
+        pickerTitleExtension: ".{{extension}} ファイルを開くアプリ",
+        pickerTitleFilename: "{{filename}} を開くアプリ",
+        dontAskAgain: "今後は確認しない",
+        use: "使用",
+        openWith: "このアプリで開く…",
+        alwaysUseExtension: ".{{extension}} に常に使用",
+        alwaysUseFilename: "{{filename}} に常に使用",
+        option: "{{title}} — {{owner}}",
+        actions: "ファイルの操作",
+        builtin: {
+          owner: "Paseo",
+          markdown: "Markdown",
+          html: "HTML",
+          image: "画像",
+          source: "ソース",
+        },
+      },
       directoryMissing: "ワークスペースディレクトリが見つかりません。",
       loading: "ファイルを読み込み中...",
       noPreview: "プレビューが利用できません",
       binaryPreviewUnavailable: "バイナリプレビューが利用できません",
       tooLargeToDisplay: "このファイルは大きすぎて表示できません",
+      documentUnsupported: "{{type}} ファイルはこのデバイスでは表示できません",
       failedToLoad: "ファイルの読み込みに失敗しました",
+      notFound: "ファイルが見つかりません",
       failedToLoadPreview: "ファイルプレビューの読み込みに失敗しました",
       editor: {
         fileSize: "ファイルサイズ {{size}}",
@@ -1940,10 +2144,7 @@ export const ja: TranslationResources = {
         changedOnDisk: "ディスク上で変更されました",
         vimMode: "Vim モード {{mode}}",
         cursor: "{{line}} 行、{{column}} 列",
-        preview: "プレビュー",
-        source: "ソース",
         deletedTitle: "ファイルはディスク上から削除されました",
-        checkFailedTitle: "ディスク上のファイルを確認できませんでした",
         preservedDescription: "開いているコピーは保持されています。",
         conflictDescription: "ローカルの内容は保持されています。残すバージョンを選択してください。",
         overwrite: "上書き",
@@ -2007,10 +2208,28 @@ export const ja: TranslationResources = {
       other: "その他のツールを{{count}}回使用",
     },
     paseoCalls: {
-      one: "Paseoを{{count}}回呼び出し",
-      other: "Paseoを{{count}}回呼び出し",
+      one: "hizuriを{{count}}回呼び出し",
+      other: "hizuriを{{count}}回呼び出し",
     },
     and: "および",
+  },
+  showMedia: {
+    youtube: "YouTube",
+    audio: "オーディオ",
+    playerWindow: "プレーヤー",
+    play: "再生",
+    pause: "一時停止",
+    back15: "15秒戻る",
+    forward15: "15秒進む",
+    openInYoutube: "YouTubeで開く",
+    onlyInYoutube: "YouTubeはこの動画をここで再生できません",
+    cannotPlay: "再生できません: {{reason}}",
+    needsDirectConnection: "ホストへの直接接続が必要です",
+    accessTitle: "hizuri にメディア操作を許可",
+    accessMessage:
+      "ご自分のアプリの音楽や映画を一時停止・スキップ・巻き戻しするには、hizuri に通知へのアクセスが必要です。hizuri は通知を読みません。Android ではこの設定からのみメディア操作が許可されます。",
+    accessConfirm: "設定を開く",
+    accessCancel: "後で",
   },
   renameModal: {
     rename: "名前を変更",
@@ -2029,6 +2248,18 @@ export const ja: TranslationResources = {
     accessibility: "コンテキストウィンドウ{{percentage}}%使用",
   },
   review: {
+    feedback: {
+      send: "フィードバックを送信 ({{count}})",
+      sending: "フィードバックを送信中 ({{count}})",
+      chooseAgent: "エージェントを選択",
+      sent: "{{recipient}} にフィードバックを送信しました",
+      "no-agents":
+        "フィードバックを送信するには、このワークスペースでエージェントタブを開いてください。",
+      disconnected: "フィードバックを送信するにはホストに接続してください。",
+      "no-context": "保存したコメントはこの差分と一致しなくなりました。",
+      failed: "フィードバックを送信できませんでした。もう一度お試しください。",
+      prompt: "このコードレビューに対応してください。",
+    },
     comment: {
       add: "レビューコメントを追加",
       edit: "レビューコメントを編集",
@@ -2039,6 +2270,70 @@ export const ja: TranslationResources = {
       cancelAccessibility: "レビューコメントをキャンセル",
       save: "コメント",
       saveAccessibility: "レビューコメントを保存",
+    },
+  },
+  providerUsage: {
+    options: "設定",
+    refreshFailed: "使用状況を更新できません",
+    noHosts: "接続中のホストがありません",
+    agentError: "使用状況を読み込めません: {{reason}}",
+    pin: "ピン留め",
+    unpin: "ピン留めを解除",
+    displayAs: "割合",
+    displayUsed: "使用済み",
+    displayRemaining: "残り",
+    showInSidebar: "サイドバーに概要を表示",
+    showInSidebarHint: "ピン留めした期間をサイドバーの下部に表示します",
+    runToRefresh: "{{command}} を実行して更新してください。",
+    signInAgain: "再度サインインしてください。",
+    loginRejected: "ログインが拒否されました (HTTP {{status}})。{{remedy}}",
+    loginExpired: "ログインは{{relativeTime}}に期限切れになりました。{{remedy}}",
+    title: "プラン使用量",
+    refresh: "更新",
+    refreshAll: "すべて更新",
+    refreshing: "更新中...",
+    loading: "使用状況を読み込み中...",
+    empty: "使用状況データがありません",
+    errorTitle: "使用状況を読み込めません",
+    hostUnavailable: "{{host}} に接続してプロバイダーの使用状況を確認してください",
+    hostUpgradeRequired: "{{host}} を更新してプロバイダーの使用状況を確認してください",
+    clientUnavailable: "ホスト接続の準備ができていません",
+    retry: "再試行",
+    tooltipLoading: "プラン使用状況を読み込み中...",
+    status: {
+      error: "エラー",
+      unavailable: "利用不可",
+    },
+    values: {
+      used: "{{percentage}} 使用済み",
+      remaining: "残り {{amount}}",
+    },
+    labels: {
+      session: "セッション",
+      weekly: "週間",
+      monthly: "月間",
+      codeReview: "コードレビュー",
+      credits: "クレジット",
+      monthlyCredits: "月間クレジット",
+    },
+    duration: {
+      days: "{{value}}日",
+      hours: "{{value}}時間",
+      minutes: "{{value}}分",
+    },
+    timing: {
+      lastUpdated: "最終更新: {{relativeTime}}",
+      noSuccessfulUpdate: "正常な更新はまだありません",
+      resetTimePassed: "リセット時刻を過ぎています",
+      resettingNow: "まもなくリセット",
+      resetsIn: "{{duration}}後にリセット",
+      runsOutNow: "まもなく上限に到達",
+      runsOutIn: "{{duration}}後に上限に到達",
+      justNow: "たった今",
+      daysAgo: "{{value}}日前",
+      hoursAgo: "{{value}}時間前",
+      minutesAgo: "{{value}}分前",
+      updated: "更新: {{relativeTime}}",
     },
   },
   settings: {
@@ -2069,6 +2364,7 @@ export const ja: TranslationResources = {
       terminal: "ターミナル",
       browser: "ブラウザ",
       editor: "エディター",
+      files: "ファイル",
       shortcuts: "ショートカット",
       integrations: "連携",
       notifications: "通知",
@@ -2082,6 +2378,14 @@ export const ja: TranslationResources = {
       vimKeybindings: "Vim キーバインド",
       vimHint: "Web とデスクトップのソースファイルに適用されます。",
     },
+    files: {
+      title: "ファイル",
+      askEveryTime: "毎回確認する",
+      askAgain: "もう一度確認する",
+      askAgainFor: "{{label}} をもう一度確認する",
+      unavailable: "接続中のホストにありません",
+      empty: "プラグインがファイルパネルを追加すると、ここに表示されます",
+    },
     notifications: {
       title: "通知",
       permission: "通知の権限",
@@ -2094,7 +2398,7 @@ export const ja: TranslationResources = {
       send: "送信",
       sending: "送信中...",
       sentTitle: "テスト通知を送信しました",
-      sentDescription: "Paseo が通知をオペレーティングシステムに渡しました。",
+      sentDescription: "hizuri が通知をオペレーティングシステムに渡しました。",
       sendFailedTitle: "テスト通知を送信できません",
     },
     hostSections: {
@@ -2117,10 +2421,10 @@ export const ja: TranslationResources = {
       selection: "モデル選択",
       automatic: "自動",
       preferred: "手動",
-      automaticHint: "Paseo が利用可能な高速モデルを選択します",
-      preferredHint: "Paseo が使用するモデルを選択します",
+      automaticHint: "hizuri が利用可能な高速モデルを選択します",
+      preferredHint: "hizuri が使用するモデルを選択します",
       model: "モデル",
-      fallbackHint: "利用できない場合、Paseo は別の利用可能なモデルを使用します",
+      fallbackHint: "利用できない場合、hizuri は別の利用可能なモデルを使用します",
       docs: "ドキュメント",
       saveError: "メタデータ生成を更新できません",
     },
@@ -2155,7 +2459,7 @@ export const ja: TranslationResources = {
       serviceUrls: {
         options: {
           ask: "確認する",
-          inApp: "Paseoで",
+          inApp: "hizuriで",
           external: "外部ブラウザ",
         },
       },
@@ -2188,13 +2492,16 @@ export const ja: TranslationResources = {
           ja: "日本語",
           ko: "韓国語",
           ptBR: "ブラジルポルトガル語",
-          ru: "ロシア語",
           zhCN: "簡体字中国語",
         },
       },
     },
     diagnostics: {
       title: "診断",
+      uploadLogs: {
+        label: "アプリのログをホストに送信",
+        description: "警告、音声の状態、マイクのレベルをホストの app-logs に送ります",
+      },
       legacyTerminalRenderer: {
         label: "以前のターミナルレンダラーを使用",
         description: "ターミナルを開き直した後、以前の WebView ターミナルを使用します",
@@ -2239,7 +2546,7 @@ export const ja: TranslationResources = {
         label: "アプリの更新",
         readyToInstall: "インストール準備完了: {{version}}",
         installTitle: "デスクトップの更新をインストール",
-        installMessage: "このコンピューターのPaseoを更新します",
+        installMessage: "このコンピューターのhizuriを更新します",
         installConfirm: "更新をインストール",
         update: "更新",
         updateTo: "{{version}}に更新",
@@ -2314,6 +2621,28 @@ export const ja: TranslationResources = {
         reset: "リセット",
         resetAccessibility: "コンテンツ幅をデフォルトに戻す",
       },
+      show: {
+        title: "Show",
+        switcher: {
+          title: "タブの切り替え方",
+          capsule: {
+            label: "カプセル",
+            description: "下のピル: スワイプでタブを切り替え、タップですべてのタブ",
+          },
+          deck: {
+            label: "デッキ",
+            description: "下のチップ: タップ、上に引く、ピンチでタブをカードで表示",
+          },
+          rail: {
+            label: "ドットレール",
+            description: "右端のドット: 押さえたまま上下にスライド",
+          },
+          inside: {
+            label: "タブ内スワイプ",
+            description: "タブそのものをスワイプ。ページは左端からめくれます",
+          },
+        },
+      },
       syntax: {
         title: "構文ハイライト",
         highlightTheme: "ハイライトテーマ",
@@ -2329,6 +2658,7 @@ export const ja: TranslationResources = {
       searchPlaceholder: "ショートカットを検索",
       unavailableOnMobile: "キーボードショートカットはデスクトップでのみ利用できます",
       capturePrompt: "ショートカットを押してください...",
+      captureIndexPrompt: "最後に1〜9の数字を入力してください。",
       unassigned: "未設定",
       actions: {
         menu: "{{name}} のアクション",
@@ -2490,11 +2820,11 @@ export const ja: TranslationResources = {
         title: "オーケストレーションスキル",
         description: "エージェントがCLI経由でオーケストレーションできるようにします。",
         updateAvailable: "更新が利用可能",
-        updateTitle: "Paseoスキルを更新しますか？",
+        updateTitle: "hizuriスキルを更新しますか？",
         updateFallback: "バンドルされたスキルをマシンに同期します。",
-        uninstallTitle: "Paseoスキルをアンインストールしますか？",
+        uninstallTitle: "hizuriスキルをアンインストールしますか？",
         uninstallMessage:
-          "~/.agents、~/.claude、~/.codexからすべてのPaseoオーケストレーションスキルを削除します。",
+          "~/.agents、~/.claude、~/.codexからすべてのhizuriオーケストレーションスキルを削除します。",
         choose: "スキルを選択",
         chooseAll: "すべてのスキル",
         chooseAllHint:
@@ -2531,9 +2861,9 @@ export const ja: TranslationResources = {
         title: "オーケストレーション",
         unavailable: "オーケストレーションを管理するにはこのホストに接続してください",
         enableTools: {
-          title: "Paseoツールを有効にする",
+          title: "hizuriツールを有効にする",
           hint: "エージェントがワークツリー、エージェント、スケジュールを管理できるようになります",
-          accessibilityLabel: "Paseoツールを有効にする",
+          accessibilityLabel: "hizuriツールを有効にする",
         },
         systemPrompt: {
           title: "システムプロンプト",
@@ -2638,15 +2968,15 @@ export const ja: TranslationResources = {
             "このホストは接続されていません。再起動する前にオンラインになるまでお待ちください。",
           offlineTitle: "ホストオフライン",
           offlineMessage:
-            "このホストはオフラインです。Paseoが自動再接続します。再起動は、ホストがオンラインに戻ってから行ってください。",
+            "このホストはオフラインです。hizuriが自動再接続します。再起動は、ホストがオンラインに戻ってから行ってください。",
           requestFailedTitle: "エラー",
           requestFailedMessage:
-            "再起動リクエストの送信に失敗しました。Paseoは自動的に再接続します。ホストがオンラインになったら再試行してください。",
+            "再起動リクエストの送信に失敗しました。hizuriは自動的に再接続します。ホストがオンラインになったら再試行してください。",
           dialogFailedMessage: "再起動確認ダイアログを開けませんでした。",
         },
         update: {
           desktopManagedHint:
-            "このデーモンはPaseo Desktopによって管理されています。ホスト上のPaseo Desktopを更新してください。",
+            "このデーモンはhizuri Desktopによって管理されています。ホスト上のhizuri Desktopを更新してください。",
           title: "デーモンを更新",
           hint: "デーモンを最新バージョンに更新して再起動します",
           confirm: "更新",
@@ -2808,7 +3138,7 @@ export const ja: TranslationResources = {
         newScript: "新しいスクリプト",
         editScript: "{{name}}を編集",
         runAsService: "サービスとして実行",
-        serviceHint: "Paseoがプロセスを監督し、$PASEO_PORTを通じてポートを割り当てます",
+        serviceHint: "hizuriがプロセスを監督し、$PASEO_PORTを通じてポートを割り当てます",
         actions: {
           add: "スクリプトを追加",
           edit: "編集",
@@ -2817,7 +3147,7 @@ export const ja: TranslationResources = {
       },
       metadata: {
         title: "メタデータ生成",
-        info: "Paseoがメタデータ生成に使うAIプロンプトへ追加する、プロジェクト固有の指示です。ブランチ名、コミット形式、PR形式など、チームの規約を反映するために使います。",
+        info: "hizuriがメタデータ生成に使うAIプロンプトへ追加する、プロジェクト固有の指示です。ブランチ名、コミット形式、PR形式など、チームの規約を反映するために使います。",
         branchName: "ブランチ名",
         branchNamePlaceholder: "ブランチ名は feat/ または fix/ で始め、個人ブランチは mb/ にする",
         commitMessage: "コミットメッセージ",

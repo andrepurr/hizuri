@@ -1,4 +1,5 @@
 import { test as base, expect, type Page } from "@playwright/test";
+import { hideDeveloperToasts } from "./developer-ui.mjs";
 import { startOutdatedDaemon, type OutdatedDaemon } from "./helpers/daemon-update";
 import { startE2EWorker } from "./helpers/e2e-worker";
 import { getE2EDaemonPort } from "./helpers/daemon-port";
@@ -130,6 +131,8 @@ const test = daemonTest.extend<{
         await ws.close({ code: 1008, reason: "Blocked connection to localhost:6767 during e2e." });
       });
 
+      await hideDeveloperToasts(page);
+
       const entries: string[] = [];
 
       page.on("console", (message) => {
@@ -155,6 +158,20 @@ const test = daemonTest.extend<{
 
       await page.addInitScript(
         ({ daemon, preferences, seedNonce: nonce, extraHostsKey }) => {
+          // hizuri: the app starts in the simple version and the specs drive the full one, so every
+          // app-settings write that does not choose a version gets the full one.
+          const appSettingsKey = "@paseo:app-settings";
+          const setItem = Storage.prototype.setItem;
+          Storage.prototype.setItem = function (key: string, value: string) {
+            const parsed = key === appSettingsKey ? JSON.parse(value) : null;
+            const next =
+              parsed && typeof parsed === "object" && !("simpleMode" in parsed)
+                ? JSON.stringify({ ...parsed, simpleMode: false })
+                : value;
+            setItem.call(this, key, next);
+          };
+          if (!localStorage.getItem(appSettingsKey)) localStorage.setItem(appSettingsKey, "{}");
+
           // `addInitScript` runs on every navigation (including reloads). Some tests intentionally
           // override storage and reload; they can opt out of seeding for the *next* navigation by
           // setting this flag before the reload.

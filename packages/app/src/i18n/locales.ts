@@ -1,4 +1,4 @@
-export type SupportedLocale = "ar" | "en" | "es" | "fr" | "ja" | "ko" | "pt-BR" | "ru" | "zh-CN";
+export type SupportedLocale = "ar" | "en" | "es" | "fr" | "ja" | "ko" | "pt-BR" | "zh-CN";
 export type AppLanguage = "system" | SupportedLocale;
 
 export interface LanguageOption {
@@ -17,7 +17,6 @@ export const LANGUAGE_OPTIONS: LanguageOption[] = [
   { value: "ja", labelKey: "settings.general.language.options.ja" },
   { value: "ko", labelKey: "settings.general.language.options.ko" },
   { value: "pt-BR", labelKey: "settings.general.language.options.ptBR" },
-  { value: "ru", labelKey: "settings.general.language.options.ru" },
   { value: "zh-CN", labelKey: "settings.general.language.options.zhCN" },
 ];
 
@@ -30,7 +29,6 @@ const SUPPORTED_LANGUAGES = new Set<AppLanguage>([
   "ja",
   "ko",
   "pt-BR",
-  "ru",
   "zh-CN",
 ]);
 const LANGUAGE_NATIVE_NAMES: Record<SupportedLocale, string> = {
@@ -41,7 +39,6 @@ const LANGUAGE_NATIVE_NAMES: Record<SupportedLocale, string> = {
   ja: "日本語",
   ko: "한국어",
   "pt-BR": "Português brasileiro",
-  ru: "Русский",
   "zh-CN": "简体中文",
 };
 const LANGUAGE_NAMES_BY_LOCALE: Record<SupportedLocale, Record<SupportedLocale, string>> = {
@@ -53,7 +50,6 @@ const LANGUAGE_NAMES_BY_LOCALE: Record<SupportedLocale, Record<SupportedLocale, 
     ja: "اليابانية",
     ko: "الكورية",
     "pt-BR": "البرتغالية البرازيلية",
-    ru: "الروسية",
     "zh-CN": "الصينية المبسطة",
   },
   en: {
@@ -64,7 +60,6 @@ const LANGUAGE_NAMES_BY_LOCALE: Record<SupportedLocale, Record<SupportedLocale, 
     ja: "Japanese",
     ko: "Korean",
     "pt-BR": "Brazilian Portuguese",
-    ru: "Russian",
     "zh-CN": "Simplified Chinese",
   },
   es: {
@@ -75,7 +70,6 @@ const LANGUAGE_NAMES_BY_LOCALE: Record<SupportedLocale, Record<SupportedLocale, 
     ja: "japonés",
     ko: "coreano",
     "pt-BR": "portugués brasileño",
-    ru: "ruso",
     "zh-CN": "chino simplificado",
   },
   fr: {
@@ -86,7 +80,6 @@ const LANGUAGE_NAMES_BY_LOCALE: Record<SupportedLocale, Record<SupportedLocale, 
     ja: "japonais",
     ko: "coréen",
     "pt-BR": "portugais brésilien",
-    ru: "russe",
     "zh-CN": "chinois simplifié",
   },
   ja: {
@@ -97,7 +90,6 @@ const LANGUAGE_NAMES_BY_LOCALE: Record<SupportedLocale, Record<SupportedLocale, 
     ja: "日本語",
     ko: "韓国語",
     "pt-BR": "ブラジルポルトガル語",
-    ru: "ロシア語",
     "zh-CN": "簡体字中国語",
   },
   ko: {
@@ -108,7 +100,6 @@ const LANGUAGE_NAMES_BY_LOCALE: Record<SupportedLocale, Record<SupportedLocale, 
     ja: "일본어",
     ko: "한국어",
     "pt-BR": "브라질 포르투갈어",
-    ru: "러시아어",
     "zh-CN": "중국어 간체",
   },
   "pt-BR": {
@@ -119,19 +110,7 @@ const LANGUAGE_NAMES_BY_LOCALE: Record<SupportedLocale, Record<SupportedLocale, 
     ja: "japonês",
     ko: "coreano",
     "pt-BR": "Português brasileiro",
-    ru: "russo",
     "zh-CN": "chinês simplificado",
-  },
-  ru: {
-    ar: "арабский",
-    en: "английский",
-    es: "испанский",
-    fr: "французский",
-    ja: "японский",
-    ko: "корейский",
-    "pt-BR": "бразильский португальский",
-    ru: "русский",
-    "zh-CN": "упрощенный китайский",
   },
   "zh-CN": {
     ar: "阿拉伯语",
@@ -141,7 +120,6 @@ const LANGUAGE_NAMES_BY_LOCALE: Record<SupportedLocale, Record<SupportedLocale, 
     ja: "日语",
     ko: "韩语",
     "pt-BR": "巴西葡萄牙语",
-    ru: "俄语",
     "zh-CN": "简体中文",
   },
 };
@@ -153,7 +131,6 @@ const REGIONAL_LANGUAGE_LOCALES: Readonly<Record<string, SupportedLocale>> = {
   fr: "fr",
   ja: "ja",
   ko: "ko",
-  ru: "ru",
 };
 
 export function parseAppLanguage(value: unknown): AppLanguage | null {

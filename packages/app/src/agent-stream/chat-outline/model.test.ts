@@ -4,6 +4,7 @@ import {
   shouldAcceptPromptIndexEpoch,
   promptTickMagnification,
   resolveActivePromptSeq,
+  sampleOutlineTicks,
   OUTLINE_MAGNIFY_RADIUS,
   type ChatOutlinePrompt,
 } from "./model";
@@ -49,6 +50,31 @@ describe("resolveActivePromptSeq", () => {
     expect(resolveActivePromptSeq(prompts, 1)).toBeNull();
     expect(resolveActivePromptSeq(prompts, null)).toBeNull();
     expect(resolveActivePromptSeq([], 42)).toBeNull();
+  });
+});
+
+describe("sampleOutlineTicks", () => {
+  const prompts = Array.from({ length: 1433 }, (_, index) => prompt(index * 3));
+
+  it("draws every prompt that fits", () => {
+    const ticks = sampleOutlineTicks(prompts.slice(0, 5), 200);
+
+    expect(ticks.map((tick) => tick.index)).toEqual([0, 1, 2, 3, 4]);
+  });
+
+  it("samples a long index down to the capacity, keeping the first and the last prompt", () => {
+    const ticks = sampleOutlineTicks(prompts, 200);
+    const indexes = ticks.map((tick) => tick.index);
+
+    expect(ticks).toHaveLength(200);
+    expect(indexes[0]).toBe(0);
+    expect(indexes.at(-1)).toBe(1432);
+    expect(indexes).toEqual([...new Set(indexes)].sort((left, right) => left - right));
+    expect(ticks.every((tick) => tick.prompt === prompts[tick.index])).toBe(true);
+  });
+
+  it("draws nothing on a rail too short for two ticks", () => {
+    expect(sampleOutlineTicks(prompts, 1)).toEqual([]);
   });
 });
 

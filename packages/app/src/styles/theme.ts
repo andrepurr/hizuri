@@ -233,6 +233,8 @@ export interface LightThemeConfig {
   accent: string;
   accentBright: string;
   accentForeground?: string;
+  success?: string;
+  successForeground?: string;
   primary: string;
   primaryForeground: string;
   destructive: string;
@@ -267,8 +269,8 @@ export function buildLightSemanticColors(tint: LightThemeConfig) {
     surface4: tint.surface4,
     surfaceDiffEmpty: tint.surfaceDiffEmpty,
     surfaceSidebar: tint.surfaceSidebar,
-    surfaceSidebarHover: tint.surface1,
-    surfaceSidebarSelected: tint.surface3,
+    surfaceSidebarHover: tint.surface3,
+    surfaceSidebarSelected: tint.surface4,
     surfaceWorkspace: tint.surface0,
     interactionHighlight: "rgba(0, 0, 0, 0.06)",
 
@@ -285,8 +287,8 @@ export function buildLightSemanticColors(tint: LightThemeConfig) {
 
     destructive: tint.destructive,
     destructiveForeground: tint.surface0,
-    success: tint.accent,
-    successForeground: tint.surface0,
+    success: tint.success ?? tint.accent,
+    successForeground: tint.successForeground ?? tint.surface0,
 
     background: tint.surface0,
     popover: tint.surface0,
@@ -320,28 +322,31 @@ export function buildLightSemanticColors(tint: LightThemeConfig) {
   };
 }
 
+// Hizuri light — a cool paper white with the same spectrum blue, for daylight use.
 const lightSemanticColors = buildLightSemanticColors({
-  surface0: "#ffffff",
-  surface1: "#fafafa",
-  surface2: "#f4f4f5",
-  surface3: "#e4e4e7",
-  surface4: "#d4d4d8",
-  surfaceDiffEmpty: "#f6f6f6",
-  surfaceSidebar: "#f4f4f5",
-  foreground: "#1a1a1e",
-  foregroundMuted: "#71717a",
-  foregroundExtraMuted: "#a1a1aa",
-  border: "#e4e4e7",
-  borderAccent: "#ececf1",
-  accent: "#20744A",
-  accentBright: "#239956",
+  surface0: "#FAFBFD",
+  surface1: "#F4F6F9",
+  surface2: "#EDEFF3",
+  surface3: "#E2E5EB",
+  surface4: "#CED3DC",
+  surfaceDiffEmpty: "#F1F3F6",
+  surfaceSidebar: "#F2F4F7",
+  foreground: "#0B0E14",
+  foregroundMuted: "#4F5666",
+  foregroundExtraMuted: "#6E7484",
+  border: "#E1E4EA",
+  borderAccent: "#E8EBF0",
+  accent: "#3567C9",
+  accentBright: "#4A7AD8",
   accentForeground: "#ffffff",
-  primary: "#18181b",
-  primaryForeground: "#fafafa",
-  destructive: "#b04138",
-  terminalBlack: "#1a1a1e",
-  terminalBrightBlack: "#3f3f46",
-  ring: "#18181b",
+  success: "#1B7F53",
+  successForeground: "#ffffff",
+  primary: "#0B0E14",
+  primaryForeground: "#FAFBFD",
+  destructive: "#C23B33",
+  terminalBlack: "#0B0E14",
+  terminalBrightBlack: "#3E4452",
+  ring: "#3567C9",
 });
 
 // ---------------------------------------------------------------------------
@@ -363,6 +368,8 @@ export interface DarkThemeConfig {
   accent: string;
   accentBright: string;
   accentForeground?: string;
+  success?: string;
+  successForeground?: string;
   destructive: string;
   terminalBlack: string;
   terminalBrightBlack: string;
@@ -416,8 +423,8 @@ export function buildDarkSemanticColors(tint: DarkThemeConfig) {
 
     destructive: tint.destructive,
     destructiveForeground: "#ffffff",
-    success: tint.accent,
-    successForeground: "#ffffff",
+    success: tint.success ?? tint.accent,
+    successForeground: tint.successForeground ?? "#ffffff",
 
     // Legacy aliases (for gradual migration)
     background: tint.surface0,
@@ -456,24 +463,27 @@ export function buildDarkSemanticColors(tint: DarkThemeConfig) {
 // Dark tint definitions
 // ---------------------------------------------------------------------------
 
-// Paseo — subtle teal-green tint (default)
-const paseoDarkColors = buildDarkSemanticColors({
-  surface0: "#181B1A",
-  surface1: "#1E2120",
-  surface2: "#272A29",
-  surface3: "#434645",
-  surface4: "#595B5B",
-  surfaceDiffEmpty: "#252827",
-  surfaceSidebar: "#141716",
-  foregroundMuted: "#A1A5A4",
-  foregroundExtraMuted: "#717574",
-  border: "#252B2A",
-  borderAccent: "#2F3534",
-  accent: "#20744A",
-  accentBright: "#7ccba0",
-  destructive: "#c64f43", // warm red, hue ~7 — reads as red (not pink) against the green tint
-  terminalBlack: "#141716",
-  terminalBrightBlack: "#434645",
+// Hizuri — near-black field with the spectrum blue accent (default; brand book round 4)
+const hizuriDarkColors = buildDarkSemanticColors({
+  surface0: "#07080B",
+  surface1: "#0E1117",
+  surface2: "#151A22",
+  surface3: "#232A35",
+  surface4: "#2E3440",
+  surfaceDiffEmpty: "#11151C",
+  surfaceSidebar: "#05060A",
+  foregroundMuted: "#A3AAB8",
+  foregroundExtraMuted: "#7A8192",
+  border: "#1A1F28",
+  borderAccent: "#232A35",
+  // #4373D5, not the brand book's #4A7AD8: white button labels need 4.5:1 (4.51 here, 4.14 there).
+  accent: "#4373D5",
+  accentBright: "#C9D6F7",
+  success: "#3FB27F",
+  successForeground: "#07080B",
+  destructive: "#d0544d",
+  terminalBlack: "#05060A",
+  terminalBrightBlack: "#232A35",
 });
 
 // Zinc — neutral gray, no tint
@@ -711,7 +721,7 @@ export function buildDarkTheme(semanticColors: ReturnType<typeof buildDarkSemant
   } as const;
 }
 
-export const darkTheme = buildDarkTheme(paseoDarkColors);
+export const darkTheme = buildDarkTheme(hizuriDarkColors);
 export const darkZincTheme = buildDarkTheme(zincDarkColors);
 export const darkMidnightTheme = buildDarkTheme(midnightDarkColors);
 export const darkClaudeTheme = buildDarkTheme(claudeDarkColors);
@@ -741,7 +751,7 @@ export const darkPureBlackTheme = buildDarkTheme(pureBlackDarkColors);
 
 const lightShadow = {
   sm: {
-    shadowColor: "rgba(0, 0, 0, 0.02)",
+    shadowColor: "rgba(0, 0, 0, 0.08)",
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 8,
     elevation: 2,
@@ -784,7 +794,7 @@ export const THEME_OPTIONS = [
     group: "primary",
     unistylesName: "light",
     theme: lightTheme,
-    swatch: "#ffffff",
+    swatch: "#FAFBFD",
   },
   {
     name: "dark",

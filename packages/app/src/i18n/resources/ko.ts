@@ -2,6 +2,9 @@ import { en, type TranslationResources } from "./en";
 import { pluginSettings } from "./plugin-settings";
 
 export const ko: TranslationResources = {
+  assistant: {
+    name: "주리",
+  },
   paneFind: {
     connectionFailure: "이 채팅을 검색할 수 없습니다. 호스트 연결을 확인하고 다시 시도하세요.",
     historyChangedFailure: "검색 중에 채팅이 변경되었습니다. 다시 검색하세요.",
@@ -25,11 +28,153 @@ export const ko: TranslationResources = {
     position: "{{current}} / {{total}}",
     total: "일치 항목 {{total}}개",
   },
+  freeBrain: {
+    title: "브레인",
+    label: "hizuri 무료 브레인",
+    description:
+      "hizuri가 비용을 부담하는 무료 시작 브레인이며 하루 한도가 있습니다. 처음부터 대화하고 Claude Code 연결을 도와줍니다.",
+    status: {
+      ready: "준비됨",
+      off: "꺼짐",
+      checking: "확인 중",
+      unavailable: "아직 사용할 수 없음",
+    },
+    claudeCode: {
+      label: "Claude Code",
+      connected: "연결됨: Claude와 새 채팅을 시작하면 한도 없이 사용할 수 있습니다.",
+      howTo: "한도 없는 나만의 브레인입니다. 무료 브레인에게 물어보면 연결 방법을 안내합니다.",
+    },
+    error: "무료 브레인을 변경하지 못했습니다.",
+  },
+  phoneLayout: {
+    label: "넓은 화면에서도 휴대폰 레이아웃",
+    description:
+      "브라우저나 태블릿에서도 $t(assistant.name)의 얼굴, 채팅, Show를 휴대폰처럼 더 크게 보여줍니다. 끄면 헤더와 사이드 패널이 있는 데스크톱 레이아웃으로 돌아갑니다.",
+  },
+  simpleMode: {
+    label: "간단한 버전",
+    description:
+      "$t(assistant.name)와 설정만 표시합니다. 끄면 워크스페이스, 기록, 검색, 일정이 있는 전체 앱으로 돌아갑니다.",
+    menu: {
+      assistant: "$t(assistant.name)",
+      face: "얼굴",
+      chat: "채팅",
+    },
+  },
+  face: {
+    title: "$t(assistant.name)의 얼굴",
+    loading: {
+      starting: "$t(assistant.name)의 얼굴을 불러오는 중…",
+      downloading: "$t(assistant.name)의 얼굴을 내려받는 중 · {{percent}}%",
+      preparing: "$t(assistant.name)의 얼굴을 3D로 준비하는 중…",
+      failed: "$t(assistant.name)의 얼굴을 불러오지 못했습니다: {{message}}",
+      noWebgl:
+        "$t(assistant.name)의 얼굴에는 WebGL이 필요한데 이 브라우저에서는 꺼져 있습니다. 이 사이트에 WebGL을 허용한 뒤(LibreWolf: 주소 표시줄의 아이콘) 다시 시도를 누르세요.",
+      retry: "다시 시도",
+    },
+    inVoiceMode: {
+      label: "음성 모드에서 얼굴 표시",
+      description:
+        "$t(assistant.name)의 얼굴을 표시합니다. 휴대폰에서는 첫 페이지에, 넓은 화면에서는 대화하는 동안 채팅 위에 표시합니다. 목소리가 끊기면 끄세요.",
+    },
+    float: {
+      label: "다른 앱 위의 $t(assistant.name)",
+      description:
+        "hizuri를 나가도 $t(assistant.name)가 모든 앱 위에 남아요. 손가락으로 끌고, 탭하고, 길게 눌러 열기와 숨기기. hizuri를 열면 숨어요.",
+      permissionTitle: "$t(assistant.name)를 다른 앱 위에 표시",
+      permissionMessage:
+        "hizuri의 '다른 앱 위에 표시'를 켜 주세요. 스위치가 회색이면: 앱 정보 → ⋮ → 제한된 설정 허용 후 다시 시도하세요.",
+      permissionOpen: "설정 열기",
+      open: "hizuri 열기",
+      hide: "$t(assistant.name) 숨기기",
+      notification: "$t(assistant.name)가 화면에 있어요",
+    },
+  },
+  agentPages: {
+    sessionMenu: "세션",
+    tabs: {
+      face: "$t(assistant.name)",
+      chat: "채팅",
+      show: "Show",
+    },
+  },
+  show: {
+    title: "Show",
+    closeTab: "탭 닫기",
+    hidePerch: "카드에서 $t(assistant.name) 숨기기",
+    open: "Show 열기",
+    close: "채팅으로 돌아가기",
+    windows: "Show 창",
+    defaultWindow: "Show",
+    limitsWindow: "한도",
+    screenWindow: "화면",
+    liveWindow: "지금",
+    screenWatch: "보기",
+    screenTakeOver: "제어하기",
+    screenConnecting: "화면에 연결 중…",
+    secret: {
+      optional: "선택",
+      note: "바로 보관함에 저장됩니다. 에이전트는 이름만 봅니다.",
+      save: "저장",
+      saving: "저장 중…",
+      notNow: "나중에",
+      saved: "«{{name}}»(으)로 저장됨",
+      closed: "저장하지 않고 닫음",
+      notSent: "보내지 못했습니다. 연결을 확인하세요.",
+      fields: {
+        username: "로그인",
+        password: "비밀번호",
+        address: "이메일",
+        holder: "카드 명의",
+        number: "카드 번호",
+        expiry: "유효기간",
+        cvc: "CVC",
+        value: "값",
+        perPayment: "결제당 최대",
+        perMonth: "월 최대",
+        currency: "통화",
+      },
+    },
+    tabs: {
+      kind: {
+        page: "웹 페이지",
+        picture: "사진",
+        video: "동영상",
+        player: "플레이어",
+        screen: "화면",
+        live: "라이브",
+        canvas: "캔버스",
+      },
+      allTabs: "모든 탭 · {{count}}",
+      closeCards: "카드 숨기기",
+      position: "탭 {{index}}/{{count}}",
+      capsuleHint: "옆으로 밀어 탭 전환, 탭하면 모든 탭",
+      deckHint: "탭하거나 위로 당기면 모든 탭",
+      releaseToCancel: "놓으면 취소",
+      insideEdgeHint: "페이지는 왼쪽 가장자리에서 넘어갑니다",
+    },
+    page: {
+      empty: "아직 표시할 내용이 없습니다",
+      loading: "불러오는 중…",
+      resetsAt: "초기화: {{time}}",
+      inTime: "{{time}} 후",
+      updated: "{{time}}에 업데이트됨",
+      used: "사용됨",
+      noData: "사용량 데이터 없음",
+      widgetError: "표시할 수 없습니다",
+      days: "일",
+      hours: "시간",
+      minutes: "분",
+      fiveHour: "5시간",
+      weekly: "주간",
+    },
+  },
   common: {
     bottomSheetBackdrop: "하단 시트 배경",
     back: "뒤로",
     loading: "불러오는 중...",
     actions: {
+      save: "저장",
       back: "뒤로",
       cancel: "취소",
       close: "닫기",
@@ -123,6 +268,8 @@ export const ko: TranslationResources = {
     input: {
       accessibilityLabel: "에이전트에게 메시지...",
       terminalAccessibilityLabel: "Terminal prompt",
+      fullscreen: "전체 화면",
+      exitFullscreen: "전체 화면 종료",
       focusHint: "{{shortcut}}로 포커스",
       addAttachment: "첨부 추가",
       interruptAgent: "에이전트 중단",
@@ -139,8 +286,6 @@ export const ko: TranslationResources = {
       interrupt: "중단",
     },
     voice: {
-      enableVoiceMode: "음성 모드 켜기",
-      voiceMode: "음성 모드",
       unmuteVoiceMode: "음성 모드 음소거 해제",
       muteVoiceMode: "음성 모드 음소거",
       stopDictation: "받아쓰기 중지",
@@ -148,7 +293,6 @@ export const ko: TranslationResources = {
       unmuteVoice: "음성 음소거 해제",
       muteVoice: "음성 음소거",
       dictation: "받아쓰기",
-      interruptBeforeVoice: "음성 모드를 시작하기 전에 에이전트를 중단하세요",
     },
     attachments: {
       addImage: "이미지 추가",
@@ -354,10 +498,20 @@ export const ko: TranslationResources = {
     speak: {
       header: "말함",
     },
+    spoken: {
+      phrase: "말함",
+      correction: "말함 · 수정됨",
+    },
+    guardian: {
+      header: "가디언 메모",
+      fix: "조치: {{fix}}",
+      rule: "규칙: {{rule}}",
+    },
     activity: {
       details: "세부 정보",
     },
     dictation: {
+      paused: "마이크가 중단되었습니다. 재개를 기다리는 중…",
       start: "음성 받아쓰기 시작",
       cancel: "받아쓰기 취소",
       retry: "받아쓰기 다시 시도",
@@ -367,6 +521,7 @@ export const ko: TranslationResources = {
       failedRetry: "받아쓰기에 실패했습니다. 다시 시도하려면 누르세요.",
     },
     question: {
+      responseFailed: "응답을 보내지 못했습니다. 다시 시도해 주세요.",
       submit: "제출",
       next: "다음",
       answerPlaceholder: "답변을 입력하세요...",
@@ -534,6 +689,7 @@ export const ko: TranslationResources = {
       },
     },
     setup: {
+      updateHost: "작업 공간 설정 세부 정보를 보려면 호스트를 업데이트하세요",
       descriptor: {
         label: "설정",
         completed: "설정 완료",
@@ -611,6 +767,9 @@ export const ko: TranslationResources = {
       updateHost: "기본 터미널 렌더러를 사용하도록 호스트를 업데이트합니다.",
       unableToSubscribe: "터미널을 구독할 수 없습니다",
     },
+    sheet: {
+      openAsTab: "탭으로 열기",
+    },
     tabs: {
       loading: "불러오는 중...",
       modified: "저장되지 않은 변경사항",
@@ -626,7 +785,7 @@ export const ko: TranslationResources = {
       },
       switcher: {
         trigger: "탭 전환 ({{count}}개 열림)",
-        title: "탭 전환",
+        title: "워크스페이스 탭",
         searchPlaceholder: "탭 검색",
       },
       menu: {
@@ -723,6 +882,7 @@ export const ko: TranslationResources = {
     header: {
       actions: {
         workspaceActions: "워크스페이스 작업",
+        workspaceActionsUnhealthy: "워크스페이스 작업, 비정상 서비스가 있습니다",
         newAgent: "새 에이전트",
         newTerminal: "새 터미널",
         newBrowser: "새 브라우저 탭",
@@ -770,6 +930,8 @@ export const ko: TranslationResources = {
         exitCode: "종료 {{code}}",
         startFailed: "{{scriptName}}을(를) 시작하지 못했습니다",
         stopFailed: "{{scriptName}}를 중지하지 못했습니다.",
+        running: "실행 중",
+        runningCount: "{{count}}개 실행 중",
       },
     },
     tree: {
@@ -877,7 +1039,7 @@ export const ko: TranslationResources = {
             "이 브랜치가 이미 {{baseRef}}와 최신 상태이므로 업데이트를 사용할 수 없습니다",
           mergePrNoGithub: "GitHub가 연결되어 있지 않아 지금은 PR 병합을 사용할 수 없습니다",
           archiveNotWorktree:
-            "이 워크스페이스가 Paseo 워크트리로 생성되지 않아 여기서 보관을 사용할 수 없습니다",
+            "이 워크스페이스가 hizuri 워크트리로 생성되지 않아 여기서 보관을 사용할 수 없습니다",
           mergePrNoForge:
             "{{brand}}가 연결되어 있지 않기 때문에 지금은 {{noun}} 병합을 사용할 수 없습니다.",
           mergePrMissing: "아직 풀 리퀘스트가 없어 PR 병합을 사용할 수 없습니다",
@@ -951,6 +1113,7 @@ export const ko: TranslationResources = {
         checkingRepository: "저장소 확인 중...",
         notRepository: "Git 저장소가 아닙니다",
         diffMode: "Diff 모드",
+        all: "모든 변경 사항",
         uncommitted: "커밋되지 않음",
         committed: "커밋됨",
         branchUnknown: "알 수 없음",
@@ -1154,6 +1317,7 @@ export const ko: TranslationResources = {
       done: "완료",
     },
     display: {
+      showBackground: "백그라운드 표시",
       trigger: "표시 설정",
       heading: "표시",
       grouping: {
@@ -1225,7 +1389,7 @@ export const ko: TranslationResources = {
       discord: "Discord",
       github: "GitHub 이슈 만들기",
       whatsNew: "새로운 소식",
-      appName: "Paseo",
+      appName: "hizuri",
     },
     sections: {
       sessions: "기록",
@@ -1329,8 +1493,9 @@ export const ko: TranslationResources = {
     },
     fields: {
       project: "프로젝트",
-      base: "기준",
+      branch: "브랜치",
       baseNotApplicable: "해당 없음",
+      host: "호스트",
     },
     titlePlaceholder: "제목(선택 사항)",
     errors: {
@@ -1372,7 +1537,7 @@ export const ko: TranslationResources = {
       close: "창 닫기",
     },
     quitting: {
-      title: "Paseo 종료 중...",
+      title: "hizuri 종료 중...",
       detail: "로컬 데몬을 중지하는 중입니다.",
     },
     daemon: {
@@ -1387,19 +1552,19 @@ export const ko: TranslationResources = {
       },
       management: {
         title: "내장 데몬 관리",
-        hint: "Paseo가 내장 데몬을 시작하고 중지하도록 허용합니다",
+        hint: "hizuri가 내장 데몬을 시작하고 중지하도록 허용합니다",
         pauseTitle: "내장 데몬 일시 중지",
         pauseMessage:
           "내장 데몬이 즉시 중지됩니다. 내장 데몬에 연결된 실행 중인 에이전트와 터미널이 중지됩니다.",
         pauseAndStop: "일시 중지 후 중지",
         registrationFailed:
-          "내장 데몬이 시작되었지만 Paseo가 localhost 연결을 저장하지 못했습니다. 데몬 관리를 껐다가 다시 켜거나 localhost를 수동으로 추가하세요.",
-        pausedStopFailed: "내장 데몬 관리가 일시 중지되었지만 Paseo가 데몬을 중지하지 못했습니다.",
+          "내장 데몬이 시작되었지만 hizuri가 localhost 연결을 저장하지 못했습니다. 데몬 관리를 껐다가 다시 켜거나 localhost를 수동으로 추가하세요.",
+        pausedStopFailed: "내장 데몬 관리가 일시 중지되었지만 hizuri가 데몬을 중지하지 못했습니다.",
         updateFailed: "내장 데몬 관리를 업데이트할 수 없습니다.",
       },
       keepRunning: {
         title: "종료 후에도 데몬 계속 실행",
-        hint: "Paseo를 종료해도 데몬이 계속 실행됩니다",
+        hint: "hizuri를 종료해도 데몬이 계속 실행됩니다",
       },
       logs: {
         title: "로그 파일",
@@ -1414,7 +1579,7 @@ export const ko: TranslationResources = {
       fullStatus: {
         title: "전체 상태",
         modalTitle: "데몬 상태",
-        hint: "`paseo daemon status`를 실행하고 출력을 표시합니다",
+        hint: "서버의 전체 상태 보고서를 표시합니다",
         view: "상태 보기",
         copied: "상태가 클립보드에 복사되었습니다.",
         fetchFailed: "데몬 상태를 가져오지 못했습니다: {{message}}",
@@ -1468,7 +1633,7 @@ export const ko: TranslationResources = {
     },
     rosetta: {
       title: "Apple Silicon 빌드 다운로드",
-      runningIntel: "Apple Silicon에서 Rosetta로 Paseo의 Intel 빌드를 실행하고 있습니다.",
+      runningIntel: "Apple Silicon에서 Rosetta로 hizuri의 Intel 빌드를 실행하고 있습니다.",
       highCpu:
         "이로 인해 CPU 사용량이 높아집니다. 이를 해결하려면 Apple Silicon 빌드를 다운로드하세요.",
       download: "다운로드",
@@ -1511,7 +1676,7 @@ export const ko: TranslationResources = {
         microphone: "마이크 상태를 아직 확인하지 않았습니다.",
       },
       testNotification: {
-        title: "Paseo 알림 테스트",
+        title: "hizuri 알림 테스트",
         body: "이 메시지가 보이면 데스크톱 알림이 작동하는 것입니다.",
         notDelivered: "알림이 전달되지 않았습니다. 시스템 설정 > 알림을 확인하세요.",
         failed: "알림을 보내지 못했습니다.",
@@ -1520,19 +1685,19 @@ export const ko: TranslationResources = {
     integrations: {
       cli: {
         statusFailed: "CLI 설치 상태를 확인할 수 없습니다.",
-        installFailed: "Paseo CLI를 설치할 수 없습니다.",
+        installFailed: "hizuri CLI를 설치할 수 없습니다.",
       },
     },
   },
   rootError: {
-    title: "Paseo에 문제가 발생했습니다.",
+    title: "hizuri에 문제가 발생했습니다.",
     body: "앱을 다시 로드해 보세요. 이런 일이 계속 발생하면 신고할 때 아래 세부정보를 포함하세요.",
     details: "세부",
   },
   startup: {
     errorTitle: "문제가 발생했습니다",
     errorDescription:
-      "로컬 서버를 시작하지 못했습니다. 이 문제가 계속되면 아래 로그를 포함하여 GitHub에 문제를 보고해 주세요.",
+      "로컬 서버를 시작하지 못했습니다. 이 문제가 계속되면 아래 로그를 복사해 주세요.",
     logs: {
       loading: "데몬 로그 불러오는 중...",
       unavailable: "사용 가능한 데몬 로그가 없습니다.",
@@ -1622,7 +1787,7 @@ export const ko: TranslationResources = {
     },
   },
   onboarding: {
-    title: "Paseo에 오신 것을 환영합니다",
+    title: "hizuri에 오신 것을 환영합니다",
     subtitle: "시작하려면 컴퓨터를 연결하세요",
     actions: {
       settings: "설정",
@@ -1730,7 +1895,7 @@ export const ko: TranslationResources = {
     },
     direct: {
       title: "직접 연결",
-      helper: "Paseo 서버의 주소를 입력하세요.",
+      helper: "hizuri 서버의 주소를 입력하세요.",
       fields: {
         host: "호스트",
         port: "포트",
@@ -1771,7 +1936,7 @@ export const ko: TranslationResources = {
     },
     remoteSsh: {
       title: "원격 SSH",
-      helper: "원격 호스트에서 실행 중인 Paseo 데몬에 연결합니다.",
+      helper: "원격 호스트에서 실행 중인 hizuri 데몬에 연결합니다.",
       fields: {
         target: "SSH 호스트",
         password: "데몬 비밀번호",
@@ -1834,15 +1999,15 @@ export const ko: TranslationResources = {
       enableDescription:
         "릴레이를 사용하면 이 장치를 어디에서나 연결할 수 있습니다. 페어링 트래픽은 종단 간 암호화됩니다.",
       relayDocs: "릴레이 작동 방식",
-      relayDocsAccessibility: "Paseo 릴레이 작동 방식 읽기",
+      relayDocsAccessibility: "hizuri 릴레이 작동 방식 읽기",
       enableRelay: "릴레이 활성화",
       enablingRelay: "활성화 중...",
       notNow: "지금은 아님",
       directConnectionHint:
         "릴레이 없이 TCP, Tailscale 또는 다른 VPN을 통해 직접 연결하세요. QR 코드가 생성되지 않습니다.",
-      updateRequired: "Paseo 데스크톱에서 릴레이를 활성화하려면 호스트를 업데이트하세요.",
+      updateRequired: "hizuri 데스크톱에서 릴레이를 활성화하려면 호스트를 업데이트하세요.",
       unavailable: "페어링 정보를 사용할 수 없습니다.",
-      hint: "휴대폰의 Paseo로 이 QR 코드를 스캔하거나 아래 링크를 복사하세요.",
+      hint: "휴대폰의 hizuri로 이 QR 코드를 스캔하거나 아래 링크를 복사하세요.",
       securityWarning:
         "이 페어링 링크는 비밀번호처럼 취급하세요. 링크를 가진 사람은 누구나 이 데몬에 접근할 수 있습니다.",
       qrUnavailable: "QR 코드를 사용할 수 없습니다.",
@@ -1854,9 +2019,28 @@ export const ko: TranslationResources = {
   },
   realtimeVoice: {
     actions: {
+      startSession: "세션 시작",
       mute: "실시간 음성 음소거",
       unmute: "실시간 음성 음소거 해제",
-      stop: "실시간 음성 중지 및 턴 중단",
+      switchToText: "텍스트로 전환(세션 유지)",
+      switchToVoice: "음성으로 돌아가기",
+      endSession: "세션 종료",
+      attachPhoto: "사진 보내기",
+    },
+    endSessionConfirm: {
+      title: "세션을 종료할까요?",
+      message: "음성, 에이전트의 음성 모드, 저장된 세션이 모두 닫힙니다.",
+    },
+    live: {
+      updateHost: "말하는 동안 내 말을 보려면 호스트를 업데이트하세요",
+    },
+    status: {
+      starting: "음성을 켜는 중...",
+      stopping: "음성을 끄는 중...",
+    },
+    moved: "음성 모드가 여기로 옮겨졌습니다",
+    errors: {
+      noSession: "먼저 세션을 시작하세요",
     },
   },
   rewind: {
@@ -1877,7 +2061,7 @@ export const ko: TranslationResources = {
   serviceUrl: {
     title: "서비스 URL 열기",
     message: "{{url}}을(를) 열까요?",
-    inPaseo: "Paseo에서",
+    inPaseo: "hizuri에서",
     externalBrowser: "외부 브라우저",
     dontAskAgain: "다시 묻지 않기",
   },
@@ -1914,12 +2098,32 @@ export const ko: TranslationResources = {
       creatingAgent: "에이전트 생성 중",
     },
     file: {
+      filePanels: {
+        pickerTitleExtension: ".{{extension}} 파일 열기 방식",
+        pickerTitleFilename: "{{filename}} 열기 방식",
+        dontAskAgain: "다시 묻지 않기",
+        use: "사용",
+        openWith: "다음으로 열기…",
+        alwaysUseExtension: ".{{extension}}에 항상 사용",
+        alwaysUseFilename: "{{filename}}에 항상 사용",
+        option: "{{title}} — {{owner}}",
+        actions: "파일 작업",
+        builtin: {
+          owner: "Paseo",
+          markdown: "Markdown",
+          html: "HTML",
+          image: "이미지",
+          source: "소스",
+        },
+      },
       directoryMissing: "워크스페이스 디렉터리를 찾을 수 없습니다.",
       loading: "파일 불러오는 중...",
       noPreview: "사용 가능한 미리보기가 없습니다",
       binaryPreviewUnavailable: "바이너리 미리보기를 사용할 수 없습니다",
       tooLargeToDisplay: "이 파일은 너무 커서 표시할 수 없습니다",
+      documentUnsupported: "{{type}} 파일은 이 기기에서 표시할 수 없습니다",
       failedToLoad: "파일을 불러오지 못했습니다",
+      notFound: "파일을 찾을 수 없습니다",
       failedToLoadPreview: "파일 미리보기를 불러오지 못했습니다",
       editor: {
         fileSize: "파일 크기 {{size}}",
@@ -1931,10 +2135,7 @@ export const ko: TranslationResources = {
         changedOnDisk: "디스크에서 변경됨",
         vimMode: "Vim 모드 {{mode}}",
         cursor: "{{line}} 라인, {{column}} 열",
-        preview: "미리보기",
-        source: "소스",
         deletedTitle: "디스크에서 파일이 삭제되었습니다.",
-        checkFailedTitle: "디스크의 파일을 확인할 수 없습니다.",
         preservedDescription: "열린 복사본은 보존됩니다.",
         conflictDescription: "로컬 버퍼가 보존되었습니다. 유지할 버전을 선택하세요.",
         overwrite: "덮어쓰기",
@@ -1997,10 +2198,28 @@ export const ko: TranslationResources = {
       other: "기타 도구 {{count}}개 사용함",
     },
     paseoCalls: {
-      one: "Paseo를 {{count}}회 호출함",
-      other: "Paseo를 {{count}}회 호출함",
+      one: "hizuri를 {{count}}회 호출함",
+      other: "hizuri를 {{count}}회 호출함",
     },
     and: "그리고",
+  },
+  showMedia: {
+    youtube: "YouTube",
+    audio: "오디오",
+    playerWindow: "플레이어",
+    play: "재생",
+    pause: "일시정지",
+    back15: "15초 뒤로",
+    forward15: "15초 앞으로",
+    openInYoutube: "YouTube에서 열기",
+    onlyInYoutube: "YouTube가 이 동영상을 여기서 재생하지 않습니다",
+    cannotPlay: "재생할 수 없습니다: {{reason}}",
+    needsDirectConnection: "호스트에 직접 연결해야 합니다",
+    accessTitle: "hizuri가 미디어를 제어하도록 허용",
+    accessMessage:
+      "내 앱의 음악과 영화를 일시정지·건너뛰기·되감기하려면 hizuri에 알림 접근 권한이 필요합니다. hizuri는 알림을 읽지 않으며, Android는 이 설정으로만 미디어 제어를 허용합니다.",
+    accessConfirm: "설정 열기",
+    accessCancel: "나중에",
   },
   renameModal: {
     rename: "이름 변경",
@@ -2019,6 +2238,17 @@ export const ko: TranslationResources = {
     accessibility: "컨텍스트 윈도우 {{percentage}}% 사용됨",
   },
   review: {
+    feedback: {
+      send: "피드백 보내기 ({{count}})",
+      sending: "피드백 전송 중 ({{count}})",
+      chooseAgent: "에이전트 선택",
+      sent: "{{recipient}}에게 피드백을 보냈습니다",
+      "no-agents": "피드백을 보내려면 이 작업 공간에서 에이전트 탭을 여세요.",
+      disconnected: "피드백을 보내려면 호스트에 연결하세요.",
+      "no-context": "저장된 댓글이 더 이상 이 변경 사항과 일치하지 않습니다.",
+      failed: "피드백 전송에 실패했습니다. 다시 시도하세요.",
+      prompt: "이 코드 리뷰를 반영해 주세요.",
+    },
     comment: {
       add: "리뷰 댓글 추가",
       edit: "리뷰 댓글 편집",
@@ -2029,6 +2259,70 @@ export const ko: TranslationResources = {
       cancelAccessibility: "리뷰 댓글 취소",
       save: "댓글",
       saveAccessibility: "리뷰 댓글 저장",
+    },
+  },
+  providerUsage: {
+    options: "설정",
+    refreshFailed: "사용량을 새로 고칠 수 없습니다",
+    noHosts: "연결된 호스트가 없습니다",
+    agentError: "사용량을 불러올 수 없습니다: {{reason}}",
+    pin: "고정",
+    unpin: "고정 해제",
+    displayAs: "백분율",
+    displayUsed: "사용됨",
+    displayRemaining: "남음",
+    showInSidebar: "사이드바에 요약 표시",
+    showInSidebarHint: "고정된 기간이 사이드바 하단에 표시됩니다",
+    runToRefresh: "{{command}} 명령을 실행하여 새로 고치세요.",
+    signInAgain: "다시 로그인하세요.",
+    loginRejected: "로그인이 거부되었습니다 (HTTP {{status}}). {{remedy}}",
+    loginExpired: "로그인이 {{relativeTime}}에 만료되었습니다. {{remedy}}",
+    title: "플랜 사용량",
+    refresh: "새로 고침",
+    refreshAll: "모두 새로 고침",
+    refreshing: "새로 고치는 중...",
+    loading: "사용량 불러오는 중...",
+    empty: "사용량 데이터가 없습니다",
+    errorTitle: "사용량을 불러올 수 없습니다",
+    hostUnavailable: "{{host}}에 연결하여 제공업체 사용량을 확인하세요",
+    hostUpgradeRequired: "{{host}}를 업데이트하여 제공업체 사용량을 확인하세요",
+    clientUnavailable: "호스트 연결이 준비되지 않았습니다",
+    retry: "다시 시도",
+    tooltipLoading: "플랜 사용량 불러오는 중...",
+    status: {
+      error: "오류",
+      unavailable: "사용할 수 없음",
+    },
+    values: {
+      used: "{{percentage}} 사용됨",
+      remaining: "{{amount}} 남음",
+    },
+    labels: {
+      session: "세션",
+      weekly: "주간",
+      monthly: "월간",
+      codeReview: "코드 검토",
+      credits: "크레딧",
+      monthlyCredits: "월간 크레딧",
+    },
+    duration: {
+      days: "{{value}}일",
+      hours: "{{value}}시간",
+      minutes: "{{value}}분",
+    },
+    timing: {
+      lastUpdated: "마지막 업데이트: {{relativeTime}}",
+      noSuccessfulUpdate: "성공한 업데이트가 없습니다",
+      resetTimePassed: "초기화 시간이 지났습니다",
+      resettingNow: "지금 재설정 중",
+      resetsIn: "{{duration}} 후 재설정",
+      runsOutNow: "지금 한도에 도달",
+      runsOutIn: "{{duration}} 후 한도에 도달",
+      justNow: "방금",
+      daysAgo: "{{value}}일 전",
+      hoursAgo: "{{value}}시간 전",
+      minutesAgo: "{{value}}분 전",
+      updated: "{{relativeTime}}에 업데이트됨",
     },
   },
   settings: {
@@ -2059,6 +2353,7 @@ export const ko: TranslationResources = {
       terminal: "터미널",
       browser: "브라우저",
       editor: "편집기",
+      files: "파일",
       shortcuts: "단축키",
       integrations: "통합",
       notifications: "알림",
@@ -2072,6 +2367,14 @@ export const ko: TranslationResources = {
       vimKeybindings: "Vim 키 바인딩",
       vimHint: "웹 및 데스크톱의 소스 파일에 적용됩니다.",
     },
+    files: {
+      title: "파일",
+      askEveryTime: "매번 묻기",
+      askAgain: "다시 묻기",
+      askAgainFor: "{{label}} 다시 묻기",
+      unavailable: "연결된 호스트에 없음",
+      empty: "플러그인이 파일 패널을 추가하면 여기에 표시됩니다",
+    },
     notifications: {
       title: "알림",
       permission: "알림 권한",
@@ -2084,7 +2387,7 @@ export const ko: TranslationResources = {
       send: "보내기",
       sending: "보내는 중...",
       sentTitle: "테스트 알림을 보냈습니다",
-      sentDescription: "Paseo가 알림을 운영 체제에 전달했습니다.",
+      sentDescription: "hizuri가 알림을 운영 체제에 전달했습니다.",
       sendFailedTitle: "테스트 알림을 보낼 수 없음",
     },
     hostSections: {
@@ -2107,10 +2410,10 @@ export const ko: TranslationResources = {
       selection: "모델 선택",
       automatic: "자동",
       preferred: "수동",
-      automaticHint: "Paseo가 사용 가능한 빠른 모델을 선택합니다",
-      preferredHint: "Paseo에서 사용할 모델을 선택하세요",
+      automaticHint: "hizuri가 사용 가능한 빠른 모델을 선택합니다",
+      preferredHint: "hizuri에서 사용할 모델을 선택하세요",
       model: "모델",
-      fallbackHint: "사용할 수 없으면 Paseo가 다른 사용 가능한 모델을 사용합니다",
+      fallbackHint: "사용할 수 없으면 hizuri가 다른 사용 가능한 모델을 사용합니다",
       docs: "문서",
       saveError: "메타데이터 생성을 업데이트할 수 없습니다",
     },
@@ -2120,7 +2423,7 @@ export const ko: TranslationResources = {
       browserData: {
         title: "브라우저 데이터",
         siteData: "쿠키 및 사이트 데이터",
-        description: "브라우저 탭은 Paseo 전체에서 로그인 및 사이트 데이터를 공유합니다.",
+        description: "브라우저 탭은 hizuri 전체에서 로그인 및 사이트 데이터를 공유합니다.",
         clear: "브라우저 데이터 지우기",
         clearing: "삭제 중...",
         confirmTitle: "브라우저 데이터를 삭제하시겠습니까?",
@@ -2147,7 +2450,7 @@ export const ko: TranslationResources = {
       serviceUrls: {
         options: {
           ask: "물어보기",
-          inApp: "Paseo에서",
+          inApp: "hizuri에서",
           external: "외부 브라우저",
         },
       },
@@ -2180,13 +2483,16 @@ export const ko: TranslationResources = {
           ja: "일본어",
           ko: "한국어",
           ptBR: "브라질 포르투갈어",
-          ru: "Русский",
           zhCN: "简体中文",
         },
       },
     },
     diagnostics: {
       title: "진단",
+      uploadLogs: {
+        label: "앱 로그를 호스트로 보내기",
+        description: "경고, 음성 상태, 마이크 레벨을 호스트의 app-logs로 보냅니다",
+      },
       legacyTerminalRenderer: {
         label: "레거시 터미널 렌더러 사용",
         description: "터미널을 다시 열 때 이전 WebView 터미널을 사용합니다.",
@@ -2231,7 +2537,7 @@ export const ko: TranslationResources = {
         label: "앱 업데이트",
         readyToInstall: "설치 준비됨: {{version}}",
         installTitle: "데스크톱 업데이트 설치",
-        installMessage: "이 컴퓨터의 Paseo를 업데이트합니다",
+        installMessage: "이 컴퓨터의 hizuri를 업데이트합니다",
         installConfirm: "업데이트 설치",
         update: "업데이트",
         updateTo: "{{version}}(으)로 업데이트",
@@ -2305,6 +2611,28 @@ export const ko: TranslationResources = {
         reset: "재설정",
         resetAccessibility: "콘텐츠 너비를 기본값으로 재설정",
       },
+      show: {
+        title: "Show",
+        switcher: {
+          title: "탭 전환 방식",
+          capsule: {
+            label: "캡슐",
+            description: "아래 알약: 밀어서 탭 전환, 탭하면 모든 탭",
+          },
+          deck: {
+            label: "덱",
+            description: "아래 칩: 탭, 위로 당기기 또는 핀치로 탭을 카드로 보기",
+          },
+          rail: {
+            label: "점 레일",
+            description: "오른쪽 가장자리의 점: 누른 채 위아래로 밀기",
+          },
+          inside: {
+            label: "탭 안에서 밀기",
+            description: "탭 자체를 밀기. 페이지는 왼쪽 가장자리에서 넘어갑니다",
+          },
+        },
+      },
       syntax: {
         title: "구문",
         highlightTheme: "강조 테마",
@@ -2319,6 +2647,7 @@ export const ko: TranslationResources = {
       searchPlaceholder: "검색 단축키",
       unavailableOnMobile: "키보드 단축키는 데스크톱에서만 사용할 수 있습니다",
       capturePrompt: "단축키를 누르세요...",
+      captureIndexPrompt: "마지막에 1부터 9까지의 숫자를 입력하세요.",
       unassigned: "설정되지 않음",
       actions: {
         menu: "{{name}} 작업",
@@ -2478,11 +2807,11 @@ export const ko: TranslationResources = {
         title: "오케스트레이션 스킬",
         description: "CLI를 통해 에이전트가 오케스트레이션하도록 가르칩니다",
         updateAvailable: "업데이트 사용 가능",
-        updateTitle: "Paseo 스킬을 업데이트할까요?",
+        updateTitle: "hizuri 스킬을 업데이트할까요?",
         updateFallback: "번들된 스킬을 내 컴퓨터에 동기화합니다.",
-        uninstallTitle: "Paseo 스킬을 제거할까요?",
+        uninstallTitle: "hizuri 스킬을 제거할까요?",
         uninstallMessage:
-          "~/.agents, ~/.claude, ~/.codex에서 모든 Paseo 오케스트레이션 스킬을 제거합니다.",
+          "~/.agents, ~/.claude, ~/.codex에서 모든 hizuri 오케스트레이션 스킬을 제거합니다.",
         choose: "스킬 선택",
         chooseAll: "모든 스킬",
         chooseAllHint: "나중에 추가되는 항목을 포함하여 모든 번들 스킬을 설치된 상태로 유지합니다.",
@@ -2518,9 +2847,9 @@ export const ko: TranslationResources = {
         title: "오케스트레이션",
         unavailable: "오케스트레이션을 관리하려면 이 호스트에 연결하세요",
         enableTools: {
-          title: "Paseo 도구 활성화",
+          title: "hizuri 도구 활성화",
           hint: "에이전트가 워크트리, 에이전트, 일정을 관리할 수 있습니다",
-          accessibilityLabel: "Paseo 도구 주입",
+          accessibilityLabel: "hizuri 도구 주입",
         },
         systemPrompt: {
           title: "시스템 프롬프트",
@@ -2624,15 +2953,15 @@ export const ko: TranslationResources = {
             "이 호스트는 연결되어 있지 않습니다. 재시작하기 전에 온라인 상태가 될 때까지 기다리세요.",
           offlineTitle: "호스트 오프라인",
           offlineMessage:
-            "이 호스트는 오프라인입니다. Paseo가 자동으로 다시 연결하므로 다시 온라인이 될 때까지 기다린 후 재시작하세요.",
+            "이 호스트는 오프라인입니다. hizuri가 자동으로 다시 연결하므로 다시 온라인이 될 때까지 기다린 후 재시작하세요.",
           requestFailedTitle: "오류",
           requestFailedMessage:
-            "재시작 요청을 보내지 못했습니다. Paseo가 자동으로 다시 연결하므로 호스트가 온라인으로 표시되면 다시 시도하세요.",
+            "재시작 요청을 보내지 못했습니다. hizuri가 자동으로 다시 연결하므로 호스트가 온라인으로 표시되면 다시 시도하세요.",
           dialogFailedMessage: "재시작 확인 대화 상자를 열 수 없습니다.",
         },
         update: {
           desktopManagedHint:
-            "이 데몬은 Paseo Desktop에서 관리됩니다. 호스트에서 Paseo 데스크톱을 업데이트합니다.",
+            "이 데몬은 hizuri Desktop에서 관리됩니다. 호스트에서 hizuri 데스크톱을 업데이트합니다.",
           title: "데몬 업데이트",
           hint: "데몬을 최신 버전으로 업데이트하고 다시 시작하세요.",
           confirm: "업데이트",
@@ -2793,7 +3122,7 @@ export const ko: TranslationResources = {
         newScript: "새 스크립트",
         editScript: "{{name}} 편집",
         runAsService: "서비스로 실행",
-        serviceHint: "Paseo가 프로세스를 감독하고 $PASEO_PORT를 통해 포트를 할당합니다",
+        serviceHint: "hizuri가 프로세스를 감독하고 $PASEO_PORT를 통해 포트를 할당합니다",
         actions: {
           add: "스크립트 추가",
           edit: "편집",
@@ -2802,7 +3131,7 @@ export const ko: TranslationResources = {
       },
       metadata: {
         title: "메타데이터 생성",
-        info: "Paseo가 메타데이터를 생성하는 데 사용하는 AI 프롬프트에 주입되는 프로젝트별 지침 - 브랜치 이름, 커밋 스타일, PR 형식 같은 팀 규칙을 적용하는 데 사용하세요",
+        info: "hizuri가 메타데이터를 생성하는 데 사용하는 AI 프롬프트에 주입되는 프로젝트별 지침 - 브랜치 이름, 커밋 스타일, PR 형식 같은 팀 규칙을 적용하는 데 사용하세요",
         branchName: "브랜치 이름",
         branchNamePlaceholder:
           "브랜치에 feat/ 또는 fix/를 접두사로, 개인 브랜치에는 mb/를 붙이세요",

@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { DiagramColorScheme, MermaidRenderRequest } from "./render-model";
-import { mermaidRuntimeHtml } from "./runtime/html.gen";
 import { parseMermaidRuntimeMessage, type MermaidRuntimeRenderMessage } from "./runtime/messages";
 import { MermaidRuntimeRequestDriver } from "./runtime/request-driver";
 
@@ -18,6 +17,14 @@ interface MermaidIframeRuntimeProps {
   onRenderFailed: (revision: number) => void;
 }
 
+// The runtime page is 3.6 MB of Mermaid. It loads as its own chunk the first time a diagram
+// shows, so the app's first load does not carry it.
+let runtimeHtml: Promise<string> | null = null;
+function loadMermaidRuntimeHtml(): Promise<string> {
+  runtimeHtml ??= import("./runtime/html.gen").then((module) => module.mermaidRuntimeHtml);
+  return runtimeHtml;
+}
+
 /** Sandboxed Mermaid renderer. Sizing and gestures belong to the surrounding viewport. */
 export function MermaidIframeRuntime({
   request,
@@ -27,6 +34,19 @@ export function MermaidIframeRuntime({
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const driverRef = useRef<MermaidRuntimeRequestDriver | null>(null);
   driverRef.current ??= new MermaidRuntimeRequestDriver();
+  const [html, setHtml] = useState<string | null>(null);
+
+  useEffect(() => {
+    let current = true;
+    const show = async () => {
+      const loaded = await loadMermaidRuntimeHtml();
+      if (current) setHtml(loaded);
+    };
+    void show();
+    return () => {
+      current = false;
+    };
+  }, []);
 
   const sendRequest = useCallback((current: MermaidRenderRequest | null) => {
     const target = iframeRef.current?.contentWindow;
@@ -68,6 +88,8 @@ export function MermaidIframeRuntime({
 
   // `inert` (not just tabIndex) because the Modal focus trap focuses descendants
   // programmatically; a focused iframe swallows every keystroke, including Escape.
+  if (html === null) return null;
+
   return (
     <iframe
       ref={iframeRef}
@@ -75,7 +97,7 @@ export function MermaidIframeRuntime({
       aria-hidden
       inert
       sandbox="allow-scripts"
-      srcDoc={mermaidRuntimeHtml}
+      srcDoc={html}
       tabIndex={-1}
       style={iframeStyle}
     />

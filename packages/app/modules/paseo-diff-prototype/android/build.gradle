@@ -10,13 +10,17 @@ useCoreDependencies()
 useDefaultAndroidSdkVersions()
 
 def skiaPackage = new File(["node", "--print", "require.resolve('@shopify/react-native-skia/package.json')"].execute(null, projectDir).text.trim()).parentFile
+// Skia's prebuilt static libraries ship in react-native-skia-android (Skia >= 2.3), resolved from
+// Skia itself so they always match its headers.
+def skiaLibs = new File(new File(["node", "--print", "require.resolve('react-native-skia-android/package.json', { paths: [process.argv[1]] })", skiaPackage.absolutePath].execute(null, projectDir).text.trim()).parentFile, "libs")
 
 android {
+  ndkVersion rootProject.ext.ndkVersion
   namespace "sh.paseo.diffprototype"
   defaultConfig {
     externalNativeBuild {
       cmake {
-        arguments "-DSKIA_PACKAGE=${skiaPackage.absolutePath}"
+        arguments "-DSKIA_PACKAGE=${skiaPackage.absolutePath}", "-DSKIA_LIBS=${skiaLibs.absolutePath}"
         cppFlags "-std=c++20 -O2 -fexceptions -frtti"
       }
     }

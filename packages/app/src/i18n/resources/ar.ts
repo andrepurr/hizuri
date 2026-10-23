@@ -2,6 +2,9 @@ import { en, type TranslationResources } from "./en";
 import { pluginSettings } from "./plugin-settings";
 
 export const ar: TranslationResources = {
+  assistant: {
+    name: "زوري",
+  },
   paneFind: {
     connectionFailure: "تعذر البحث في هذه المحادثة. تحقق من الاتصال بالمضيف وأعد المحاولة.",
     historyChangedFailure: "تغيّرت المحادثة أثناء البحث. أعد البحث.",
@@ -25,11 +28,153 @@ export const ar: TranslationResources = {
     position: "{{current}} من {{total}}",
     total: "{{total}} تطابقات",
   },
+  freeBrain: {
+    title: "العقل",
+    label: "عقل hizuri المجاني",
+    description:
+      "عقل مبدئي مجاني تدفع hizuri تكلفته، بحد يومي. يتحدث معك من الدقيقة الأولى ويساعدك على ربط Claude Code.",
+    status: {
+      ready: "جاهز",
+      off: "متوقف",
+      checking: "جارٍ التحقق",
+      unavailable: "غير متاح بعد",
+    },
+    claudeCode: {
+      label: "Claude Code",
+      connected: "متصل: ابدأ محادثة جديدة مع Claude للعمل دون حدودنا.",
+      howTo: "عقلك الخاص، بلا حد منا. اسأل العقل المجاني: سيرشدك خطوة بخطوة لربطه.",
+    },
+    error: "تعذّر تغيير العقل المجاني.",
+  },
+  phoneLayout: {
+    label: "تخطيط الهاتف على الشاشات العريضة",
+    description:
+      "في المتصفح أو على الجهاز اللوحي: وجه $t(assistant.name) والدردشة وShow كما على الهاتف، لكن بحجم أكبر. أوقفه للعودة إلى تخطيط سطح المكتب مع الترويسة واللوحات الجانبية.",
+  },
+  simpleMode: {
+    label: "النسخة البسيطة",
+    description:
+      "$t(assistant.name) والإعدادات فقط. أوقفها للتطبيق الكامل مع مساحات العمل والسجل والبحث والجداول.",
+    menu: {
+      assistant: "$t(assistant.name)",
+      face: "الوجه",
+      chat: "الدردشة",
+    },
+  },
+  face: {
+    title: "وجه $t(assistant.name)",
+    loading: {
+      starting: "جارٍ تحميل وجه $t(assistant.name)…",
+      downloading: "جارٍ تنزيل وجه $t(assistant.name) · {{percent}}%",
+      preparing: "جارٍ تجهيز وجه $t(assistant.name) ثلاثي الأبعاد…",
+      failed: "تعذّر تحميل وجه $t(assistant.name): {{message}}",
+      noWebgl:
+        "يحتاج وجه $t(assistant.name) إلى WebGL، وهو متوقف في هذا المتصفح. اسمح بـ WebGL لهذا الموقع (في LibreWolf: الأيقونة في شريط العنوان)، ثم اضغط إعادة المحاولة.",
+      retry: "إعادة المحاولة",
+    },
+    inVoiceMode: {
+      label: "الوجه في الوضع الصوتي",
+      description:
+        "اعرض وجه $t(assistant.name): على الهاتف في الصفحة الأولى، وعلى الشاشة العريضة فوق المحادثة أثناء التحدث. أوقفه إذا تقطّع صوت المساعد.",
+    },
+    float: {
+      label: "$t(assistant.name) فوق التطبيقات الأخرى",
+      description:
+        "عندما تغادر hizuri يبقى $t(assistant.name) على شاشتك فوق أي تطبيق: اسحب المساعد بإصبعك، انقر عليه، واضغط مطولًا لفتح أو إخفاء. يختفي المساعد عند فتح hizuri.",
+      permissionTitle: "السماح ل $t(assistant.name) بالظهور فوق التطبيقات",
+      permissionMessage:
+        "فعّل «الظهور فوق التطبيقات الأخرى» لـ hizuri. إذا كان المفتاح رماديًا: معلومات التطبيق ← ⋮ ← السماح بالإعدادات المقيدة، ثم أعد المحاولة.",
+      permissionOpen: "فتح الإعدادات",
+      open: "فتح hizuri",
+      hide: "إخفاء $t(assistant.name)",
+      notification: "$t(assistant.name) على شاشتك",
+    },
+  },
+  agentPages: {
+    sessionMenu: "الجلسة",
+    tabs: {
+      face: "$t(assistant.name)",
+      chat: "الدردشة",
+      show: "Show",
+    },
+  },
+  show: {
+    title: "Show",
+    closeTab: "إغلاق علامة التبويب",
+    hidePerch: "إزالة $t(assistant.name) من البطاقة",
+    open: "فتح Show",
+    close: "العودة إلى الدردشة",
+    windows: "نوافذ Show",
+    defaultWindow: "Show",
+    limitsWindow: "الحدود",
+    screenWindow: "الشاشة",
+    liveWindow: "الآن",
+    screenWatch: "مشاهدة",
+    screenTakeOver: "تولي التحكم",
+    screenConnecting: "جارٍ الاتصال بالشاشة…",
+    secret: {
+      optional: "اختياري",
+      note: "يذهب مباشرة إلى خزنتك. لا يراه وكيلك أبدًا، يرى الاسم فقط.",
+      save: "حفظ",
+      saving: "جارٍ الحفظ…",
+      notNow: "ليس الآن",
+      saved: "حُفظ باسم «{{name}}»",
+      closed: "أُغلق دون حفظ",
+      notSent: "لم يُرسل. تحقق من الاتصال.",
+      fields: {
+        username: "اسم الدخول",
+        password: "كلمة المرور",
+        address: "البريد",
+        holder: "الاسم على البطاقة",
+        number: "رقم البطاقة",
+        expiry: "تاريخ الانتهاء",
+        cvc: "CVC",
+        value: "القيمة",
+        perPayment: "الحد الأقصى للدفعة",
+        perMonth: "الحد الأقصى شهريًا",
+        currency: "العملة",
+      },
+    },
+    tabs: {
+      kind: {
+        page: "صفحة ويب",
+        picture: "صورة",
+        video: "فيديو",
+        player: "مشغّل",
+        screen: "الشاشة",
+        live: "مباشر",
+        canvas: "لوحة",
+      },
+      allTabs: "كل علامات التبويب · {{count}}",
+      closeCards: "إخفاء البطاقات",
+      position: "علامة التبويب {{index}} من {{count}}",
+      capsuleHint: "اسحب جانبيًا لتغيير علامة التبويب، وانقر لعرضها كلها",
+      deckHint: "انقر أو اسحب للأعلى لعرض كل علامات التبويب",
+      releaseToCancel: "اترك للإلغاء",
+      insideEdgeHint: "تُقلب الصفحة من الحافة اليسرى",
+    },
+    page: {
+      empty: "لا شيء للعرض بعد",
+      loading: "جارٍ التحميل…",
+      resetsAt: "إعادة التعيين: {{time}}",
+      inTime: "بعد {{time}}",
+      updated: "تم التحديث {{time}}",
+      used: "مستخدم",
+      noData: "لا توجد بيانات استخدام",
+      widgetError: "تعذّر العرض",
+      days: "ي",
+      hours: "س",
+      minutes: "د",
+      fiveHour: "5 ساعات",
+      weekly: "الأسبوع",
+    },
+  },
   common: {
     bottomSheetBackdrop: "خلفية اللوحة السفلية",
     back: "خلف",
     loading: "تحميل...",
     actions: {
+      save: "حفظ",
       back: "خلف",
       cancel: "يلغي",
       close: "يغلق",
@@ -123,6 +268,8 @@ export const ar: TranslationResources = {
     input: {
       accessibilityLabel: "وكيل الرسائل...",
       terminalAccessibilityLabel: "Terminal prompt",
+      fullscreen: "ملء الشاشة",
+      exitFullscreen: "الخروج من ملء الشاشة",
       focusHint: "{{shortcut}}للتركيز",
       addAttachment: "إضافة مرفق",
       interruptAgent: "عامل المقاطعة",
@@ -139,8 +286,6 @@ export const ar: TranslationResources = {
       interrupt: "مقاطعة",
     },
     voice: {
-      enableVoiceMode: "تمكين الوضع الصوتي",
-      voiceMode: "وضع الصوت",
       unmuteVoiceMode: "إلغاء كتم وضع الصوت",
       muteVoiceMode: "وضع كتم الصوت",
       stopDictation: "توقف عن الإملاء",
@@ -148,7 +293,6 @@ export const ar: TranslationResources = {
       unmuteVoice: "إلغاء كتم الصوت",
       muteVoice: "كتم الصوت",
       dictation: "الإملاء",
-      interruptBeforeVoice: "قم بمقاطعة الوكيل قبل بدء الوضع الصوتي",
     },
     attachments: {
       addImage: "أضف صورة",
@@ -353,10 +497,20 @@ export const ar: TranslationResources = {
     speak: {
       header: "تكلم",
     },
+    spoken: {
+      phrase: "قيل",
+      correction: "قيل · مصحَّح",
+    },
+    guardian: {
+      header: "ملاحظة الحارس",
+      fix: "الإجراء: {{fix}}",
+      rule: "القاعدة: {{rule}}",
+    },
     activity: {
       details: "تفاصيل",
     },
     dictation: {
+      paused: "تمت مقاطعة الميكروفون. في انتظار الاستئناف…",
       start: "بدء الإملاء الصوتي",
       cancel: "إلغاء الإملاء",
       retry: "أعد محاولة الإملاء",
@@ -366,6 +520,7 @@ export const ar: TranslationResources = {
       failedRetry: "فشل الإملاء. اضغط على إعادة المحاولة.",
     },
     question: {
+      responseFailed: "تعذر إرسال ردك. حاول مرة أخرى.",
       submit: "يُقدِّم",
       next: "التالي",
       answerPlaceholder: "اكتب إجابتك...",
@@ -533,6 +688,7 @@ export const ar: TranslationResources = {
       },
     },
     setup: {
+      updateHost: "حدّث المضيف لعرض تفاصيل إعداد مساحة العمل",
       descriptor: {
         label: "يثبت",
         completed: "اكتمل الإعداد",
@@ -610,6 +766,9 @@ export const ar: TranslationResources = {
       updateHost: "حدّث المضيف لاستخدام عارض الطرفية الأصلي.",
       unableToSubscribe: "غير قادر على الاشتراك في المحطة",
     },
+    sheet: {
+      openAsTab: "فتح كعلامة تبويب",
+    },
     tabs: {
       loading: "تحميل...",
       modified: "تغييرات غير محفوظة",
@@ -625,7 +784,7 @@ export const ar: TranslationResources = {
       },
       switcher: {
         trigger: "تبديل علامات التبويب (فتح{{count}})",
-        title: "علامة التبويب التبديل",
+        title: "علامات تبويب الـ Workspace",
         searchPlaceholder: "علامات تبويب البحث",
       },
       menu: {
@@ -723,6 +882,7 @@ export const ar: TranslationResources = {
     header: {
       actions: {
         workspaceActions: "إجراءات Workspace",
+        workspaceActionsUnhealthy: "إجراءات Workspace، توجد خدمة غير سليمة",
         newAgent: "وكيل جديد",
         newTerminal: "محطة جديدة",
         newBrowser: "علامة تبويب متصفح جديدة",
@@ -770,6 +930,8 @@ export const ar: TranslationResources = {
         exitCode: "الخروج من{{code}}",
         startFailed: "فشل بدء تشغيل{{scriptName}}",
         stopFailed: "فشل إيقاف{{scriptName}}",
+        running: "قيد التشغيل",
+        runningCount: "{{count}} قيد التشغيل",
       },
     },
     tree: {
@@ -872,7 +1034,7 @@ export const ar: TranslationResources = {
           updateCurrent: "التحديث غير متاح لأن هذا الفرع محدث بالفعل باستخدام{{baseRef}}",
           mergePrNoGithub: "دمج PR غير متاح الآن لأن GitHub غير متصل",
           archiveNotWorktree:
-            "الأرشيف غير متاح هنا لأنه لم يتم إنشاء مساحة العمل هذه كشجرة عمل Paseo",
+            "الأرشيف غير متاح هنا لأنه لم يتم إنشاء مساحة العمل هذه كشجرة عمل hizuri",
           mergePrNoForge: "دمج {{noun}} غير متاح الآن لأن {{brand}} غير متصل",
           mergePrMissing: "دمج PR غير متاح لأنه لا يوجد طلب سحب حتى الآن",
           mergePrDraft: "دمج PR غير متاح لأن طلب السحب لا يزال مسودة",
@@ -944,6 +1106,7 @@ export const ar: TranslationResources = {
         checkingRepository: "فحص المستودع...",
         notRepository: "ليس مستودع جيت",
         diffMode: "وضع الفرق",
+        all: "كل التغييرات",
         uncommitted: "غير ملتزم",
         committed: "ملتزم",
         branchUnknown: "مجهول",
@@ -1147,6 +1310,7 @@ export const ar: TranslationResources = {
       done: "تم",
     },
     display: {
+      showBackground: "إظهار مساحات العمل في الخلفية",
       trigger: "تفضيلات العرض",
       heading: "العرض",
       grouping: {
@@ -1218,7 +1382,7 @@ export const ar: TranslationResources = {
       discord: "Discord",
       github: "إنشاء مشكلة على GitHub",
       whatsNew: "ما الجديد",
-      appName: "Paseo",
+      appName: "hizuri",
     },
     sections: {
       sessions: "السجل",
@@ -1322,8 +1486,9 @@ export const ar: TranslationResources = {
     },
     fields: {
       project: "المشروع",
-      base: "الأساس",
+      branch: "الفرع",
       baseNotApplicable: "غير قابل للتطبيق",
+      host: "المضيف",
     },
     titlePlaceholder: "العنوان (اختياري)",
     errors: {
@@ -1365,7 +1530,7 @@ export const ar: TranslationResources = {
       close: "إغلاق النافذة",
     },
     quitting: {
-      title: "جارٍ إنهاء Paseo...",
+      title: "جارٍ إنهاء hizuri...",
       detail: "إيقاف البرنامج الخفي المحلي.",
     },
     daemon: {
@@ -1380,20 +1545,20 @@ export const ar: TranslationResources = {
       },
       management: {
         title: "إدارة البرنامج الخفي المدمج",
-        hint: "اسمح لـ Paseo ببدء تشغيل البرنامج الخفي المدمج وإيقافه",
+        hint: "اسمح لـ hizuri ببدء تشغيل البرنامج الخفي المدمج وإيقافه",
         pauseTitle: "وقفة المدمج في البرنامج الخفي",
         pauseMessage:
           "سيؤدي هذا إلى إيقاف البرنامج الخفي المدمج على الفور. سيتم إيقاف تشغيل الوكلاء والمحطات الطرفية المتصلة بالبرنامج الخفي المدمج.",
         pauseAndStop: "وقفة وتوقف",
         registrationFailed:
-          "Built-in daemon started, but Paseo could not save the localhost connection. Toggle daemon management off and on again, or add localhost manually.",
+          "Built-in daemon started, but hizuri could not save the localhost connection. Toggle daemon management off and on again, or add localhost manually.",
         pausedStopFailed:
-          "تم إيقاف إدارة البرنامج الخفي المضمنة مؤقتًا، لكن لم يتمكن Paseo من إيقاف البرنامج الخفي.",
+          "تم إيقاف إدارة البرنامج الخفي المضمنة مؤقتًا، لكن لم يتمكن hizuri من إيقاف البرنامج الخفي.",
         updateFailed: "غير قادر على تحديث إدارة البرنامج الخفي المضمنة.",
       },
       keepRunning: {
         title: "استمر في تشغيل البرنامج الخفي بعد الإقلاع عن التدخين",
-        hint: "يستمر تشغيل Daemon عند إنهاء Paseo",
+        hint: "يستمر تشغيل Daemon عند إنهاء hizuri",
       },
       logs: {
         title: "ملف السجل",
@@ -1408,7 +1573,7 @@ export const ar: TranslationResources = {
       fullStatus: {
         title: "الوضع الكامل",
         modalTitle: "حالة Daemon",
-        hint: "يقوم بتشغيل`paseo daemon status`ويظهر الإخراج",
+        hint: "يعرض تقرير الحالة الكامل للخادم",
         view: "عرض الحالة",
         copied: "تم نسخ الحالة إلى الحافظة.",
         fetchFailed: "فشل جلب حالة البرنامج الخفي:{{message}}",
@@ -1459,7 +1624,7 @@ export const ar: TranslationResources = {
     },
     rosetta: {
       title: "قم بتنزيل نسخة Apple Silicon",
-      runningIntel: "أنت تقوم بتشغيل إصدار Intel من Paseo ضمن Rosetta على Apple Silicon.",
+      runningIntel: "أنت تقوم بتشغيل إصدار Intel من hizuri ضمن Rosetta على Apple Silicon.",
       highCpu:
         "يؤدي هذا إلى ارتفاع استخدام وحدة المعالجة المركزية. قم بتنزيل إصدار Apple Silicon لإصلاحه.",
       download: "تحميل",
@@ -1502,7 +1667,7 @@ export const ar: TranslationResources = {
         microphone: "لم يتم التحقق من حالة الميكروفون بعد.",
       },
       testNotification: {
-        title: "اختبار الإخطار Paseo",
+        title: "اختبار الإخطار hizuri",
         body: "إذا كان بإمكانك رؤية ذلك، فهذا يعني أن إشعارات سطح المكتب تعمل.",
         notDelivered: "لم يتم تسليم الإخطار. تحقق من إعدادات النظام > الإشعارات.",
         failed: "فشل في إرسال الإخطار.",
@@ -1516,14 +1681,13 @@ export const ar: TranslationResources = {
     },
   },
   rootError: {
-    title: "واجه Paseo مشكلة.",
+    title: "واجه hizuri مشكلة.",
     body: "جرّب مرة أخرى لإعادة تحميل التطبيق. إذا استمر حدوث ذلك، فأرفق التفاصيل أدناه عند الإبلاغ عنه.",
     details: "التفاصيل",
   },
   startup: {
     errorTitle: "حدث خطأ ما",
-    errorDescription:
-      "فشل الخادم المحلي في البدء. إذا استمر حدوث ذلك، فيرجى الإبلاغ عن المشكلة على GitHub وتضمين السجلات أدناه.",
+    errorDescription: "فشل الخادم المحلي في البدء. إذا استمر حدوث ذلك، فانسخ السجلات أدناه.",
     logs: {
       loading: "جارٍ تحميل سجلات البرنامج الخفي...",
       unavailable: "لا توجد سجلات خفية متاحة.",
@@ -1612,7 +1776,7 @@ export const ar: TranslationResources = {
     },
   },
   onboarding: {
-    title: "مرحبا بكم في Paseo",
+    title: "مرحبا بكم في hizuri",
     subtitle: "قم بتوصيل جهاز الكمبيوتر الخاص بك للبدء",
     actions: {
       settings: "إعدادات",
@@ -1720,7 +1884,7 @@ export const ar: TranslationResources = {
     },
     direct: {
       title: "اتصال مباشر",
-      helper: "أدخل عنوان خادم Paseo.",
+      helper: "أدخل عنوان خادم hizuri.",
       fields: {
         host: "Host",
         port: "ميناء",
@@ -1763,7 +1927,7 @@ export const ar: TranslationResources = {
     },
     remoteSsh: {
       title: "SSH عن بُعد",
-      helper: "الاتصال بخادم Paseo يعمل على المضيف البعيد.",
+      helper: "الاتصال بخادم hizuri يعمل على المضيف البعيد.",
       fields: {
         target: "مضيف SSH",
         password: "كلمة مرور الدايمون",
@@ -1824,15 +1988,15 @@ export const ar: TranslationResources = {
       enableDescription:
         "يتيح التتابع لهذا الجهاز الاتصال من أي مكان. حركة مرور الإقران مشفرة من طرف إلى طرف.",
       relayDocs: "كيفية عمل التتابع",
-      relayDocsAccessibility: "اقرأ كيفية عمل تتابع Paseo",
+      relayDocsAccessibility: "اقرأ كيفية عمل تتابع hizuri",
       enableRelay: "تمكين التتابع",
       enablingRelay: "جارٍ التمكين...",
       notNow: "ليس الآن",
       directConnectionHint:
         "بدون التتابع، اتصل مباشرة عبر TCP أو Tailscale أو شبكة VPN أخرى. لن يتم إنشاء رمز QR.",
-      updateRequired: "حدّث المضيف لتمكين التتابع من Paseo Desktop.",
+      updateRequired: "حدّث المضيف لتمكين التتابع من hizuri Desktop.",
       unavailable: "عرض الاقتران غير متاح.",
-      hint: "قم بمسح رمز QR هذا باستخدام Paseo على هاتفك، أو انسخ الرابط أدناه.",
+      hint: "قم بمسح رمز QR هذا باستخدام hizuri على هاتفك، أو انسخ الرابط أدناه.",
       securityWarning:
         "تعامل مع رابط الاقتران هذا ككلمة مرور. يمكن لأي شخص يملكه الوصول إلى هذا البرنامج الخفي.",
       qrUnavailable: "رمز QR غير متاح.",
@@ -1844,9 +2008,28 @@ export const ar: TranslationResources = {
   },
   realtimeVoice: {
     actions: {
+      startSession: "بدء الجلسة",
       mute: "كتم صوت الوقت الحقيقي",
       unmute: "إلغاء كتم صوت الوقت الحقيقي",
-      stop: "إيقاف الصوت في الوقت الحقيقي ومقاطعة الدوران",
+      switchToText: "التبديل إلى النص مع إبقاء الجلسة",
+      switchToVoice: "العودة إلى الصوت",
+      endSession: "إنهاء الجلسة",
+      attachPhoto: "إرسال صورة",
+    },
+    endSessionConfirm: {
+      title: "إنهاء الجلسة؟",
+      message: "سيُغلق الصوت ووضع الصوت للوكيل والجلسة المحفوظة.",
+    },
+    live: {
+      updateHost: "حدّث المضيف لترى كلماتك أثناء حديثك",
+    },
+    status: {
+      starting: "جارٍ تشغيل الصوت...",
+      stopping: "جارٍ إيقاف الصوت...",
+    },
+    moved: "انتقل الوضع الصوتي إلى هنا",
+    errors: {
+      noSession: "ابدأ جلسة أولاً",
     },
   },
   rewind: {
@@ -1867,7 +2050,7 @@ export const ar: TranslationResources = {
   serviceUrl: {
     title: "افتح الخدمة URL",
     message: "افتح{{url}}؟",
-    inPaseo: "في Paseo",
+    inPaseo: "في hizuri",
     externalBrowser: "متصفح خارجي",
     dontAskAgain: "لا تسأل مرة أخرى",
   },
@@ -1904,12 +2087,32 @@ export const ar: TranslationResources = {
       creatingAgent: "وكيل الخلق",
     },
     file: {
+      filePanels: {
+        pickerTitleExtension: "فتح ملفات .{{extension}} باستخدام",
+        pickerTitleFilename: "فتح {{filename}} باستخدام",
+        dontAskAgain: "لا تسألني مرة أخرى",
+        use: "استخدام",
+        openWith: "فتح باستخدام…",
+        alwaysUseExtension: "استخدام دائمًا لـ .{{extension}}",
+        alwaysUseFilename: "استخدام دائمًا لـ {{filename}}",
+        option: "{{title}} — {{owner}}",
+        actions: "إجراءات الملف",
+        builtin: {
+          owner: "Paseo",
+          markdown: "Markdown",
+          html: "HTML",
+          image: "صورة",
+          source: "المصدر",
+        },
+      },
       directoryMissing: "لم يتم العثور على دليل Workspace.",
       loading: "جارٍ تحميل الملف...",
       noPreview: "لا تتوفر معاينة",
       binaryPreviewUnavailable: "المعاينة الثنائية غير متاحة",
       tooLargeToDisplay: "هذا الملف كبير جدًا بحيث لا يمكن عرضه",
+      documentUnsupported: "لا يمكن عرض ملفات {{type}} على هذا الجهاز",
       failedToLoad: "فشل تحميل الملف",
+      notFound: "الملف غير موجود",
       failedToLoadPreview: "فشل تحميل معاينة الملف",
       editor: {
         fileSize: "حجم الملف {{size}}",
@@ -1921,10 +2124,7 @@ export const ar: TranslationResources = {
         changedOnDisk: "تغيّر على القرص",
         vimMode: "وضع Vim ‏{{mode}}",
         cursor: "السطر {{line}}، العمود {{column}}",
-        preview: "معاينة",
-        source: "المصدر",
         deletedTitle: "تم حذف الملف من القرص",
-        checkFailedTitle: "تعذّر التحقق من الملف على القرص",
         preservedDescription: "تم الاحتفاظ بالنسخة المفتوحة.",
         conflictDescription: "تم الاحتفاظ بالمحتوى المحلي. اختر الإصدار الذي تريد إبقاءه.",
         overwrite: "استبدال",
@@ -1987,10 +2187,28 @@ export const ar: TranslationResources = {
       other: "استخدم {{count}} أدوات أخرى",
     },
     paseoCalls: {
-      one: "استدعى Paseo {{count}} مرة",
-      other: "استدعى Paseo {{count}} مرات",
+      one: "استدعى hizuri {{count}} مرة",
+      other: "استدعى hizuri {{count}} مرات",
     },
     and: "و",
+  },
+  showMedia: {
+    youtube: "YouTube",
+    audio: "صوت",
+    playerWindow: "المشغّل",
+    play: "تشغيل",
+    pause: "إيقاف مؤقت",
+    back15: "رجوع 15 ثانية",
+    forward15: "تقديم 15 ثانية",
+    openInYoutube: "فتح في YouTube",
+    onlyInYoutube: "لا يسمح YouTube بتشغيل هذا الفيديو هنا",
+    cannotPlay: "تعذّر التشغيل: {{reason}}",
+    needsDirectConnection: "يتطلب هذا اتصالًا مباشرًا بالمضيف",
+    accessTitle: "اسمح لـ hizuri بالتحكم في الوسائط",
+    accessMessage:
+      "لإيقاف الموسيقى والأفلام في تطبيقاتك مؤقتًا أو تخطيها أو إرجاعها، يحتاج hizuri إلى الوصول إلى الإشعارات. لا يقرأ hizuri أي إشعارات؛ ولا يمنح Android التحكم في الوسائط إلا عبر هذا الخيار.",
+    accessConfirm: "فتح الإعدادات",
+    accessCancel: "ليس الآن",
   },
   renameModal: {
     rename: "إعادة تسمية",
@@ -2009,6 +2227,17 @@ export const ar: TranslationResources = {
     accessibility: "تم استخدام نافذة السياق{{percentage}}%",
   },
   review: {
+    feedback: {
+      send: "إرسال الملاحظات ({{count}})",
+      sending: "جارٍ إرسال الملاحظات ({{count}})",
+      chooseAgent: "اختر وكيلاً",
+      sent: "تم إرسال الملاحظات إلى {{recipient}}",
+      "no-agents": "افتح علامة تبويب وكيل في مساحة العمل هذه لإرسال الملاحظات.",
+      disconnected: "اتصل بالمضيف لإرسال الملاحظات.",
+      "no-context": "لم تعد التعليقات المحفوظة تتطابق مع هذا الفرق.",
+      failed: "تعذر إرسال الملاحظات. حاول مرة أخرى.",
+      prompt: "يرجى معالجة مراجعة الكود هذه.",
+    },
     comment: {
       add: "إضافة تعليق المراجعة",
       edit: "تحرير تعليق المراجعة",
@@ -2019,6 +2248,106 @@ export const ar: TranslationResources = {
       cancelAccessibility: "إلغاء تعليق المراجعة",
       save: "تعليق",
       saveAccessibility: "حفظ تعليق المراجعة",
+    },
+  },
+  providerUsage: {
+    options: "الإعدادات",
+    refreshFailed: "تعذّر تحديث الاستخدام",
+    noHosts: "لا توجد مضيفات متصلة",
+    agentError: "تعذّر تحميل الاستخدام: {{reason}}",
+    pin: "تثبيت",
+    unpin: "إلغاء التثبيت",
+    displayAs: "النسب المئوية",
+    displayUsed: "المستخدم",
+    displayRemaining: "المتبقي",
+    showInSidebar: "ملخص في الشريط الجانبي",
+    showInSidebarHint: "تظهر الفترات المثبتة في أسفل الشريط الجانبي",
+    runToRefresh: "شغّل {{command}} للتحديث.",
+    signInAgain: "سجّل الدخول مجددًا.",
+    loginRejected: "تم رفض تسجيل الدخول (HTTP {{status}}). {{remedy}}",
+    loginExpired: "انتهت صلاحية تسجيل الدخول {{relativeTime}}. {{remedy}}",
+    title: "استخدام الخطة",
+    refresh: "تحديث",
+    refreshAll: "تحديث الكل",
+    refreshing: "جارٍ التحديث...",
+    loading: "جارٍ تحميل بيانات الاستخدام...",
+    empty: "لا توجد بيانات استخدام",
+    errorTitle: "تعذّر تحميل بيانات الاستخدام",
+    hostUnavailable: "اتصل بـ{{host}} لعرض استخدام المزوّد",
+    hostUpgradeRequired: "حدّث {{host}} لعرض استخدام المزوّد",
+    clientUnavailable: "اتصال المضيف غير جاهز",
+    retry: "حاول مرة أخرى",
+    tooltipLoading: "جارٍ تحميل استخدام الخطة...",
+    status: {
+      error: "خطأ",
+      unavailable: "غير متاح",
+    },
+    values: {
+      used: "تم استخدام {{percentage}}",
+      remaining: "متبقٍ {{amount}}",
+    },
+    labels: {
+      session: "الجلسة",
+      weekly: "أسبوعي",
+      monthly: "شهري",
+      codeReview: "مراجعة التعليمات البرمجية",
+      credits: "الأرصدة",
+      monthlyCredits: "أرصدة شهرية",
+    },
+    duration: {
+      days: "{{value}} يوم",
+      days_zero: "{{value}} يوم",
+      days_one: "يوم واحد",
+      days_two: "يومين",
+      days_few: "{{value}} أيام",
+      days_many: "{{value}} يومًا",
+      days_other: "{{value}} يوم",
+      hours: "{{value}} ساعة",
+      hours_zero: "{{value}} ساعة",
+      hours_one: "ساعة واحدة",
+      hours_two: "ساعتين",
+      hours_few: "{{value}} ساعات",
+      hours_many: "{{value}} ساعة",
+      hours_other: "{{value}} ساعة",
+      minutes: "{{value}} دقيقة",
+      minutes_zero: "{{value}} دقيقة",
+      minutes_one: "دقيقة واحدة",
+      minutes_two: "دقيقتين",
+      minutes_few: "{{value}} دقائق",
+      minutes_many: "{{value}} دقيقة",
+      minutes_other: "{{value}} دقيقة",
+    },
+    timing: {
+      lastUpdated: "آخر تحديث {{relativeTime}}",
+      noSuccessfulUpdate: "لا يوجد تحديث ناجح",
+      resetTimePassed: "مضى وقت إعادة التعيين",
+      resettingNow: "تتم إعادة التعيين الآن",
+      resetsIn: "تتم إعادة التعيين خلال {{duration}}",
+      runsOutNow: "ينفد الآن",
+      runsOutIn: "ينفد خلال {{duration}}",
+      justNow: "الآن",
+      daysAgo: "قبل {{value}} يومًا",
+      daysAgo_zero: "قبل {{value}} يوم",
+      daysAgo_one: "قبل يوم واحد",
+      daysAgo_two: "قبل يومين",
+      daysAgo_few: "قبل {{value}} أيام",
+      daysAgo_many: "قبل {{value}} يومًا",
+      daysAgo_other: "قبل {{value}} يوم",
+      hoursAgo: "قبل {{value}} ساعة",
+      hoursAgo_zero: "قبل {{value}} ساعة",
+      hoursAgo_one: "قبل ساعة واحدة",
+      hoursAgo_two: "قبل ساعتين",
+      hoursAgo_few: "قبل {{value}} ساعات",
+      hoursAgo_many: "قبل {{value}} ساعة",
+      hoursAgo_other: "قبل {{value}} ساعة",
+      minutesAgo: "قبل {{value}} دقيقة",
+      minutesAgo_zero: "قبل {{value}} دقيقة",
+      minutesAgo_one: "قبل دقيقة واحدة",
+      minutesAgo_two: "قبل دقيقتين",
+      minutesAgo_few: "قبل {{value}} دقائق",
+      minutesAgo_many: "قبل {{value}} دقيقة",
+      minutesAgo_other: "قبل {{value}} دقيقة",
+      updated: "تم التحديث {{relativeTime}}",
     },
   },
   settings: {
@@ -2049,6 +2378,7 @@ export const ar: TranslationResources = {
       terminal: "الطرفية",
       browser: "المتصفح",
       editor: "المحرر",
+      files: "الملفات",
       shortcuts: "الاختصارات",
       integrations: "التكامل",
       notifications: "الإشعارات",
@@ -2062,6 +2392,14 @@ export const ar: TranslationResources = {
       vimKeybindings: "اختصارات Vim",
       vimHint: "تنطبق على ملفات المصدر في الويب وسطح المكتب.",
     },
+    files: {
+      title: "الملفات",
+      askEveryTime: "اسأل في كل مرة",
+      askAgain: "اسأل مجددًا",
+      askAgainFor: "اسأل مجددًا عن {{label}}",
+      unavailable: "غير موجود على مضيف متصل",
+      empty: "تظهر لوحات الملفات هنا عندما تضيف إحدى الإضافات لوحة",
+    },
     notifications: {
       title: "الإشعارات",
       permission: "إذن الإشعارات",
@@ -2074,7 +2412,7 @@ export const ar: TranslationResources = {
       send: "إرسال",
       sending: "جارٍ الإرسال...",
       sentTitle: "تم إرسال إشعار الاختبار",
-      sentDescription: "سلّم Paseo الإشعار إلى نظام التشغيل.",
+      sentDescription: "سلّم hizuri الإشعار إلى نظام التشغيل.",
       sendFailedTitle: "تعذر إرسال إشعار الاختبار",
     },
     hostSections: {
@@ -2093,14 +2431,14 @@ export const ar: TranslationResources = {
     metadataGeneration: {
       title: "إنشاء البيانات الوصفية",
       description:
-        "اختر النموذج الذي يستخدمه Paseo لعناوين مساحات العمل وأسماء الفروع ورسائل الالتزام ومسودات طلبات السحب",
+        "اختر النموذج الذي يستخدمه hizuri لعناوين مساحات العمل وأسماء الفروع ورسائل الالتزام ومسودات طلبات السحب",
       selection: "اختيار النموذج",
       automatic: "تلقائي",
       preferred: "يدوي",
-      automaticHint: "يختار Paseo نموذجًا سريعًا متاحًا",
-      preferredHint: "اختر النموذج الذي يستخدمه Paseo",
+      automaticHint: "يختار hizuri نموذجًا سريعًا متاحًا",
+      preferredHint: "اختر النموذج الذي يستخدمه hizuri",
       model: "النموذج",
-      fallbackHint: "إذا لم يكن متاحًا، يستخدم Paseo نموذجًا آخر متاحًا",
+      fallbackHint: "إذا لم يكن متاحًا، يستخدم hizuri نموذجًا آخر متاحًا",
       docs: "الوثائق",
       saveError: "تعذر تحديث إنشاء البيانات الوصفية",
     },
@@ -2110,7 +2448,7 @@ export const ar: TranslationResources = {
       browserData: {
         title: "بيانات المتصفح",
         siteData: "ملفات تعريف الارتباط وبيانات المواقع",
-        description: "تتشارك علامات تبويب المتصفح تسجيلات الدخول وبيانات المواقع عبر Paseo.",
+        description: "تتشارك علامات تبويب المتصفح تسجيلات الدخول وبيانات المواقع عبر hizuri.",
         clear: "مسح بيانات المتصفح",
         clearing: "جارٍ المسح...",
         confirmTitle: "هل تريد مسح بيانات المتصفح؟",
@@ -2136,7 +2474,7 @@ export const ar: TranslationResources = {
       serviceUrls: {
         options: {
           ask: "بسأل",
-          inApp: "في Paseo",
+          inApp: "في hizuri",
           external: "متصفح خارجي",
         },
       },
@@ -2169,13 +2507,16 @@ export const ar: TranslationResources = {
           ja: "日本語",
           ko: "한국어",
           ptBR: "Português brasileiro",
-          ru: "Русский",
           zhCN: "中文",
         },
       },
     },
     diagnostics: {
       title: "التشخيص",
+      uploadLogs: {
+        label: "إرسال سجلات التطبيق إلى المضيف",
+        description: "تُرسل التحذيرات وحالة الصوت ومستويات الميكروفون إلى app-logs على المضيف",
+      },
       legacyTerminalRenderer: {
         label: "استخدام عارض الطرفية السابق",
         description: "استخدام طرفية WebView السابقة بعد إعادة فتح الطرفية",
@@ -2220,7 +2561,7 @@ export const ar: TranslationResources = {
         label: "تحديثات التطبيق",
         readyToInstall: "جاهز للتثبيت:{{version}}",
         installTitle: "تثبيت تحديث سطح المكتب",
-        installMessage: "يؤدي هذا إلى تحديث Paseo على هذا الكمبيوتر",
+        installMessage: "يؤدي هذا إلى تحديث hizuri على هذا الكمبيوتر",
         installConfirm: "تثبيت التحديث",
         update: "تحديث",
         updateTo: "التحديث إلى{{version}}",
@@ -2294,6 +2635,28 @@ export const ar: TranslationResources = {
         reset: "إعادة تعيين",
         resetAccessibility: "إعادة عرض المحتوى إلى الافتراضي",
       },
+      show: {
+        title: "Show",
+        switcher: {
+          title: "مبدّل علامات التبويب",
+          capsule: {
+            label: "كبسولة",
+            description: "كبسولة في الأسفل: اسحبها لتغيير علامة التبويب، وانقرها لعرضها كلها",
+          },
+          deck: {
+            label: "مجموعة بطاقات",
+            description: "زر في الأسفل: انقر أو اسحب للأعلى أو اقرص لعرض علامات التبويب كبطاقات",
+          },
+          rail: {
+            label: "سكة النقاط",
+            description: "نقاط على الحافة اليمنى: اضغط مطولًا واسحب للأعلى أو للأسفل",
+          },
+          inside: {
+            label: "السحب داخل التبويب",
+            description: "اسحب علامة التبويب نفسها؛ تُقلب الصفحة من الحافة اليسرى",
+          },
+        },
+      },
       syntax: {
         title: "بناء الجملة",
         highlightTheme: "تسليط الضوء على الموضوع",
@@ -2309,6 +2672,7 @@ export const ar: TranslationResources = {
       searchPlaceholder: "البحث في الاختصارات",
       unavailableOnMobile: "اختصارات لوحة المفاتيح متاحة فقط على سطح المكتب",
       capturePrompt: "اضغط على الاختصار...",
+      captureIndexPrompt: "اختم برقم من 1 إلى 9.",
       unassigned: "غير معين",
       actions: {
         menu: "إجراءات {{name}}",
@@ -2468,10 +2832,10 @@ export const ar: TranslationResources = {
         title: "مهارات التنسيق",
         description: "قم بتعليم عملائك كيفية التنسيق من خلال CLI",
         updateAvailable: "التحديث متاح",
-        updateTitle: "تحديث مهارات Paseo ؟",
+        updateTitle: "تحديث مهارات hizuri ؟",
         updateFallback: "مزامنة المهارات المجمعة لجهازك.",
-        uninstallTitle: "إلغاء تثبيت مهارات Paseo ؟",
-        uninstallMessage: "يزيل جميع مهارات تنسيق Paseo من ~/.agents ، ~/.claude ، ~/.codex.",
+        uninstallTitle: "إلغاء تثبيت مهارات hizuri ؟",
+        uninstallMessage: "يزيل جميع مهارات تنسيق hizuri من ~/.agents ، ~/.claude ، ~/.codex.",
         choose: "اختيار المهارات",
         chooseAll: "كل المهارات",
         chooseAllHint: "أبقِ جميع المهارات المرفقة مثبتة، بما فيها ما يُضاف لاحقًا.",
@@ -2507,9 +2871,9 @@ export const ar: TranslationResources = {
         title: "التنسيق",
         unavailable: "اتصل بهذا المضيف لإدارة التنسيق",
         enableTools: {
-          title: "تمكين أدوات Paseo",
+          title: "تمكين أدوات hizuri",
           hint: "سيتمكن الوكلاء من إدارة أشجار العمل والوكلاء والجداول الزمنية",
-          accessibilityLabel: "حقن أدوات Paseo",
+          accessibilityLabel: "حقن أدوات hizuri",
         },
         systemPrompt: {
           title: "موجه النظام",
@@ -2611,15 +2975,15 @@ export const ar: TranslationResources = {
             "هذا المضيف غير متصل. انتظر حتى يصبح متصلاً بالإنترنت قبل إعادة التشغيل.",
           offlineTitle: "Host غير متصل",
           offlineMessage:
-            "هذا المضيف غير متصل.  يقوم Paseo بإعادة الاتصال تلقائيًا - انتظر حتى يتم الاتصال بالإنترنت مرة أخرى قبل إعادة التشغيل.",
+            "هذا المضيف غير متصل.  يقوم hizuri بإعادة الاتصال تلقائيًا - انتظر حتى يتم الاتصال بالإنترنت مرة أخرى قبل إعادة التشغيل.",
           requestFailedTitle: "خطأ",
           requestFailedMessage:
-            "فشل في إرسال طلب إعادة التشغيل.  يقوم Paseo بإعادة الاتصال تلقائيًا - حاول مرة أخرى بمجرد ظهور المضيف على أنه متصل بالإنترنت.",
+            "فشل في إرسال طلب إعادة التشغيل.  يقوم hizuri بإعادة الاتصال تلقائيًا - حاول مرة أخرى بمجرد ظهور المضيف على أنه متصل بالإنترنت.",
           dialogFailedMessage: "غير قادر على فتح مربع حوار تأكيد إعادة التشغيل.",
         },
         update: {
           desktopManagedHint:
-            "يدير Paseo Desktop هذا البرنامج الخفي. حدّث Paseo Desktop على المضيف.",
+            "يدير hizuri Desktop هذا البرنامج الخفي. حدّث hizuri Desktop على المضيف.",
           title: "Update daemon",
           hint: "Update the daemon to the latest version and restart it",
           confirm: "Update",
@@ -2779,7 +3143,7 @@ export const ar: TranslationResources = {
         newScript: "نص جديد",
         editScript: "تحرير{{name}}",
         runAsService: "تشغيل كخدمة",
-        serviceHint: "يشرف Paseo على العملية ويعين منفذًا عبر $PASEO_PORT",
+        serviceHint: "يشرف hizuri على العملية ويعين منفذًا عبر $PASEO_PORT",
         actions: {
           add: "إضافة البرنامج النصي",
           edit: "يحرر",
@@ -2788,7 +3152,7 @@ export const ar: TranslationResources = {
       },
       metadata: {
         title: "توليد البيانات الوصفية",
-        info: "تعليمات خاصة بالمشروع يتم إدخالها في الذكاء الاصطناعي الذي يستخدمه Paseo لإنشاء بيانات التعريف - استخدمها لفرض اصطلاحات فريقك مثل تسمية الفرع أو نمط الالتزام أو تنسيق PR",
+        info: "تعليمات خاصة بالمشروع يتم إدخالها في الذكاء الاصطناعي الذي يستخدمه hizuri لإنشاء بيانات التعريف - استخدمها لفرض اصطلاحات فريقك مثل تسمية الفرع أو نمط الالتزام أو تنسيق PR",
         branchName: "اسماء الفروع",
         branchNamePlaceholder: "بادئة الفروع بـ fet/ أو Fix/, mb/ للفروع الشخصية",
         commitMessage: "ارتكاب الرسائل",

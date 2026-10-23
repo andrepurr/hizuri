@@ -2,6 +2,9 @@ import { en, type TranslationResources } from "./en";
 import { pluginSettings } from "./plugin-settings";
 
 export const ptBR: TranslationResources = {
+  assistant: {
+    name: "Zuri",
+  },
   paneFind: {
     connectionFailure:
       "Não foi possível pesquisar nesta conversa. Verifique a conexão com o host e tente novamente.",
@@ -26,11 +29,154 @@ export const ptBR: TranslationResources = {
     position: "{{current}} de {{total}}",
     total: "{{total}} correspondências",
   },
+  freeBrain: {
+    title: "Cérebro",
+    label: "Cérebro gratuito do hizuri",
+    description:
+      "Um cérebro inicial gratuito pago pelo hizuri, com limite diário. Conversa com você desde o primeiro minuto e ajuda a conectar o Claude Code.",
+    status: {
+      ready: "Pronto",
+      off: "Desligado",
+      checking: "Verificando",
+      unavailable: "Ainda indisponível",
+    },
+    claudeCode: {
+      label: "Claude Code",
+      connected: "Conectado: abra um novo chat com o Claude para trabalhar sem o nosso limite.",
+      howTo:
+        "Seu próprio cérebro, sem limite nosso. Pergunte ao cérebro gratuito: ele guia você na conexão.",
+    },
+    error: "Não foi possível alterar o cérebro gratuito.",
+  },
+  phoneLayout: {
+    label: "Layout de celular em telas largas",
+    description:
+      "No navegador ou no tablet: o rosto de $t(assistant.name), o chat e o Show como no celular, só que maiores. Desative para o layout de desktop com cabeçalho e painéis laterais.",
+  },
+  simpleMode: {
+    label: "Versão simples",
+    description:
+      "Só a $t(assistant.name) e as configurações. Desative para o app completo com espaços de trabalho, histórico, busca e agendamentos.",
+    menu: {
+      assistant: "$t(assistant.name)",
+      face: "Rosto",
+      chat: "Chat",
+    },
+  },
+  face: {
+    title: "O rosto de $t(assistant.name)",
+    loading: {
+      starting: "Carregando o rosto de $t(assistant.name)…",
+      downloading: "Baixando o rosto de $t(assistant.name) · {{percent}}%",
+      preparing: "Preparando o rosto de $t(assistant.name) em 3D…",
+      failed: "O rosto de $t(assistant.name) não carregou: {{message}}",
+      noWebgl:
+        "O rosto de $t(assistant.name) precisa de WebGL, e este navegador está com ele desligado. Permita o WebGL para este site (no LibreWolf: o ícone na barra de endereço) e toque em Tentar de novo.",
+      retry: "Tentar de novo",
+    },
+    inVoiceMode: {
+      label: "Rosto no modo de voz",
+      description:
+        "Mostra o rosto de $t(assistant.name): no celular, na primeira página; em uma tela larga, acima do chat enquanto você fala. Desative se a voz do assistente falhar.",
+    },
+    float: {
+      label: "$t(assistant.name) sobre outros apps",
+      description:
+        "Ao sair do hizuri, $t(assistant.name) fica na tela sobre qualquer app: arraste o assistente com o dedo, toque nele, toque longo para Abrir e Ocultar. O assistente se esconde quando você abre o hizuri.",
+      permissionTitle: "Permitir $t(assistant.name) sobre outros apps",
+      permissionMessage:
+        "Ative «Sobrepor a outros apps» para o hizuri. Se a chave estiver cinza: Informações do app → ⋮ → Permitir configurações restritas e tente de novo.",
+      permissionOpen: "Abrir configurações",
+      open: "Abrir hizuri",
+      hide: "Ocultar $t(assistant.name)",
+      notification: "$t(assistant.name) está na sua tela",
+    },
+  },
+  agentPages: {
+    sessionMenu: "Sessão",
+    tabs: {
+      face: "$t(assistant.name)",
+      chat: "Conversa",
+      show: "Show",
+    },
+  },
+  show: {
+    title: "Show",
+    closeTab: "Fechar aba",
+    hidePerch: "Tirar a $t(assistant.name) do cartão",
+    open: "Abrir Show",
+    close: "Voltar ao chat",
+    windows: "Janelas do Show",
+    defaultWindow: "Show",
+    limitsWindow: "Limites",
+    screenWindow: "Tela",
+    liveWindow: "Agora",
+    screenWatch: "Assistir",
+    screenTakeOver: "Assumir o controle",
+    screenConnecting: "Conectando à tela…",
+    secret: {
+      optional: "opcional",
+      note: "Vai direto para o seu cofre. Seu agente nunca vê, só o nome.",
+      save: "Salvar",
+      saving: "Salvando…",
+      notNow: "Agora não",
+      saved: "Salvo como «{{name}}»",
+      closed: "Fechado sem salvar",
+      notSent: "Não enviado. Verifique a conexão.",
+      fields: {
+        username: "Login",
+        password: "Senha",
+        address: "E-mail",
+        holder: "Nome no cartão",
+        number: "Número do cartão",
+        expiry: "Validade",
+        cvc: "CVC",
+        value: "Valor",
+        perPayment: "Máximo por pagamento",
+        perMonth: "Máximo por mês",
+        currency: "Moeda",
+      },
+    },
+    tabs: {
+      kind: {
+        page: "Página web",
+        picture: "Imagem",
+        video: "Vídeo",
+        player: "Player",
+        screen: "Tela",
+        live: "Ao vivo",
+        canvas: "Tela",
+      },
+      allTabs: "Todas as abas · {{count}}",
+      closeCards: "Ocultar os cartões",
+      position: "Aba {{index}} de {{count}}",
+      capsuleHint: "Deslize para o lado para trocar de aba, toque para ver todas",
+      deckHint: "Toque ou puxe para cima para ver todas as abas",
+      releaseToCancel: "Solte para cancelar",
+      insideEdgeHint: "A página vira pela borda esquerda",
+    },
+    page: {
+      empty: "Nada para mostrar ainda",
+      loading: "Carregando…",
+      resetsAt: "Reinicia: {{time}}",
+      inTime: "em {{time}}",
+      updated: "Atualizado {{time}}",
+      used: "usado",
+      noData: "Sem dados de uso",
+      widgetError: "Não foi possível desenhar",
+      days: "d",
+      hours: "h",
+      minutes: "min",
+      fiveHour: "5 horas",
+      weekly: "Semana",
+    },
+  },
   common: {
     bottomSheetBackdrop: "Fundo do painel inferior",
     back: "Voltar",
     loading: "Carregando...",
     actions: {
+      save: "Salvar",
       back: "Voltar",
       cancel: "Cancelar",
       close: "Fechar",
@@ -124,6 +270,8 @@ export const ptBR: TranslationResources = {
     input: {
       accessibilityLabel: "Enviar mensagem ao agente...",
       terminalAccessibilityLabel: "Terminal prompt",
+      fullscreen: "Tela cheia",
+      exitFullscreen: "Sair da tela cheia",
       focusHint: "{{shortcut}} para focar",
       addAttachment: "Adicionar anexo",
       interruptAgent: "Interromper agente",
@@ -140,8 +288,6 @@ export const ptBR: TranslationResources = {
       interrupt: "Interromper",
     },
     voice: {
-      enableVoiceMode: "Ativar modo de voz",
-      voiceMode: "Modo de voz",
       unmuteVoiceMode: "Ativar som do modo de voz",
       muteVoiceMode: "Silenciar modo de voz",
       stopDictation: "Parar ditado",
@@ -149,7 +295,6 @@ export const ptBR: TranslationResources = {
       unmuteVoice: "Ativar som da voz",
       muteVoice: "Silenciar voz",
       dictation: "Ditado",
-      interruptBeforeVoice: "Interrompa o agente antes de iniciar o modo de voz",
     },
     attachments: {
       addImage: "Adicionar imagem",
@@ -357,10 +502,20 @@ export const ptBR: TranslationResources = {
     speak: {
       header: "Falou",
     },
+    spoken: {
+      phrase: "Falado",
+      correction: "Falado · corrigido",
+    },
+    guardian: {
+      header: "Nota do guardião",
+      fix: "O que fazer: {{fix}}",
+      rule: "Regra: {{rule}}",
+    },
     activity: {
       details: "Detalhes",
     },
     dictation: {
+      paused: "Microfone interrompido. Aguardando para retomar…",
       start: "Iniciar ditado por voz",
       cancel: "Cancelar ditado",
       retry: "Tentar ditado novamente",
@@ -370,6 +525,7 @@ export const ptBR: TranslationResources = {
       failedRetry: "Falha no ditado. Toque para tentar novamente.",
     },
     question: {
+      responseFailed: "Não foi possível enviar sua resposta. Tente novamente.",
       submit: "Enviar",
       next: "Próximo",
       answerPlaceholder: "Digite sua resposta...",
@@ -538,6 +694,7 @@ export const ptBR: TranslationResources = {
       },
     },
     setup: {
+      updateHost: "Atualize o host para ver os detalhes da configuração do espaço de trabalho",
       descriptor: {
         label: "Configuração",
         completed: "Configuração concluída",
@@ -615,6 +772,9 @@ export const ptBR: TranslationResources = {
       updateHost: "Atualize o host para usar o renderizador de terminal nativo.",
       unableToSubscribe: "Não foi possível assinar o terminal",
     },
+    sheet: {
+      openAsTab: "Abrir como aba",
+    },
     tabs: {
       loading: "Carregando...",
       modified: "Alterações não salvas",
@@ -630,7 +790,7 @@ export const ptBR: TranslationResources = {
       },
       switcher: {
         trigger: "Alternar abas ({{count}} abertas)",
-        title: "Alternar aba",
+        title: "Abas do workspace",
         searchPlaceholder: "Buscar abas",
       },
       menu: {
@@ -727,6 +887,7 @@ export const ptBR: TranslationResources = {
     header: {
       actions: {
         workspaceActions: "Ações do workspace",
+        workspaceActionsUnhealthy: "Ações do workspace, há um serviço com problema",
         newAgent: "Novo agente",
         newTerminal: "Novo terminal",
         newBrowser: "Nova aba de navegador",
@@ -774,6 +935,8 @@ export const ptBR: TranslationResources = {
         exitCode: "saída {{code}}",
         startFailed: "Falha ao iniciar {{scriptName}}",
         stopFailed: "Falha ao parar {{scriptName}}",
+        running: "Em execução",
+        runningCount: "{{count}} em execução",
       },
     },
     tree: {
@@ -891,7 +1054,7 @@ export const ptBR: TranslationResources = {
           mergePrNoGithub:
             "Merge da PR não está disponível agora porque o GitHub não está conectado",
           archiveNotWorktree:
-            "Arquivar não está disponível aqui porque este workspace não foi criado como um worktree do Paseo",
+            "Arquivar não está disponível aqui porque este workspace não foi criado como um worktree do hizuri",
           mergePrNoForge:
             "Merge da {{noun}} não está disponível agora porque o {{brand}} não está conectado",
           mergePrMissing: "Merge da PR não está disponível porque ainda não há uma pull request",
@@ -967,6 +1130,7 @@ export const ptBR: TranslationResources = {
         checkingRepository: "Verificando repositório...",
         notRepository: "Não é um repositório git",
         diffMode: "Modo de diff",
+        all: "Todas as alterações",
         uncommitted: "Sem commit",
         committed: "Com commit",
         branchUnknown: "Desconhecido",
@@ -1173,6 +1337,7 @@ export const ptBR: TranslationResources = {
       done: "Concluído",
     },
     display: {
+      showBackground: "Mostrar espaços em segundo plano",
       trigger: "Preferências de exibição",
       heading: "Exibição",
       grouping: {
@@ -1244,7 +1409,7 @@ export const ptBR: TranslationResources = {
       discord: "Discord",
       github: "Criar issue no GitHub",
       whatsNew: "Novidades",
-      appName: "Paseo",
+      appName: "hizuri",
     },
     sections: {
       sessions: "Histórico",
@@ -1348,8 +1513,9 @@ export const ptBR: TranslationResources = {
     },
     fields: {
       project: "Projeto",
-      base: "Base",
+      branch: "Branch",
       baseNotApplicable: "Não aplicável",
+      host: "Host",
     },
     titlePlaceholder: "Título (opcional)",
     errors: {
@@ -1391,7 +1557,7 @@ export const ptBR: TranslationResources = {
       close: "Fechar janela",
     },
     quitting: {
-      title: "Saindo do Paseo...",
+      title: "Saindo do hizuri...",
       detail: "Parando o daemon local.",
     },
     daemon: {
@@ -1406,20 +1572,20 @@ export const ptBR: TranslationResources = {
       },
       management: {
         title: "Gerenciar daemon integrado",
-        hint: "Permitir que o Paseo inicie e pare o daemon integrado",
+        hint: "Permitir que o hizuri inicie e pare o daemon integrado",
         pauseTitle: "Pausar daemon integrado",
         pauseMessage:
           "Isso vai parar o daemon integrado imediatamente. Agentes e terminais em execução conectados ao daemon integrado serão interrompidos.",
         pauseAndStop: "Pausar e parar",
         registrationFailed:
-          "O daemon integrado foi iniciado, mas o Paseo não conseguiu salvar a conexão localhost. Desative e reative o gerenciamento do daemon ou adicione localhost manualmente.",
+          "O daemon integrado foi iniciado, mas o hizuri não conseguiu salvar a conexão localhost. Desative e reative o gerenciamento do daemon ou adicione localhost manualmente.",
         pausedStopFailed:
-          "O gerenciamento do daemon integrado foi pausado, mas o Paseo não conseguiu parar o daemon.",
+          "O gerenciamento do daemon integrado foi pausado, mas o hizuri não conseguiu parar o daemon.",
         updateFailed: "Não foi possível atualizar o gerenciamento do daemon integrado.",
       },
       keepRunning: {
         title: "Manter daemon em execução ao sair",
-        hint: "O daemon continua em execução quando você sai do Paseo",
+        hint: "O daemon continua em execução quando você sai do hizuri",
       },
       logs: {
         title: "Arquivo de log",
@@ -1434,7 +1600,7 @@ export const ptBR: TranslationResources = {
       fullStatus: {
         title: "Status completo",
         modalTitle: "Status do daemon",
-        hint: "Executa `paseo daemon status` e mostra a saída",
+        hint: "Mostra o relatório de status completo do servidor",
         view: "Ver status",
         copied: "Status copiado para a área de transferência.",
         fetchFailed: "Falha ao buscar status do daemon: {{message}}",
@@ -1489,7 +1655,7 @@ export const ptBR: TranslationResources = {
     },
     rosetta: {
       title: "Baixar a build para Apple Silicon",
-      runningIntel: "Você está executando a build Intel do Paseo pelo Rosetta no Apple Silicon.",
+      runningIntel: "Você está executando a build Intel do hizuri pelo Rosetta no Apple Silicon.",
       highCpu: "Isso causa alto uso de CPU. Baixe a build para Apple Silicon para corrigir.",
       download: "Baixar",
     },
@@ -1531,7 +1697,7 @@ export const ptBR: TranslationResources = {
         microphone: "O status do microfone ainda não foi verificado.",
       },
       testNotification: {
-        title: "Teste de notificação do Paseo",
+        title: "Teste de notificação do hizuri",
         body: "Se você consegue ver isto, as notificações desktop funcionam.",
         notDelivered:
           "A notificação não foi entregue. Verifique Ajustes do Sistema > Notificações.",
@@ -1541,19 +1707,19 @@ export const ptBR: TranslationResources = {
     integrations: {
       cli: {
         statusFailed: "Não foi possível verificar o status de instalação da CLI.",
-        installFailed: "Não foi possível instalar a CLI do Paseo.",
+        installFailed: "Não foi possível instalar a CLI do hizuri.",
       },
     },
   },
   rootError: {
-    title: "O Paseo encontrou um problema.",
+    title: "O hizuri encontrou um problema.",
     body: "Tente novamente para recarregar o app. Se isso continuar acontecendo, inclua os detalhes abaixo ao relatar o problema.",
     details: "Detalhes",
   },
   startup: {
     errorTitle: "Algo deu errado",
     errorDescription:
-      "O servidor local falhou ao iniciar. Se isso continuar acontecendo, reporte o problema no GitHub e inclua os logs abaixo.",
+      "O servidor local falhou ao iniciar. Se isso continuar acontecendo, copie os logs abaixo.",
     logs: {
       loading: "Carregando logs do daemon...",
       unavailable: "Nenhum log do daemon disponível.",
@@ -1643,7 +1809,7 @@ export const ptBR: TranslationResources = {
     },
   },
   onboarding: {
-    title: "Bem-vindo ao Paseo",
+    title: "Bem-vindo ao hizuri",
     subtitle: "Conecte seu computador para começar",
     actions: {
       settings: "Configurações",
@@ -1751,7 +1917,7 @@ export const ptBR: TranslationResources = {
     },
     direct: {
       title: "Conexão direta",
-      helper: "Informe o endereço de um servidor Paseo.",
+      helper: "Informe o endereço de um servidor hizuri.",
       fields: {
         host: "Host",
         port: "Porta",
@@ -1794,7 +1960,7 @@ export const ptBR: TranslationResources = {
     },
     remoteSsh: {
       title: "SSH remoto",
-      helper: "Conecte-se a um daemon Paseo no host remoto.",
+      helper: "Conecte-se a um daemon hizuri no host remoto.",
       fields: {
         target: "Host SSH",
         password: "Senha do daemon",
@@ -1857,15 +2023,15 @@ export const ptBR: TranslationResources = {
       enableDescription:
         "O relay permite conectar este dispositivo de qualquer lugar. O tráfego de pareamento é criptografado de ponta a ponta.",
       relayDocs: "Como o relay funciona",
-      relayDocsAccessibility: "Leia como o relay do Paseo funciona",
+      relayDocsAccessibility: "Leia como o relay do hizuri funciona",
       enableRelay: "Ativar relay",
       enablingRelay: "Ativando...",
       notNow: "Agora não",
       directConnectionHint:
         "Sem relay, conecte diretamente por TCP, Tailscale ou outra VPN. Nenhum código QR é criado.",
-      updateRequired: "Atualize o host para ativar o relay pelo Paseo Desktop.",
+      updateRequired: "Atualize o host para ativar o relay pelo hizuri Desktop.",
       unavailable: "Oferta de pareamento indisponível.",
-      hint: "Escaneie este QR code com o Paseo no seu celular ou copie o link abaixo.",
+      hint: "Escaneie este QR code com o hizuri no seu celular ou copie o link abaixo.",
       securityWarning:
         "Trate este link de pareamento como uma senha. Qualquer pessoa com o link pode acessar este daemon.",
       qrUnavailable: "QR code indisponível.",
@@ -1877,9 +2043,28 @@ export const ptBR: TranslationResources = {
   },
   realtimeVoice: {
     actions: {
+      startSession: "Começar sessão",
       mute: "Silenciar voz em tempo real",
       unmute: "Ativar voz em tempo real",
-      stop: "Parar voz em tempo real e interromper a resposta",
+      switchToText: "Mudar para texto e manter a sessão",
+      switchToVoice: "Voltar para voz",
+      endSession: "Encerrar sessão",
+      attachPhoto: "Enviar uma foto",
+    },
+    endSessionConfirm: {
+      title: "Encerrar a sessão?",
+      message: "A voz, o modo de voz do agente e a sessão salva serão fechados.",
+    },
+    live: {
+      updateHost: "Atualize o host para ver suas palavras enquanto fala",
+    },
+    status: {
+      starting: "Ativando a voz...",
+      stopping: "Desativando a voz...",
+    },
+    moved: "A voz veio para cá",
+    errors: {
+      noSession: "Comece uma sessão primeiro",
     },
   },
   rewind: {
@@ -1900,7 +2085,7 @@ export const ptBR: TranslationResources = {
   serviceUrl: {
     title: "Abrir URL do serviço",
     message: "Abrir {{url}}?",
-    inPaseo: "No Paseo",
+    inPaseo: "No hizuri",
     externalBrowser: "Navegador externo",
     dontAskAgain: "Não perguntar novamente",
   },
@@ -1937,12 +2122,32 @@ export const ptBR: TranslationResources = {
       creatingAgent: "Criando agente",
     },
     file: {
+      filePanels: {
+        pickerTitleExtension: "Abrir arquivos .{{extension}} com",
+        pickerTitleFilename: "Abrir {{filename}} com",
+        dontAskAgain: "Não perguntar novamente",
+        use: "Usar",
+        openWith: "Abrir com…",
+        alwaysUseExtension: "Sempre usar para .{{extension}}",
+        alwaysUseFilename: "Sempre usar para {{filename}}",
+        option: "{{title}} — {{owner}}",
+        actions: "Ações do arquivo",
+        builtin: {
+          owner: "Paseo",
+          markdown: "Markdown",
+          html: "HTML",
+          image: "Imagem",
+          source: "Fonte",
+        },
+      },
       directoryMissing: "Diretório do workspace não encontrado.",
       loading: "Carregando arquivo...",
       noPreview: "Nenhuma prévia disponível",
       binaryPreviewUnavailable: "Prévia binária indisponível",
       tooLargeToDisplay: "Este arquivo é grande demais para exibir",
+      documentUnsupported: "Arquivos {{type}} não podem ser exibidos neste dispositivo",
       failedToLoad: "Falha ao carregar arquivo",
+      notFound: "Arquivo não encontrado",
       failedToLoadPreview: "Falha ao carregar prévia do arquivo",
       editor: {
         fileSize: "Tamanho {{size}}",
@@ -1954,10 +2159,7 @@ export const ptBR: TranslationResources = {
         changedOnDisk: "Alterado no disco",
         vimMode: "Modo Vim {{mode}}",
         cursor: "Linha {{line}}, coluna {{column}}",
-        preview: "Prévia",
-        source: "Fonte",
         deletedTitle: "Arquivo excluído do disco",
-        checkFailedTitle: "Não foi possível verificar o arquivo no disco",
         preservedDescription: "A cópia aberta foi preservada.",
         conflictDescription: "O conteúdo local foi preservado. Escolha qual versão manter.",
         overwrite: "Sobrescrever",
@@ -2020,10 +2222,28 @@ export const ptBR: TranslationResources = {
       other: "usou {{count}} outras ferramentas",
     },
     paseoCalls: {
-      one: "chamou o Paseo {{count}} vez",
-      other: "chamou o Paseo {{count}} vezes",
+      one: "chamou o hizuri {{count}} vez",
+      other: "chamou o hizuri {{count}} vezes",
     },
     and: "e",
+  },
+  showMedia: {
+    youtube: "YouTube",
+    audio: "Áudio",
+    playerWindow: "Player",
+    play: "Reproduzir",
+    pause: "Pausar",
+    back15: "Voltar 15 segundos",
+    forward15: "Avançar 15 segundos",
+    openInYoutube: "Abrir no YouTube",
+    onlyInYoutube: "O YouTube não reproduz este vídeo aqui",
+    cannotPlay: "Não foi possível reproduzir: {{reason}}",
+    needsDirectConnection: "Isto precisa de uma conexão direta com o host",
+    accessTitle: "Deixe o hizuri controlar sua mídia",
+    accessMessage:
+      "Para pausar, pular ou voltar músicas e filmes nos seus apps, o hizuri precisa de acesso às notificações. O hizuri não lê notificações; o Android só libera o controle de mídia por esta chave.",
+    accessConfirm: "Abrir configurações",
+    accessCancel: "Agora não",
   },
   renameModal: {
     rename: "Renomear",
@@ -2042,6 +2262,17 @@ export const ptBR: TranslationResources = {
     accessibility: "Janela de contexto {{percentage}}% usada",
   },
   review: {
+    feedback: {
+      send: "Enviar comentários ({{count}})",
+      sending: "Enviando comentários ({{count}})",
+      chooseAgent: "Escolher um agente",
+      sent: "Comentários enviados para {{recipient}}",
+      "no-agents": "Abra uma aba de agente neste espaço de trabalho para enviar comentários.",
+      disconnected: "Conecte-se ao host para enviar comentários.",
+      "no-context": "Os comentários salvos não correspondem mais a este diff.",
+      failed: "Falha ao enviar comentários. Tente novamente.",
+      prompt: "Por favor, atenda a esta revisão de código.",
+    },
     comment: {
       add: "Adicionar comentário de revisão",
       edit: "Editar comentário de revisão",
@@ -2052,6 +2283,70 @@ export const ptBR: TranslationResources = {
       cancelAccessibility: "Cancelar comentário de revisão",
       save: "Comentar",
       saveAccessibility: "Salvar comentário de revisão",
+    },
+  },
+  providerUsage: {
+    options: "Configurações",
+    refreshFailed: "Não foi possível atualizar o uso",
+    noHosts: "Nenhum host conectado",
+    agentError: "Não foi possível carregar o uso: {{reason}}",
+    pin: "Fixar",
+    unpin: "Desafixar",
+    displayAs: "Porcentagens",
+    displayUsed: "Usado",
+    displayRemaining: "Restante",
+    showInSidebar: "Resumo na barra lateral",
+    showInSidebarHint: "Os períodos fixados aparecem no rodapé da barra lateral",
+    runToRefresh: "Execute {{command}} para atualizar.",
+    signInAgain: "Entre novamente.",
+    loginRejected: "Login rejeitado (HTTP {{status}}). {{remedy}}",
+    loginExpired: "O login expirou {{relativeTime}}. {{remedy}}",
+    title: "Uso do plano",
+    refresh: "Atualizar",
+    refreshAll: "Atualizar tudo",
+    refreshing: "Atualizando...",
+    loading: "Carregando uso...",
+    empty: "Sem dados de uso",
+    errorTitle: "Não foi possível carregar o uso",
+    hostUnavailable: "Conecte-se a {{host}} para ver o uso do provedor",
+    hostUpgradeRequired: "Atualize {{host}} para ver o uso do provedor",
+    clientUnavailable: "A conexão com o host não está pronta",
+    retry: "Tentar novamente",
+    tooltipLoading: "Carregando uso do plano...",
+    status: {
+      error: "Erro",
+      unavailable: "Indisponível",
+    },
+    values: {
+      used: "{{percentage}} usado",
+      remaining: "{{amount}} restantes",
+    },
+    labels: {
+      session: "Sessão",
+      weekly: "Semanal",
+      monthly: "Mensal",
+      codeReview: "Revisão de código",
+      credits: "Créditos",
+      monthlyCredits: "Créditos mensais",
+    },
+    duration: {
+      days: "{{value}} d",
+      hours: "{{value}} h",
+      minutes: "{{value}} min",
+    },
+    timing: {
+      lastUpdated: "Última atualização {{relativeTime}}",
+      noSuccessfulUpdate: "Nenhuma atualização bem-sucedida",
+      resetTimePassed: "O horário de redefinição passou",
+      resettingNow: "redefinindo agora",
+      resetsIn: "redefine em {{duration}}",
+      runsOutNow: "esgota agora",
+      runsOutIn: "esgota em {{duration}}",
+      justNow: "agora mesmo",
+      daysAgo: "há {{value}} d",
+      hoursAgo: "há {{value}} h",
+      minutesAgo: "há {{value}} min",
+      updated: "Atualizado {{relativeTime}}",
     },
   },
   settings: {
@@ -2082,6 +2377,7 @@ export const ptBR: TranslationResources = {
       terminal: "Terminal",
       browser: "Navegador",
       editor: "Editor",
+      files: "Arquivos",
       shortcuts: "Atalhos",
       integrations: "Integrações",
       notifications: "Notificações",
@@ -2095,6 +2391,14 @@ export const ptBR: TranslationResources = {
       vimKeybindings: "Atalhos do Vim",
       vimHint: "Aplica-se a arquivos-fonte na web e no desktop.",
     },
+    files: {
+      title: "Arquivos",
+      askEveryTime: "Perguntar sempre",
+      askAgain: "Perguntar de novo",
+      askAgainFor: "Perguntar de novo para {{label}}",
+      unavailable: "Não está em um host conectado",
+      empty: "Os painéis de arquivo aparecem aqui quando um plugin adiciona um",
+    },
     notifications: {
       title: "Notificações",
       permission: "Permissão de notificações",
@@ -2107,7 +2411,7 @@ export const ptBR: TranslationResources = {
       send: "Enviar",
       sending: "Enviando...",
       sentTitle: "Notificação de teste enviada",
-      sentDescription: "O Paseo entregou a notificação ao sistema operacional.",
+      sentDescription: "O hizuri entregou a notificação ao sistema operacional.",
       sendFailedTitle: "Não foi possível enviar a notificação de teste",
     },
     hostSections: {
@@ -2126,14 +2430,14 @@ export const ptBR: TranslationResources = {
     metadataGeneration: {
       title: "Geração de metadados",
       description:
-        "Escolha o modelo usado pelo Paseo para títulos de espaços de trabalho, nomes de branches, mensagens de commit e rascunhos de pull request",
+        "Escolha o modelo usado pelo hizuri para títulos de espaços de trabalho, nomes de branches, mensagens de commit e rascunhos de pull request",
       selection: "Seleção de modelo",
       automatic: "Automática",
       preferred: "Manual",
-      automaticHint: "O Paseo escolhe um modelo rápido disponível",
-      preferredHint: "Escolha o modelo que o Paseo usa",
+      automaticHint: "O hizuri escolhe um modelo rápido disponível",
+      preferredHint: "Escolha o modelo que o hizuri usa",
       model: "Modelo",
-      fallbackHint: "Se ele não estiver disponível, o Paseo usa outro modelo disponível",
+      fallbackHint: "Se ele não estiver disponível, o hizuri usa outro modelo disponível",
       docs: "Documentação",
       saveError: "Não foi possível atualizar a geração de metadados",
     },
@@ -2143,7 +2447,7 @@ export const ptBR: TranslationResources = {
       browserData: {
         title: "Dados do navegador",
         siteData: "Cookies e dados de sites",
-        description: "As abas do navegador compartilham logins e dados de sites no Paseo.",
+        description: "As abas do navegador compartilham logins e dados de sites no hizuri.",
         clear: "Limpar dados do navegador",
         clearing: "Limpando...",
         confirmTitle: "Limpar dados do navegador?",
@@ -2170,7 +2474,7 @@ export const ptBR: TranslationResources = {
       serviceUrls: {
         options: {
           ask: "Perguntar",
-          inApp: "No Paseo",
+          inApp: "No hizuri",
           external: "Navegador externo",
         },
       },
@@ -2204,13 +2508,16 @@ export const ptBR: TranslationResources = {
           ja: "Japonês",
           ko: "Coreano",
           ptBR: "Português brasileiro",
-          ru: "Russo",
           zhCN: "Chinês simplificado",
         },
       },
     },
     diagnostics: {
       title: "Diagnósticos",
+      uploadLogs: {
+        label: "Enviar logs do app ao host",
+        description: "Avisos, estado da voz e níveis do microfone vão para app-logs no host",
+      },
       legacyTerminalRenderer: {
         label: "Usar renderizador de terminal anterior",
         description: "Usa o terminal WebView anterior após reabrir um terminal",
@@ -2255,7 +2562,7 @@ export const ptBR: TranslationResources = {
         label: "Atualizações do app",
         readyToInstall: "Pronta para instalar: {{version}}",
         installTitle: "Instalar atualização desktop",
-        installMessage: "Isso atualiza o Paseo neste computador",
+        installMessage: "Isso atualiza o hizuri neste computador",
         installConfirm: "Instalar atualização",
         update: "Atualizar",
         updateTo: "Atualizar para {{version}}",
@@ -2329,6 +2636,29 @@ export const ptBR: TranslationResources = {
         reset: "Redefinir",
         resetAccessibility: "Redefinir a largura do conteúdo",
       },
+      show: {
+        title: "Show",
+        switcher: {
+          title: "Seletor de abas",
+          capsule: {
+            label: "Cápsula",
+            description: "Uma pílula embaixo: deslize-a para trocar de aba, toque para ver todas",
+          },
+          deck: {
+            label: "Baralho",
+            description:
+              "Um botão embaixo: toque, puxe para cima ou faça pinça para ver as abas como cartões",
+          },
+          rail: {
+            label: "Trilho de pontos",
+            description: "Pontos na borda direita: segure e deslize para cima ou para baixo",
+          },
+          inside: {
+            label: "Deslizar dentro",
+            description: "Deslize a própria aba; a página vira pela borda esquerda",
+          },
+        },
+      },
       syntax: {
         title: "Sintaxe",
         highlightTheme: "Tema de destaque",
@@ -2344,6 +2674,7 @@ export const ptBR: TranslationResources = {
       searchPlaceholder: "Pesquisar atalhos",
       unavailableOnMobile: "Atalhos de teclado estão disponíveis apenas no desktop",
       capturePrompt: "Pressione o atalho...",
+      captureIndexPrompt: "Termine com um número de 1 a 9.",
       unassigned: "Não definido",
       actions: {
         menu: "Ações para {{name}}",
@@ -2504,11 +2835,11 @@ export const ptBR: TranslationResources = {
         title: "Skills de orquestração",
         description: "Ensine seus agentes a orquestrar pela CLI",
         updateAvailable: "Atualização disponível",
-        updateTitle: "Atualizar Paseo skills?",
+        updateTitle: "Atualizar hizuri skills?",
         updateFallback: "Sincronize as skills incluídas com sua máquina.",
-        uninstallTitle: "Desinstalar Paseo skills?",
+        uninstallTitle: "Desinstalar hizuri skills?",
         uninstallMessage:
-          "Remove todas as skills de orquestração do Paseo de ~/.agents, ~/.claude e ~/.codex.",
+          "Remove todas as skills de orquestração do hizuri de ~/.agents, ~/.claude e ~/.codex.",
         choose: "Escolher skills",
         chooseAll: "Todas as skills",
         chooseAllHint:
@@ -2545,9 +2876,9 @@ export const ptBR: TranslationResources = {
         title: "Orquestração",
         unavailable: "Conecte-se a este host para gerenciar a orquestração",
         enableTools: {
-          title: "Ativar ferramentas do Paseo",
+          title: "Ativar ferramentas do hizuri",
           hint: "Agentes poderão gerenciar worktrees, agentes e agendamentos",
-          accessibilityLabel: "Injetar ferramentas do Paseo",
+          accessibilityLabel: "Injetar ferramentas do hizuri",
         },
         systemPrompt: {
           title: "Prompt do sistema",
@@ -2652,15 +2983,15 @@ export const ptBR: TranslationResources = {
             "Este host não está conectado. Aguarde até ele ficar online antes de reiniciar.",
           offlineTitle: "Host offline",
           offlineMessage:
-            "Este host está offline. O Paseo reconecta automaticamente. Aguarde ele voltar a ficar online antes de reiniciar.",
+            "Este host está offline. O hizuri reconecta automaticamente. Aguarde ele voltar a ficar online antes de reiniciar.",
           requestFailedTitle: "Erro",
           requestFailedMessage:
-            "Falha ao enviar a solicitação de reinício. O Paseo reconecta automaticamente. Tente novamente quando o host aparecer como online.",
+            "Falha ao enviar a solicitação de reinício. O hizuri reconecta automaticamente. Tente novamente quando o host aparecer como online.",
           dialogFailedMessage: "Não foi possível abrir o diálogo de confirmação de reinício.",
         },
         update: {
           desktopManagedHint:
-            "Este daemon é gerenciado pelo Paseo Desktop. Atualize o Paseo Desktop no host.",
+            "Este daemon é gerenciado pelo hizuri Desktop. Atualize o hizuri Desktop no host.",
           title: "Atualizar daemon",
           hint: "Atualiza o daemon para a versão mais recente e o reinicia",
           confirm: "Atualizar",
@@ -2822,7 +3153,7 @@ export const ptBR: TranslationResources = {
         newScript: "Novo script",
         editScript: "Editar {{name}}",
         runAsService: "Executar como serviço",
-        serviceHint: "O Paseo supervisiona o processo e atribui uma porta via $PASEO_PORT",
+        serviceHint: "O hizuri supervisiona o processo e atribui uma porta via $PASEO_PORT",
         actions: {
           add: "Adicionar script",
           edit: "Editar",
@@ -2831,7 +3162,7 @@ export const ptBR: TranslationResources = {
       },
       metadata: {
         title: "Geração de metadados",
-        info: "Instruções específicas do projeto injetadas nos prompts de IA que o Paseo usa para gerar metadados. Use-as para aplicar convenções da sua equipe, como nomes de branch, estilo de commit ou formato de PR",
+        info: "Instruções específicas do projeto injetadas nos prompts de IA que o hizuri usa para gerar metadados. Use-as para aplicar convenções da sua equipe, como nomes de branch, estilo de commit ou formato de PR",
         branchName: "Nomes de branch",
         branchNamePlaceholder: "Prefixe branches com feat/ ou fix/, mb/ para branches pessoais",
         commitMessage: "Mensagens de commit",

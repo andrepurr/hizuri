@@ -15,6 +15,7 @@ import {
   parseClampedFontSize,
   parseTerminalScrollbackLines,
   resolveContentMaxWidth,
+  sanitizeFontFamily,
   saveAppSettings,
   type SettingsDeps,
 } from "./storage";
@@ -43,6 +44,33 @@ function makeDeps(
 }
 
 describe("loadAppSettingsFromStorage", () => {
+  it("persists file panel associations, including panels absent from this host", async () => {
+    const deps = makeDeps();
+    const queryClient = new QueryClient();
+    const filePanelAssociations = {
+      "ext:md": "builtin:markdown",
+      "name:Dockerfile": "plugin:absent/container",
+    };
+    await saveAppSettings({ queryClient, deps, updates: { filePanelAssociations } });
+    expect((await loadAppSettingsFromStorage(deps)).filePanelAssociations).toEqual(
+      filePanelAssociations,
+    );
+  });
+
+  it.each([undefined, null, [], "invalid", { "ext:md": 42 }])(
+    "defaults malformed file panel associations without discarding other settings: %j",
+    async (filePanelAssociations) => {
+      const deps = makeDeps({
+        storage: createInMemoryKeyValueStorage({
+          [APP_SETTINGS_KEY]: JSON.stringify({ filePanelAssociations, vimKeybindings: true }),
+        }),
+      });
+      const settings = await loadAppSettingsFromStorage(deps);
+      expect(settings.filePanelAssociations).toEqual({});
+      expect(settings.vimKeybindings).toBe(true);
+    },
+  );
+
   it("preserves a persisted steer send behavior", async () => {
     const deps = makeDeps({
       storage: createInMemoryKeyValueStorage({
@@ -130,12 +158,12 @@ describe("loadAppSettingsFromStorage", () => {
     expect((await loadAppSettingsFromStorage(deps)).sendBehavior).toBe("interrupt");
   });
 
-  it("defaults theme to auto when storage is empty", async () => {
+  it("defaults theme to dark when storage is empty", async () => {
     const deps = makeDeps();
 
     const result = await loadAppSettingsFromStorage(deps);
 
-    expect(result.theme).toBe("auto");
+    expect(result.theme).toBe("dark");
   });
 
   it.each(THEME_OPTIONS)("loads the persisted $name theme", async ({ name }) => {
@@ -168,6 +196,21 @@ describe("loadAppSettingsFromStorage", () => {
     const result = await loadAppSettingsFromStorage(deps);
 
     expect(result.language).toBe("system");
+  });
+
+  it("starts in the simple version and keeps a stored choice of the full one", async () => {
+    const load = (simpleMode: unknown) =>
+      loadAppSettingsFromStorage(
+        makeDeps({
+          storage: createInMemoryKeyValueStorage({
+            [APP_SETTINGS_KEY]: JSON.stringify({ simpleMode }),
+          }),
+        }),
+      );
+
+    expect((await loadAppSettingsFromStorage(makeDeps())).simpleMode).toBe(true);
+    expect((await load(false)).simpleMode).toBe(false);
+    expect((await load("full")).simpleMode).toBe(true);
   });
 
   it("defaults workspace title source to title when storage is empty", async () => {
@@ -1038,6 +1081,36 @@ describe("appearance settings", () => {
 
     expect((await loadAppSettingsFromStorage(deps)).syntaxTheme).toBe("one");
   });
+
+  it("keeps the chosen Show tab switcher and falls back to the capsule", async () => {
+    const load = (showTabSwitcher: unknown) =>
+      loadAppSettingsFromStorage(
+        makeDeps({
+          storage: createInMemoryKeyValueStorage({
+            [APP_SETTINGS_KEY]: JSON.stringify({ showTabSwitcher }),
+          }),
+        }),
+      );
+
+    expect((await load("rail")).showTabSwitcher).toBe("rail");
+    expect((await load("pills")).showTabSwitcher).toBe("capsule");
+    expect((await load(undefined)).showTabSwitcher).toBe("capsule");
+  });
+
+  it("keeps the phone layout on wide screens unless it was turned off", async () => {
+    const load = (phoneLayout: unknown) =>
+      loadAppSettingsFromStorage(
+        makeDeps({
+          storage: createInMemoryKeyValueStorage({
+            [APP_SETTINGS_KEY]: JSON.stringify({ phoneLayout }),
+          }),
+        }),
+      );
+
+    expect((await load(false)).phoneLayout).toBe(false);
+    expect((await load(undefined)).phoneLayout).toBe(true);
+    expect((await load("wide")).phoneLayout).toBe(true);
+  });
 });
 
 describe("parseClampedFontSize", () => {
@@ -1093,4 +1166,35 @@ describe("content max width", () => {
     expect((await load(10)).contentMaxWidth).toBe(600);
     expect((await load("wide")).contentMaxWidth).toBeNull();
   });
+});
+
+describe("font family CSS safety", () => {
+  it.each(["'foo", '"foo', "Menlo, 'foo", "foo\\", "foo/*", "foo(", "foo["])(
+    "rejects unfinished CSS syntax: %s",
+    (value) => expect(sanitizeFontFamily(value)).toBeNull(),
+  );
+
+  it.each([
+    "Menlo",
+    "'Fira Code', monospace",
+    '"Fira Code", monospace',
+    "'Font\\'s name'",
+    "Font\\ Name",
+    "'Font (Mono)'",
+    "'Font [Mono]'",
+  ])("preserves complete font families: %s", (value) =>
+    expect(sanitizeFontFamily(value)).toBe(value),
+  );
+
+  it.each(["uiFontFamily", "monoFontFamily"])(
+    "recovers a persisted unmatched quote in %s",
+    async (field) => {
+      const deps = makeDeps({
+        storage: createInMemoryKeyValueStorage({
+          [APP_SETTINGS_KEY]: JSON.stringify({ [field]: "'foo" }),
+        }),
+      });
+      expect(await loadAppSettingsFromStorage(deps)).toMatchObject({ [field]: "" });
+    },
+  );
 });

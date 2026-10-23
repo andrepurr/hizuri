@@ -1,2 +1,18 @@
-<manifest>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <!-- Voice mode in the background (VoiceForegroundService). Android 14 needs the typed permissions. -->
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+  <uses-permission android:name="android.permission.WAKE_LOCK" />
+  <!-- Android 13+: without it the ongoing "listening" notification stays hidden. -->
+  <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+  <!-- Lets voice mode ask once to be exempt from battery optimisation (Doze cuts the network). -->
+  <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
+  <application>
+    <service
+      android:name="expo.modules.twowayaudio.VoiceForegroundService"
+      android:exported="false"
+      android:foregroundServiceType="microphone|mediaPlayback" />
+  </application>
 </manifest>

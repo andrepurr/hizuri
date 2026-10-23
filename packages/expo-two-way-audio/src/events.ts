@@ -16,12 +16,18 @@ export interface AudioInterruptionEvent {
   data: string;
 }
 
+/** Android: `route=<communication|media> out=... in=... reason=...` when the voice route changes. */
+export interface AudioRouteEvent {
+  data: string;
+}
+
 export interface ExpoTwoWayAudioEventMap {
   onMicrophoneData: MicrophoneDataEvent;
   onInputVolumeLevelData: VolumeLevelEvent;
   onOutputVolumeLevelData: VolumeLevelEvent;
   onRecordingChange: RecordingChangeEvent;
   onAudioInterruption: AudioInterruptionEvent;
+  onAudioRoute: AudioRouteEvent;
 }
 
 // These are useful for defining `useCallback` types inline

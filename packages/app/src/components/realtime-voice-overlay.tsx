@@ -1,142 +1,210 @@
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Pressable, View } from "react-native";
-import { StyleSheet, useUnistyles } from "react-native-unistyles";
-import { Mic, MicOff, Square } from "lucide-react-native";
-import { FOOTER_HEIGHT } from "@/constants/layout";
-import { useVoiceTelemetry } from "@/contexts/voice-context";
-import { VolumeMeter } from "./volume-meter";
+import { Pressable, Text, View } from "react-native";
+import { StyleSheet, withUnistyles } from "react-native-unistyles";
+import { Keyboard, Mic, MicOff, Plus } from "lucide-react-native";
+import { CONTROL_HEIGHTS } from "@/components/ui/control-geometry";
+import {
+  MODE_SWITCH_ICON_SIZE,
+  MODE_SWITCH_INSET,
+  MODE_SWITCH_SIZE,
+} from "@/composer/action-geometry";
+import type { Theme } from "@/styles/theme";
+
+const ThemedPlus = withUnistyles(Plus);
+const ThemedKeyboard = withUnistyles(Keyboard);
+const ThemedMic = withUnistyles(Mic);
+const ThemedMicOff = withUnistyles(MicOff);
+const foregroundColorMapping = (theme: Theme) => ({ color: theme.colors.foreground });
+const mutedIconColorMapping = (theme: Theme) => ({ color: theme.colors.palette.white });
 
 interface RealtimeVoiceOverlayProps {
   isMuted: boolean;
   isSwitching: boolean;
   onToggleMute: () => void;
-  onStop: () => void;
+  /** “+”: pick a photo and send it to the agent without leaving voice. */
+  onAttachPhoto?: () => void;
+  /** Voice off, session kept; absent when the host cannot keep a session in text mode. */
+  onSwitchToText?: () => void;
+  /** Shown instead of mute while voice turns on or off ("Turning voice on..."). */
+  statusText?: string | null;
 }
 
-const OVERLAY_BUTTON_SIZE = 44;
-const OVERLAY_VERTICAL_PADDING = (FOOTER_HEIGHT - OVERLAY_BUTTON_SIZE) / 2;
+/** The call-screen mute, the biggest button of the bar. Breakpoint map. */
+const MUTE_BUTTON_SIZE = {
+  xs: 60,
+  md: CONTROL_HEIGHTS.field,
+} as const;
+// The call-screen mute glyph is larger than the interface icon ramp, like a phone's.
+const MUTE_ICON_SIZE = 28;
 
+/**
+ * Hizuri: the voice bar is a phone-call screen: “+” on the left, a big mute in the middle, the
+ * switch to typing on the right. The user's live words above the chat are the sign that they are
+ * heard, so there is no level meter; “End session” lives in the screen's header menu.
+ *
+ * The bar sits at the bottom of the composer's frame, and its switch to typing has the typing
+ * bar's switch to voice size and inset (`composer/action-geometry.ts`): one toggle, one spot.
+ */
 export function RealtimeVoiceOverlay({
   isMuted,
   isSwitching,
   onToggleMute,
-  onStop,
+  onAttachPhoto,
+  onSwitchToText,
+  statusText,
 }: RealtimeVoiceOverlayProps) {
-  const { theme } = useUnistyles();
   const { t } = useTranslation();
-  const { volume, isSpeaking } = useVoiceTelemetry();
-  const muteButtonStyle = useMemo(
-    () => [
-      styles.actionButton,
-      styles.muteButton,
-      isMuted ? styles.muteButtonMuted : undefined,
-      isSwitching ? styles.buttonDisabled : undefined,
-    ],
-    [isMuted, isSwitching],
-  );
-  const stopButtonStyle = useMemo(
-    () => [styles.actionButton, styles.stopButton, isSwitching ? styles.buttonDisabled : undefined],
+  const sideButtonStyle = useMemo(
+    () => [styles.sideButton, isSwitching ? styles.buttonDisabled : undefined],
     [isSwitching],
   );
+  const muteButtonStyle = useMemo(
+    () => [styles.muteButton, isMuted ? styles.muteButtonMuted : undefined],
+    [isMuted],
+  );
+  const muteState = useMemo(() => ({ checked: isMuted }), [isMuted]);
   return (
-    <View style={styles.container}>
-      <View style={styles.meterContainer}>
-        <VolumeMeter
-          volume={volume}
-          isMuted={isMuted}
-          isSpeaking={isSpeaking}
-          orientation="horizontal"
-        />
-      </View>
-
-      <View style={styles.actionsContainer}>
+    <View style={styles.container} testID="voice-bar">
+      {onAttachPhoto ? (
         <Pressable
-          onPress={onToggleMute}
+          onPress={onAttachPhoto}
           disabled={isSwitching}
           accessibilityRole="button"
-          accessibilityLabel={
-            isMuted ? t("realtimeVoice.actions.unmute") : t("realtimeVoice.actions.mute")
-          }
-          style={muteButtonStyle}
+          accessibilityLabel={t("realtimeVoice.actions.attachPhoto")}
+          testID="voice-attach-photo"
+          style={sideButtonStyle}
         >
-          {isMuted ? (
-            <MicOff size={theme.iconSize.lg} color={theme.colors.palette.white} strokeWidth={2.5} />
-          ) : (
-            <Mic size={theme.iconSize.lg} color={theme.colors.foreground} strokeWidth={2.5} />
-          )}
+          <ThemedPlus
+            size={MODE_SWITCH_ICON_SIZE}
+            strokeWidth={2}
+            uniProps={foregroundColorMapping}
+          />
         </Pressable>
+      ) : (
+        <View style={styles.sideSpacer} />
+      )}
 
+      <View style={styles.middleSlot}>
+        {statusText ? (
+          <Text
+            style={styles.statusText}
+            numberOfLines={2}
+            accessibilityLiveRegion="polite"
+            testID="voice-status"
+          >
+            {statusText}
+          </Text>
+        ) : (
+          <Pressable
+            onPress={onToggleMute}
+            disabled={isSwitching}
+            accessibilityRole="button"
+            accessibilityLabel={
+              isMuted ? t("realtimeVoice.actions.unmute") : t("realtimeVoice.actions.mute")
+            }
+            accessibilityState={muteState}
+            testID="voice-mute"
+            style={muteButtonStyle}
+          >
+            {isMuted ? (
+              <ThemedMicOff
+                size={MUTE_ICON_SIZE}
+                strokeWidth={2.25}
+                uniProps={mutedIconColorMapping}
+              />
+            ) : (
+              <ThemedMic
+                size={MUTE_ICON_SIZE}
+                strokeWidth={2.25}
+                uniProps={foregroundColorMapping}
+              />
+            )}
+          </Pressable>
+        )}
+      </View>
+
+      {onSwitchToText ? (
         <Pressable
-          onPress={onStop}
+          onPress={onSwitchToText}
           disabled={isSwitching}
           accessibilityRole="button"
-          accessibilityLabel={t("realtimeVoice.actions.stop")}
-          style={stopButtonStyle}
+          accessibilityLabel={t("realtimeVoice.actions.switchToText")}
+          testID="voice-switch-to-text"
+          style={sideButtonStyle}
         >
-          {isSwitching ? (
-            <LoadingSpinner size="small" color={theme.colors.palette.white} />
-          ) : (
-            <Square
-              size={theme.iconSize.lg}
-              color={theme.colors.palette.white}
-              fill={theme.colors.palette.white}
-              strokeWidth={2.5}
-            />
-          )}
+          <ThemedKeyboard
+            size={MODE_SWITCH_ICON_SIZE}
+            strokeWidth={2}
+            uniProps={foregroundColorMapping}
+          />
         </Pressable>
-      </View>
+      ) : (
+        <View style={styles.sideSpacer} />
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create((theme) => ({
+  // Bottom of the composer's frame; the vertical padding centres the mute on the toggle's line
+  // while the toggle keeps its inset from the bottom border. No box: the call controls stand on
+  // the open field; the transparent border keeps the toggle on the typing bar's spot.
   container: {
     flexDirection: "row",
     alignItems: "center",
     width: "100%",
-    height: FOOTER_HEIGHT,
+    marginTop: "auto",
     borderRadius: theme.borderRadius["2xl"],
-    justifyContent: "space-between",
-    paddingHorizontal: theme.spacing[4],
-    paddingVertical: OVERLAY_VERTICAL_PADDING,
-    backgroundColor: theme.colors.surface1,
+    paddingHorizontal: MODE_SWITCH_INSET,
+    paddingVertical: {
+      xs: MODE_SWITCH_INSET - (MUTE_BUTTON_SIZE.xs - MODE_SWITCH_SIZE.xs) / 2,
+      md: MODE_SWITCH_INSET - (MUTE_BUTTON_SIZE.md - MODE_SWITCH_SIZE.md) / 2,
+    },
     borderWidth: theme.borderWidth[1],
-    borderColor: theme.colors.border,
+    borderColor: "transparent",
   },
-  meterContainer: {
-    flex: 1,
+  // Rings on the open field, as in the brand's live-voice screen (round 3b): a darker filled
+  // circle inside a lighter box read as a hole. The typing bar's toggle is the same
+  // ring (composer modeSwitch).
+  sideButton: {
+    width: MODE_SWITCH_SIZE,
+    height: MODE_SWITCH_SIZE,
+    borderRadius: theme.borderRadius.full,
     alignItems: "center",
     justifyContent: "center",
+    borderWidth: theme.borderWidth[1],
+    borderColor: theme.colors.surface4,
   },
-  actionsContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: theme.spacing[2],
+  sideSpacer: {
+    width: MODE_SWITCH_SIZE,
+    height: MODE_SWITCH_SIZE,
   },
-  actionButton: {
-    width: OVERLAY_BUTTON_SIZE,
-    height: OVERLAY_BUTTON_SIZE,
-    borderRadius: theme.borderRadius.full,
+  // Holds the mute or, while voice switches, the status text, at the mute's height either way.
+  middleSlot: {
+    flex: 1,
+    height: MUTE_BUTTON_SIZE,
     alignItems: "center",
     justifyContent: "center",
   },
   muteButton: {
-    backgroundColor: theme.colors.surface0,
-    borderWidth: theme.borderWidth[1],
-    borderColor: theme.colors.border,
+    width: MUTE_BUTTON_SIZE,
+    height: MUTE_BUTTON_SIZE,
+    borderRadius: theme.borderRadius.full,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: theme.colors.surface3,
   },
   muteButtonMuted: {
     backgroundColor: theme.colors.palette.red[600],
-    borderColor: theme.colors.palette.red[800],
   },
-  stopButton: {
-    backgroundColor: theme.colors.palette.red[600],
-    borderWidth: theme.borderWidth[1],
-    borderColor: theme.colors.palette.red[800],
+  statusText: {
+    textAlign: "center",
+    marginHorizontal: theme.spacing[3],
+    fontSize: theme.fontSize.base,
+    color: theme.colors.foregroundMuted,
   },
   buttonDisabled: {
-    opacity: 0.5,
+    opacity: theme.opacity[50],
   },
 }));

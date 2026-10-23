@@ -1,5 +1,6 @@
 import { useUnistyles } from "react-native-unistyles";
 import { isWeb } from "@/constants/platform";
+import { usePhoneLayoutStore } from "@/stores/phone-layout-store";
 
 export const FOOTER_HEIGHT = 75;
 
@@ -33,13 +34,41 @@ export {
   getIsElectronMac as getIsElectronRuntimeMac,
 } from "./platform";
 
+/** Below 600 points, sidebars overlay the workspace. Medium and wider layouts dock them. */
+export function isCompactBreakpoint(breakpoint: string | undefined): boolean {
+  return breakpoint === "xs" || breakpoint === "sm";
+}
+
 /**
  * Reactive hook — re-renders the component when the breakpoint changes.
  * Always use this instead of reading UnistylesRuntime.breakpoint directly.
  */
 export function useIsCompactFormFactor(): boolean {
   const { rt } = useUnistyles();
-  return rt.breakpoint === "xs" || rt.breakpoint === "sm";
+  const phoneLayout = usePhoneLayoutStore((state) => state.phoneLayout);
+  return isCompactLayout({ breakpoint: rt.breakpoint, phoneLayout });
+}
+
+/**
+ * True only when the window itself is phone-sized, whatever the phone-layout setting says. Use it
+ * for what depends on the real width, not on the layout: a laptop browser in the phone layout
+ * still has a laptop's room and a long chat to keep out of the DOM.
+ */
+export function useIsPhoneSizedWindow(): boolean {
+  const { rt } = useUnistyles();
+  return isCompactLayout({ breakpoint: rt.breakpoint, phoneLayout: false });
+}
+
+/**
+ * The phone layout: a phone-sized window always, a wide one too while "Phone layout on wide
+ * screens" is on (hizuri's default, so the browser matches the phone version).
+ * Stylesheet breakpoints still follow the real width, so spacing grows with the window.
+ */
+export function isCompactLayout(input: {
+  breakpoint: string | undefined;
+  phoneLayout: boolean;
+}): boolean {
+  return input.phoneLayout || isCompactBreakpoint(input.breakpoint);
 }
 
 // SplitContainer relies on dnd-kit and DOM-backed accessibility helpers.

@@ -1,14 +1,22 @@
-import type { AudioEngine, AudioEngineCallbacks, AudioPlaybackSource } from "./audio-engine-types";
+import {
+  type AudioEngine,
+  type AudioEngineCallbacks,
+  type AudioEngineOptions,
+  type AudioPlaybackSource,
+  type OutputRoute,
+  outputRouteOf,
+} from "./audio-engine-types";
 
 import { createAudioPlayer, setAudioModeAsync } from "expo-audio";
 import { File, Paths } from "expo-file-system";
+import { appLogBuffer } from "@/diagnostics/app-log-uploader";
 import { createPlaybackQueue } from "./playback";
 import { playFile } from "./file-playback";
-import { playPcm16 } from "./pcm";
+import { nativeOutputDrainMs, playPcm16, stopQueuedPcm16, waitForNativeOutputDrain } from "./pcm";
 
 export function createAudioEngine(
   callbacks: AudioEngineCallbacks,
-  _options?: { traceLabel?: string },
+  options?: AudioEngineOptions,
 ): AudioEngine {
   const native = require("@getpaseo/expo-two-way-audio");
 
@@ -47,6 +55,12 @@ export function createAudioEngine(
   const interruptionSubscription = native.addExpoTwoWayAudioEventListener(
     "onAudioInterruption",
     (event: { data: string }) => {
+      if (event.data === "capture_paused" || event.data === "capture_resumed") {
+        if (refs.captureActive) {
+          callbacks.onCaptureAvailabilityChange?.(event.data === "capture_resumed");
+        }
+        return;
+      }
       if (event.data !== "blocked") {
         return;
       }
@@ -59,6 +73,42 @@ export function createAudioEngine(
       }
     },
   );
+
+  // hizuri: where replies play and which mic records (Android), e.g. "route=media
+  // out=bt_a2dp(...) in=builtin_mic(bottom)". Shows on the host as an `[audio]` app-log line, and
+  // its output kind goes to the host with every mic chunk (outputRoute).
+  let outputRoute: OutputRoute | undefined;
+  const routeSubscription = native.addExpoTwoWayAudioEventListener(
+    "onAudioRoute",
+    (event: { data: string }) => {
+      outputRoute = outputRouteOf(event.data);
+      appLogBuffer.record({ level: "info", tag: "audio", message: event.data });
+    },
+  );
+
+  // hizuri: the player's measured output timing (AudioTrack.getTimestamp) that times the
+  // assistant's mouth, logged at most every 30 s as an `[audio] output-timing` app-log line.
+  let lastTimingLogAt = 0;
+  const pcmOutput = {
+    resumePlayback: () => native.resumePlayback(),
+    playPCMData: (bytes: Uint8Array) => native.playPCMData(bytes),
+    stopPlayback: () => native.stopPlayback(),
+    getOutputTiming: () => {
+      const timing = native.getOutputTiming();
+      const now = Date.now();
+      if (now - lastTimingLogAt >= 30_000) {
+        lastTimingLogAt = now;
+        appLogBuffer.record({
+          level: "info",
+          tag: "audio",
+          message: timing
+            ? `output-timing audibleIn=${Math.round(timing.audibleInMs)}ms startLatency=${Math.round(timing.startLatencyMs)}ms measured=${timing.measured} ${timing.clock ?? ""}`
+            : "output-timing none (estimate)",
+        });
+      }
+      return timing;
+    },
+  };
 
   async function ensureInitialized(): Promise<void> {
     if (refs.initialized) {
@@ -84,6 +134,12 @@ export function createAudioEngine(
     if (refs.captureActive || playback.isPlaying()) {
       return;
     }
+    // The queue settles a voice chunk before its sound ends (pcm/index.ts NATIVE_PREFEED_MS).
+    const drainMs = nativeOutputDrainMs();
+    if (drainMs > 0) {
+      setTimeout(releaseSessionIfIdle, drainMs);
+      return;
+    }
     // The wrapper no-ops on binaries whose native module predates this function.
     native.releaseAudioSession();
   }
@@ -106,7 +162,7 @@ export function createAudioEngine(
     if (signal.aborted) throw new Error("Playback stopped");
     if (audio.type.startsWith("audio/pcm")) {
       await ensureInitialized();
-      return playPcm16(bytes, audio.type, signal, native);
+      return playPcm16(bytes, audio.type, signal, pcmOutput);
     }
     // Capture owns its audio session while active. File playback alone must not
     // initialize the microphone or the native two-way engine.
@@ -170,6 +226,7 @@ export function createAudioEngine(
       microphoneSubscription.remove();
       volumeSubscription.remove();
       interruptionSubscription.remove();
+      routeSubscription.remove();
     },
 
     async startCapture() {
@@ -180,7 +237,10 @@ export function createAudioEngine(
       try {
         await ensureMicrophonePermission();
         await ensureInitialized();
-        const isRecording = native.toggleRecording(true);
+        const isRecording =
+          options?.captureMode === "dictation"
+            ? native.startDictation()
+            : native.toggleRecording(true);
         if (!isRecording) {
           throw new Error(
             "Microphone capture could not start because Android audio focus is unavailable.",
@@ -201,6 +261,7 @@ export function createAudioEngine(
       refs.captureActive = false;
       refs.muted = false;
       callbacks.onVolumeLevel(0);
+      callbacks.onCaptureAvailabilityChange?.(true);
       releaseSessionIfIdle();
     },
 
@@ -217,8 +278,13 @@ export function createAudioEngine(
     },
 
     play: playback.play,
-    stop: playback.stop,
+    stop() {
+      playback.stop();
+      stopQueuedPcm16(native);
+    },
     clearQueue: playback.clearQueue,
-    isPlaying: playback.isPlaying,
+    isPlaying: () => playback.isPlaying() || nativeOutputDrainMs() > 0,
+    waitForOutputDrain: waitForNativeOutputDrain,
+    outputRoute: () => outputRoute,
   };
 }

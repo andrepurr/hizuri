@@ -22,7 +22,7 @@ export function formatAppDiagnosticHeader(input: {
   isDesktopApp: boolean;
   hostCount: number;
 }): string {
-  return formatDiagnosticSection("Paseo app diagnostics", [
+  return formatDiagnosticSection("hizuri app diagnostics", [
     { label: "Collected at", value: new Date().toISOString() },
     { label: "App version", value: input.appVersion ?? "unknown" },
     { label: "Platform", value: input.platform },
@@ -110,7 +110,25 @@ export function redactAppDiagnosticReport(report: string, hosts: HostProfile[]):
   for (const value of collectSensitiveHostValues(hosts)) {
     redacted = redacted.split(value).join("[redacted]");
   }
-  return redacted
+  return redactSecretPatterns(redacted);
+}
+
+/**
+ * hizuri: uploaded app logs keep host endpoints (they explain reconnects) but never passwords,
+ * tokens or keys.
+ */
+export function redactAppLogMessage(message: string, hosts: HostProfile[]): string {
+  let redacted = message;
+  for (const host of hosts) {
+    if (host.password) {
+      redacted = redacted.split(host.password).join("[redacted]");
+    }
+  }
+  return redactSecretPatterns(redacted);
+}
+
+function redactSecretPatterns(text: string): string {
+  return text
     .replace(/paseo:\/\/\S+/gi, "paseo://[redacted]")
     .replace(
       /([?&](?:password|token|secret|key|publicKey|daemonPublicKeyB64)=)[^&\s"']+/gi,

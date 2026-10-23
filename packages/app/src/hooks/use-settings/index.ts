@@ -53,6 +53,8 @@ import {
   type SidebarWorkspaceTrailing,
   type SettingsDeps,
   type WorkspaceTitleSource,
+  SHOW_TAB_SWITCHERS,
+  type ShowTabSwitcher,
 } from "./storage";
 
 export {
@@ -80,6 +82,7 @@ export {
   parseTerminalScrollbackLines,
   resolveContentMaxWidth,
   sanitizeFontFamily,
+  SHOW_TAB_SWITCHERS,
 };
 export type {
   AppSettings,
@@ -94,6 +97,7 @@ export type {
   ServiceUrlBehavior,
   Settings,
   SettingsDeps,
+  ShowTabSwitcher,
   SidebarWorkspaceTrailing,
   WorkspaceTitleSource,
 };

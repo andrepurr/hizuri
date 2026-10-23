@@ -47,12 +47,15 @@ interface MobilePanelsRuntime {
   leftCloseGestureRef: RefObject<GestureType | undefined>;
   leftOpenGestureRef: RefObject<GestureType | undefined>;
   motionState: SharedValue<MobilePanelMotionState>;
-  openGesturesBlocked: SharedValue<boolean>;
+  agentListOpenBlocked: SharedValue<boolean>;
+  fileExplorerOpenBlocked: SharedValue<boolean>;
+  /** Set on the UI thread while a finger is down on a control that owns its drag (Show's tab
+   * switchers); both opening swipes fail for that touch. */
+  openTouchHeld: SharedValue<boolean>;
   position: SharedValue<number>;
-  rightCloseGestureRef: RefObject<GestureType | undefined>;
   rightOpenGestureRef: RefObject<GestureType | undefined>;
   updateGesture: (startedRevision: number, nextPosition: number) => boolean;
-  setOpenGestureBlocked: (owner: symbol, blocked: boolean) => void;
+  setOpenGestureBlocked: (owner: symbol, side: MobilePanelOpenSide | null) => void;
   windowWidth: number;
 }
 
@@ -66,6 +69,9 @@ interface FinishGestureInput {
   target: MobilePanelView;
 }
 
+/** Which panel-opening swipe a surface takes over: toward the agent list, the explorer, or both. */
+export type MobilePanelOpenSide = "agent-list" | "file-explorer" | "both";
+
 const MobilePanelsContext = createContext<MobilePanelsRuntime | null>(null);
 const MobilePanelActiveContext = createContext<MobilePanelView>("agent");
 
@@ -74,24 +80,27 @@ export function MobilePanelsProvider({ children }: { children: ReactNode }) {
   const initialSelection = useRef(usePanelStore.getState().mobilePanel).current;
   const position = useSharedValue(getMobilePanelAnchor(initialSelection.target));
   const motionState = useSharedValue(createMobilePanelMotionState(initialSelection));
-  const openGesturesBlocked = useSharedValue(false);
-  const openGestureBlockersRef = useRef(new Set<symbol>());
+  const agentListOpenBlocked = useSharedValue(false);
+  const fileExplorerOpenBlocked = useSharedValue(false);
+  const openTouchHeld = useSharedValue(false);
+  const openGestureBlockersRef = useRef(new Map<symbol, MobilePanelOpenSide>());
   const leftOpenGestureRef = useRef<GestureType | undefined>(undefined);
   const leftCloseGestureRef = useRef<GestureType | undefined>(undefined);
   const rightOpenGestureRef = useRef<GestureType | undefined>(undefined);
-  const rightCloseGestureRef = useRef<GestureType | undefined>(undefined);
   const [activePanel, setActivePanel] = useState(initialSelection.target);
 
   const setOpenGestureBlocked = useCallback(
-    (owner: symbol, blocked: boolean) => {
-      if (blocked) {
-        openGestureBlockersRef.current.add(owner);
+    (owner: symbol, side: MobilePanelOpenSide | null) => {
+      if (side) {
+        openGestureBlockersRef.current.set(owner, side);
       } else {
         openGestureBlockersRef.current.delete(owner);
       }
-      openGesturesBlocked.value = openGestureBlockersRef.current.size > 0;
+      const sides = [...openGestureBlockersRef.current.values()];
+      agentListOpenBlocked.value = sides.some((blocked) => blocked !== "file-explorer");
+      fileExplorerOpenBlocked.value = sides.some((blocked) => blocked !== "agent-list");
     },
-    [openGesturesBlocked],
+    [agentListOpenBlocked, fileExplorerOpenBlocked],
   );
 
   const publishActivePanel = useCallback((panel: MobilePanelView, revision: number) => {
@@ -220,9 +229,10 @@ export function MobilePanelsProvider({ children }: { children: ReactNode }) {
       leftCloseGestureRef,
       leftOpenGestureRef,
       motionState,
-      openGesturesBlocked,
+      agentListOpenBlocked,
+      fileExplorerOpenBlocked,
+      openTouchHeld,
       position,
-      rightCloseGestureRef,
       rightOpenGestureRef,
       updateGesture,
       setOpenGestureBlocked,
@@ -232,7 +242,9 @@ export function MobilePanelsProvider({ children }: { children: ReactNode }) {
       beginGesture,
       finishGesture,
       motionState,
-      openGesturesBlocked,
+      agentListOpenBlocked,
+      fileExplorerOpenBlocked,
+      openTouchHeld,
       position,
       setOpenGestureBlocked,
       updateGesture,
@@ -258,16 +270,32 @@ export function useMobilePanelsRuntime(): MobilePanelsRuntime {
   return context;
 }
 
+/**
+ * The touch-down hold for the panel-opening swipes, or null outside the compact panels. A control
+ * that owns its drag sets it in its gesture's onTouchesDown and clears it when the touch ends:
+ * unlike useBlockMobilePanelOpenGestures it acts on the UI thread before the first move.
+ */
+export function useMobilePanelOpenTouchHold(): SharedValue<boolean> | null {
+  return useContext(MobilePanelsContext)?.openTouchHeld ?? null;
+}
+
 export function useIsMobilePanelActive(panel: MobilePanelView): boolean {
   return useContext(MobilePanelActiveContext) === panel;
 }
 
-export function useBlockMobilePanelOpenGestures(blocked: boolean): void {
+/**
+ * While `blocked`, the panel-opening swipe toward `side` belongs to the calling surface: a terminal
+ * selection takes both, the agent pages take the side they can still page toward.
+ */
+export function useBlockMobilePanelOpenGestures(
+  blocked: boolean,
+  side: MobilePanelOpenSide = "both",
+): void {
   const { setOpenGestureBlocked } = useMobilePanelsRuntime();
   const owner = useRef(Symbol("mobile-panel-open-gesture-blocker")).current;
 
   useLayoutEffect(() => {
-    setOpenGestureBlocked(owner, blocked);
-    return () => setOpenGestureBlocked(owner, false);
-  }, [blocked, owner, setOpenGestureBlocked]);
+    setOpenGestureBlocked(owner, blocked ? side : null);
+    return () => setOpenGestureBlocked(owner, null);
+  }, [blocked, owner, setOpenGestureBlocked, side]);
 }

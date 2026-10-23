@@ -11,6 +11,7 @@ import type {
   FetchAgentsOptions,
 } from "@getpaseo/client/internal/daemon-client";
 import { DaemonAuthenticationError } from "@getpaseo/client/internal/daemon-client";
+import type { HostDirectory } from "@getpaseo/protocol/hosts";
 import type { ConnectionOffer } from "@getpaseo/protocol/connection-offer";
 import type { SessionOutboundMessage } from "@getpaseo/protocol/messages";
 import type { AgentPermissionRequest } from "@getpaseo/protocol/agent-types";
@@ -24,6 +25,7 @@ import {
   HostRuntimeController,
   HostRuntimeStore,
   readInitialDaemonConnectionHint,
+  takeInitialDaemonPasswordFromLink,
   type HostRuntimeControllerDeps,
   type HostRuntimeStorage,
 } from "./host-runtime";
@@ -52,6 +54,9 @@ it("requests the managed connection credential through desktop main without a we
 });
 
 class FakeDaemonClient {
+  supportsBackgroundWorkspaces(): boolean {
+    return false;
+  }
   private state: ConnectionState = { status: "idle" };
   private listeners = new Set<(status: ConnectionState) => void>();
   private error: string | null = null;
@@ -132,6 +137,7 @@ class FakeDaemonClient {
     if (response) await response;
     const failure = this.sendAgentMessageFailures.shift();
     if (failure) throw failure;
+    return {};
   }
 
   async waitForSentMessages(count: number): Promise<void> {
@@ -154,8 +160,22 @@ class FakeDaemonClient {
     }
   }
 
+  get isConnected(): boolean {
+    return this.state.status === "connected";
+  }
+
   getConnectionState(): ConnectionState {
     return this.state;
+  }
+
+  public connectedHosts = false;
+  public hostDirectory: Promise<HostDirectory> = Promise.resolve({
+    self: { serverId: "srv_test", label: "test" },
+    hosts: [],
+  });
+
+  observeHosts() {
+    return subscriptionFixture(this.hostDirectory, () => () => {});
   }
 
   public ownedSubscriptions = true;
@@ -168,7 +188,10 @@ class FakeDaemonClient {
       serverId: "srv_test",
       hostname: "test",
       version: this.daemonVersion,
-      features: { ownedSubscriptions: this.ownedSubscriptions },
+      features: {
+        ownedSubscriptions: this.ownedSubscriptions,
+        connectedHosts: this.connectedHosts,
+      },
     };
   }
 
@@ -1655,6 +1678,103 @@ describe("HostRuntimeController", () => {
 });
 
 describe("HostRuntimeStore", () => {
+  it.each([false, true])(
+    "keeps B and C distinct with routed and direct candidates (B direct first: %s)",
+    async (directFirst) => {
+      const directory = new Deferred<HostDirectory>();
+      const origin = new FakeDaemonClient();
+      origin.setConnectionState({ status: "connected" });
+      origin.connectedHosts = true;
+      origin.hostDirectory = directory.promise;
+      const store = new HostRuntimeStore({
+        storage: createMemoryHostRuntimeStorage(),
+        deps: {
+          createClient: ({ host }) =>
+            (host.serverId === "srv_a"
+              ? origin
+              : new FakeDaemonClient()) as unknown as DaemonClient,
+          connectToDaemon: async ({ host }) => ({
+            client: (host.serverId === "srv_a"
+              ? origin
+              : makeConnectedProbeClient(5)) as unknown as DaemonClient,
+            serverId: host.serverId,
+            hostname: host.label,
+          }),
+          getClientId: async () => "cid_fleet_candidates",
+        },
+      });
+      const addDirectB = () =>
+        store.upsertDirectConnection({
+          serverId: "srv_b",
+          endpoint: "b:6767",
+          label: "My B",
+        });
+      try {
+        if (directFirst) await addDirectB();
+        await store.upsertDirectConnection({
+          serverId: "srv_c",
+          endpoint: "c:6767",
+          label: "My C",
+        });
+        await store.upsertDirectConnection({ serverId: "srv_a", endpoint: "a:6767" });
+        await waitForHostOnline(store, "srv_a");
+        directory.resolve({
+          self: { serverId: "srv_a", label: "A" },
+          hosts: ["b", "c"].map((target) => ({
+            registrationId: `reg_${target}`,
+            serverId: `srv_${target}`,
+            label: `Fleet ${target.toUpperCase()}`,
+            source: { id: "user", key: target },
+            metadata: {},
+            enabled: true,
+            status: "online" as const,
+            targetDescription: `${target}:6767`,
+            lastOnlineAt: null,
+            nextRetryAt: null,
+            error: null,
+          })),
+        });
+        await vi.waitFor(() =>
+          expect(store.getHosts()).toContainEqual(
+            expect.objectContaining({
+              serverId: "srv_b",
+              connections: expect.arrayContaining([
+                { id: "via:srv_a", type: "routed", originServerId: "srv_a" },
+              ]),
+            }),
+          ),
+        );
+        await waitForHostOnline(store, "srv_b");
+        if (!directFirst) await addDirectB();
+        const targets = store.getHosts().filter((host) => host.serverId === "srv_b");
+        expect(targets).toHaveLength(1);
+        expect(targets[0]?.connections).toEqual(
+          expect.arrayContaining([
+            { id: "via:srv_a", type: "routed", originServerId: "srv_a" },
+            { id: "direct:b:6767", type: "directTcp", endpoint: "b:6767", useTls: false },
+          ]),
+        );
+        expect(targets[0]?.connections).toHaveLength(2);
+        expect(targets[0]?.label).toBe(directFirst ? "My B" : "Fleet B");
+        expect(store.getSnapshot("srv_b")?.connectionStatus).toBe("online");
+        expect(store.getHosts()).toHaveLength(3);
+        const targetC = store.getHosts().find((host) => host.serverId === "srv_c");
+        expect(targetC).toMatchObject({
+          serverId: "srv_c",
+          label: "My C",
+          connections: [
+            { id: "direct:c:6767", type: "directTcp", endpoint: "c:6767", useTls: false },
+            { id: "via:srv_a", type: "routed", originServerId: "srv_a" },
+          ],
+        });
+        await waitForHostOnline(store, "srv_c");
+        expect(store.getSnapshot("srv_c")?.connectionStatus).toBe("online");
+      } finally {
+        store.syncHosts([]);
+      }
+    },
+  );
+
   it.each(["active", "inactive", "background"] as const)(
     "keeps reconnect enabled through inactive/background and resumes immediately (mounted %s)",
     async (currentState) => {
@@ -4047,6 +4167,33 @@ describe("readInitialDaemonConnectionHint", () => {
   });
 });
 
+describe("takeInitialDaemonPasswordFromLink", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  function stubLocation(hash: string) {
+    const replaceState = vi.fn();
+    vi.stubGlobal("location", { hash, pathname: "/", search: "" });
+    vi.stubGlobal("history", { state: null, replaceState });
+    return replaceState;
+  }
+
+  it("reads the k fragment and removes it from the address bar", () => {
+    const replaceState = stubLocation("#k=s3cret&tab=chat");
+    expect(takeInitialDaemonPasswordFromLink({ isWebRuntime: true })).toBe("s3cret");
+    expect(replaceState).toHaveBeenCalledWith(null, "", "/#tab=chat");
+  });
+
+  it("returns null without a k fragment or outside the web runtime", () => {
+    const replaceState = stubLocation("#tab=chat");
+    expect(takeInitialDaemonPasswordFromLink({ isWebRuntime: true })).toBeNull();
+    stubLocation("#k=s3cret");
+    expect(takeInitialDaemonPasswordFromLink({ isWebRuntime: false })).toBeNull();
+    expect(replaceState).not.toHaveBeenCalled();
+  });
+});
+
 describe("HostRuntimeStore initial connection hint bootstrap", () => {
   it("starts saved remote-host probes while desktop daemon startup is still pending", async () => {
     const host = makeHost({
@@ -4434,6 +4581,61 @@ describe("HostRuntimeStore initial connection hint bootstrap", () => {
     await firstProbe.promise;
 
     expect(seenProbes).not.toContainEqual(expect.objectContaining({ endpoint: "metro-host:8081" }));
+    expect(store.getHosts()).toHaveLength(0);
+  });
+});
+
+describe("Zuri default host", () => {
+  const defaultHost = { host: "192.0.2.1", port: 6768, endpoint: "192.0.2.1:6768" };
+
+  function createDefaultHostStore(storage: HostRuntimeStorage, probes: string[]) {
+    return new HostRuntimeStore({
+      storage,
+      deps: {
+        createClient: () => new FakeDaemonClient() as unknown as DaemonClient,
+        connectToDaemon: async ({ connection }) => {
+          probes.push(connection.id);
+          if (connection.id !== "direct:192.0.2.1:6768") {
+            throw new Error("probe unavailable");
+          }
+          return {
+            client: makeConnectedProbeClient(5) as unknown as DaemonClient,
+            serverId: "srv_workstation",
+            hostname: "workstation",
+          };
+        },
+        getClientId: async () => "cid_test_runtime",
+        readInitialConnectionHint: () => null,
+        readZuriDefaultHost: () => defaultHost,
+      },
+    });
+  }
+
+  it("adds the build-time default host on first launch and remembers it did", async () => {
+    const storage = createMemoryHostRuntimeStorage();
+    const store = createDefaultHostStore(storage, []);
+    const seeded = onceHostListMatches(store, () => store.getHosts().length === 1);
+    store.boot();
+    await seeded;
+
+    expect(store.getHosts()[0]).toMatchObject({
+      serverId: "srv_workstation",
+      label: "workstation",
+    });
+    await vi.waitFor(async () =>
+      expect(await storage.getItem("@zuri:default-host-seeded")).toBe("1"),
+    );
+    store.syncHosts([]);
+  });
+
+  it("does not bring the default host back once the user removed it", async () => {
+    const storage = createMemoryHostRuntimeStorage({ "@zuri:default-host-seeded": "1" });
+    const probes: string[] = [];
+    const store = createDefaultHostStore(storage, probes);
+    await store.boot();
+    await Promise.resolve();
+
+    expect(probes).not.toContain("direct:192.0.2.1:6768");
     expect(store.getHosts()).toHaveLength(0);
   });
 });

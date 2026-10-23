@@ -47,6 +47,36 @@ export function resolveActivePromptSeq(
   return activeSeq;
 }
 
+export interface ChatOutlineTickPrompt {
+  prompt: ChatOutlinePrompt;
+  /** Position in the complete index, so a tick still reads "k of n" when prompts are sampled. */
+  index: number;
+}
+
+/**
+ * The prompts the rail draws a tick for. A long conversation has more prompts than the rail
+ * has pixels (1,400+ in a voice session), and every tick is three elements, so past the
+ * rail's capacity the ticks sample the index evenly, always keeping the first and the last.
+ */
+export function sampleOutlineTicks(
+  prompts: readonly ChatOutlinePrompt[],
+  capacity: number,
+): ChatOutlineTickPrompt[] {
+  if (prompts.length <= capacity) {
+    return prompts.map((prompt, index) => ({ prompt, index }));
+  }
+  if (capacity < 2) {
+    return [];
+  }
+  const ticks: ChatOutlineTickPrompt[] = [];
+  const step = (prompts.length - 1) / (capacity - 1);
+  for (let tick = 0; tick < capacity; tick += 1) {
+    const index = Math.round(tick * step);
+    ticks.push({ prompt: prompts[index], index });
+  }
+  return ticks;
+}
+
 export interface ActivePromptSource {
   subscribe: (listener: () => void) => () => void;
   getActiveSeq: () => number | null;

@@ -16,6 +16,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { DropdownTrigger } from "@/components/ui/dropdown-trigger";
+import { SettingsCard } from "@/components/settings";
 import { SettingsSection } from "@/components/settings/headings/settings-section";
 import { useContributedThemes } from "@/appearance/provider";
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,7 @@ import {
   type AppSettings,
   DEFAULT_THEME_PREFERENCE,
 } from "@/hooks/use-settings";
+import { ShowTabSwitcherRow } from "./show-tab-switcher-row";
 import {
   DEFAULT_MONO_FONT_STACK,
   DEFAULT_UI_FONT_STACK,
@@ -241,7 +243,7 @@ interface FontFamilyRowProps {
   draft: string;
   withBorder: boolean;
   onChangeDraft: (value: string) => void;
-  onCommit: (value: string) => void;
+  onCommit: (value: string) => string;
 }
 
 function FontFamilyRow({
@@ -255,13 +257,16 @@ function FontFamilyRow({
   onChangeDraft,
   onCommit,
 }: FontFamilyRowProps) {
+  const inputRef = useRef<EditingTextInputHandle>(null);
   const handleCommit = useCallback(() => {
-    onCommit(draft);
+    const committed = onCommit(draft);
+    inputRef.current?.replaceText(committed);
   }, [draft, onCommit]);
 
   // Resync from the committed value when it changes elsewhere.
   useEffect(() => {
     onChangeDraft(value);
+    inputRef.current?.replaceText(value);
     // Only resync on external value changes, not on local keystrokes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
@@ -273,6 +278,7 @@ function FontFamilyRow({
         <Text style={settingsStyles.rowHint}>{hint}</Text>
       </View>
       <TextInput
+        ref={inputRef}
         initialValue={draft}
         onChangeText={onChangeDraft}
         onBlur={handleCommit}
@@ -533,12 +539,13 @@ export function AppearanceSection() {
       const sanitized = sanitizeFontFamily(value);
       if (sanitized === null) {
         setUiFontDraft(settings.uiFontFamily);
-        return;
+        return settings.uiFontFamily;
       }
       setUiFontDraft(sanitized);
       if (sanitized !== settings.uiFontFamily) {
         void updateSettings({ uiFontFamily: sanitized });
       }
+      return sanitized;
     },
     [settings.uiFontFamily, updateSettings],
   );
@@ -548,12 +555,13 @@ export function AppearanceSection() {
       const sanitized = sanitizeFontFamily(value);
       if (sanitized === null) {
         setMonoFontDraft(settings.monoFontFamily);
-        return;
+        return settings.monoFontFamily;
       }
       setMonoFontDraft(sanitized);
       if (sanitized !== settings.monoFontFamily) {
         void updateSettings({ monoFontFamily: sanitized });
       }
+      return sanitized;
     },
     [settings.monoFontFamily, updateSettings],
   );
@@ -691,6 +699,11 @@ export function AppearanceSection() {
             onChange={handleContentMaxWidthChange}
           />
         </View>
+      </SettingsSection>
+      <SettingsSection title={t("settings.appearance.show.title")}>
+        <SettingsCard>
+          <ShowTabSwitcherRow />
+        </SettingsCard>
       </SettingsSection>
       <SettingsSection title={t("settings.appearance.syntax.title")}>
         <View style={settingsStyles.card}>

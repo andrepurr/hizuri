@@ -2,6 +2,9 @@ import { en, type TranslationResources } from "./en";
 import { pluginSettings } from "./plugin-settings";
 
 export const zhCN: TranslationResources = {
+  assistant: {
+    name: "Zuri",
+  },
   paneFind: {
     connectionFailure: "无法搜索此聊天。请检查主机连接后重试。",
     historyChangedFailure: "搜索期间聊天已更改。请重新搜索。",
@@ -25,11 +28,153 @@ export const zhCN: TranslationResources = {
     position: "{{current}} / {{total}}",
     total: "{{total}} 个匹配项",
   },
+  freeBrain: {
+    title: "大脑",
+    label: "hizuri 免费大脑",
+    description:
+      "由 hizuri 付费的免费入门大脑，每天有使用上限。从第一分钟起就能和你对话，并帮你连接 Claude Code。",
+    status: {
+      ready: "就绪",
+      off: "已关闭",
+      checking: "检查中",
+      unavailable: "暂不可用",
+    },
+    claudeCode: {
+      label: "Claude Code",
+      connected: "已连接：与 Claude 开始新对话，即可不受我们的限制。",
+      howTo: "你自己的大脑，没有我们的限制。问问免费大脑，它会一步步带你连接。",
+    },
+    error: "无法更改免费大脑。",
+  },
+  phoneLayout: {
+    label: "宽屏也用手机布局",
+    description:
+      "在浏览器或平板上：$t(assistant.name) 的脸、聊天和 Show 与手机相同，只是更大。关闭后恢复带标题栏和侧边栏的桌面布局。",
+  },
+  simpleMode: {
+    label: "简洁版",
+    description:
+      "只显示 $t(assistant.name) 和设置。关闭后恢复完整应用：工作区、历史、搜索和计划任务。",
+    menu: {
+      assistant: "$t(assistant.name)",
+      face: "面孔",
+      chat: "聊天",
+    },
+  },
+  face: {
+    title: "$t(assistant.name) 的脸",
+    loading: {
+      starting: "正在加载 $t(assistant.name) 的脸…",
+      downloading: "正在下载 $t(assistant.name) 的脸 · {{percent}}%",
+      preparing: "正在准备 $t(assistant.name) 的 3D 脸…",
+      failed: "$t(assistant.name) 的脸加载失败：{{message}}",
+      noWebgl:
+        "$t(assistant.name) 的脸需要 WebGL，而此浏览器已关闭它。请为此网站允许 WebGL（LibreWolf：地址栏中的图标），然后点“重试”。",
+      retry: "重试",
+    },
+    inVoiceMode: {
+      label: "语音模式下显示面孔",
+      description:
+        "显示 $t(assistant.name) 的脸：手机上在第一页，宽屏上在你说话时显示在聊天上方。如果助手的声音断断续续，请关闭。",
+    },
+    float: {
+      label: "$t(assistant.name) 悬浮在其他应用上",
+      description:
+        "离开 hizuri 后，$t(assistant.name) 会留在任何应用之上：用手指拖动它，轻点它，长按可打开或隐藏。打开 hizuri 时它会隐藏。",
+      permissionTitle: "允许 $t(assistant.name) 显示在其他应用上",
+      permissionMessage:
+        "为 hizuri 打开“显示在其他应用的上层”。如果开关是灰色：应用信息 → ⋮ → 允许受限设置，然后重试。",
+      permissionOpen: "打开设置",
+      open: "打开 hizuri",
+      hide: "隐藏 $t(assistant.name)",
+      notification: "$t(assistant.name) 在你的屏幕上",
+    },
+  },
+  agentPages: {
+    sessionMenu: "会话",
+    tabs: {
+      face: "$t(assistant.name)",
+      chat: "聊天",
+      show: "Show",
+    },
+  },
+  show: {
+    title: "Show",
+    closeTab: "关闭标签页",
+    hidePerch: "把 $t(assistant.name) 从卡片上移开",
+    open: "打开 Show",
+    close: "返回聊天",
+    windows: "Show 窗口",
+    defaultWindow: "Show",
+    limitsWindow: "限额",
+    screenWindow: "屏幕",
+    liveWindow: "现在",
+    screenWatch: "观看",
+    screenTakeOver: "接管",
+    screenConnecting: "正在连接屏幕…",
+    secret: {
+      optional: "可选",
+      note: "直接存入你的保险库。你的代理永远看不到，只知道名称。",
+      save: "保存",
+      saving: "正在保存…",
+      notNow: "以后再说",
+      saved: "已保存为「{{name}}」",
+      closed: "未保存即关闭",
+      notSent: "未发送。请检查连接。",
+      fields: {
+        username: "登录名",
+        password: "密码",
+        address: "邮箱",
+        holder: "持卡人姓名",
+        number: "卡号",
+        expiry: "有效期",
+        cvc: "CVC",
+        value: "值",
+        perPayment: "每笔上限",
+        perMonth: "每月上限",
+        currency: "币种",
+      },
+    },
+    tabs: {
+      kind: {
+        page: "网页",
+        picture: "图片",
+        video: "视频",
+        player: "播放器",
+        screen: "屏幕",
+        live: "直播",
+        canvas: "画布",
+      },
+      allTabs: "全部标签页 · {{count}}",
+      closeCards: "隐藏卡片",
+      position: "第 {{index}} 个标签页，共 {{count}} 个",
+      capsuleHint: "左右滑动切换标签页，轻点查看全部",
+      deckHint: "轻点或上拉查看全部标签页",
+      releaseToCancel: "松开即取消",
+      insideEdgeHint: "从左边缘翻页",
+    },
+    page: {
+      empty: "暂无内容",
+      loading: "加载中…",
+      resetsAt: "重置时间：{{time}}",
+      inTime: "{{time}}后",
+      updated: "更新于 {{time}}",
+      used: "已用",
+      noData: "暂无用量数据",
+      widgetError: "无法显示",
+      days: "天",
+      hours: "小时",
+      minutes: "分钟",
+      fiveHour: "5 小时",
+      weekly: "每周",
+    },
+  },
   common: {
     bottomSheetBackdrop: "底部面板背景",
     back: "返回",
     loading: "加载中...",
     actions: {
+      save: "保存",
       back: "返回",
       cancel: "取消",
       close: "关闭",
@@ -123,6 +268,8 @@ export const zhCN: TranslationResources = {
     input: {
       accessibilityLabel: "给 Agent 发消息...",
       terminalAccessibilityLabel: "Terminal prompt",
+      fullscreen: "全屏",
+      exitFullscreen: "退出全屏",
       focusHint: "{{shortcut}} 聚焦",
       addAttachment: "添加附件",
       interruptAgent: "中断 Agent",
@@ -139,8 +286,6 @@ export const zhCN: TranslationResources = {
       interrupt: "中断",
     },
     voice: {
-      enableVoiceMode: "启用语音模式",
-      voiceMode: "语音模式",
       unmuteVoiceMode: "取消静音语音模式",
       muteVoiceMode: "静音语音模式",
       stopDictation: "停止听写",
@@ -148,7 +293,6 @@ export const zhCN: TranslationResources = {
       unmuteVoice: "取消静音",
       muteVoice: "静音",
       dictation: "听写",
-      interruptBeforeVoice: "启动语音模式前请先中断 Agent",
     },
     attachments: {
       addImage: "添加图片",
@@ -353,10 +497,20 @@ export const zhCN: TranslationResources = {
     speak: {
       header: "已朗读",
     },
+    spoken: {
+      phrase: "已说",
+      correction: "已说 · 已更正",
+    },
+    guardian: {
+      header: "守护者提示",
+      fix: "处理：{{fix}}",
+      rule: "规则：{{rule}}",
+    },
     activity: {
       details: "详情",
     },
     dictation: {
+      paused: "麦克风已中断，正在等待恢复…",
       start: "开始语音听写",
       cancel: "取消听写",
       retry: "重试听写",
@@ -366,6 +520,7 @@ export const zhCN: TranslationResources = {
       failedRetry: "听写失败。点按重试。",
     },
     question: {
+      responseFailed: "未能发送你的回复，请重试。",
       submit: "提交",
       next: "下一步",
       answerPlaceholder: "输入你的回答...",
@@ -533,6 +688,7 @@ export const zhCN: TranslationResources = {
       },
     },
     setup: {
+      updateHost: "更新主机以查看工作区设置详情",
       descriptor: {
         label: "Setup",
         completed: "Setup 已完成",
@@ -610,6 +766,9 @@ export const zhCN: TranslationResources = {
       updateHost: "请更新主机以使用原生终端渲染器。",
       unableToSubscribe: "无法订阅 Terminal",
     },
+    sheet: {
+      openAsTab: "作为标签页打开",
+    },
     tabs: {
       loading: "正在加载...",
       modified: "未保存的更改",
@@ -625,7 +784,7 @@ export const zhCN: TranslationResources = {
       },
       switcher: {
         trigger: "切换标签（已打开 {{count}} 个）",
-        title: "切换标签",
+        title: "Workspace 标签",
         searchPlaceholder: "搜索标签",
       },
       menu: {
@@ -719,6 +878,7 @@ export const zhCN: TranslationResources = {
     header: {
       actions: {
         workspaceActions: "Workspace 操作",
+        workspaceActionsUnhealthy: "Workspace 操作，有服务异常",
         newAgent: "新建 Agent",
         newTerminal: "新建 Terminal",
         newBrowser: "新建浏览器标签",
@@ -766,6 +926,8 @@ export const zhCN: TranslationResources = {
         exitCode: "exit {{code}}",
         startFailed: "启动 {{scriptName}} 失败",
         stopFailed: "停止 {{scriptName}} 失败",
+        running: "运行中",
+        runningCount: "{{count}} 个运行中",
       },
     },
     tree: {
@@ -864,7 +1026,7 @@ export const zhCN: TranslationResources = {
           updateDirty: "有本地变更时无法更新，请先 commit 或 stash",
           updateCurrent: "无法更新，因为此分支已与 {{baseRef}} 保持最新",
           mergePrNoGithub: "当前无法 merge PR，因为 GitHub 未连接",
-          archiveNotWorktree: "此处无法归档，因为此 workspace 不是作为 Paseo worktree 创建的",
+          archiveNotWorktree: "此处无法归档，因为此 workspace 不是作为 hizuri worktree 创建的",
           mergePrNoForge: "当前无法 merge {{noun}}，因为 {{brand}} 未连接",
           mergePrMissing: "无法 merge PR，因为还没有 pull request",
           mergePrDraft: "无法 merge PR，因为 pull request 仍是 draft",
@@ -936,6 +1098,7 @@ export const zhCN: TranslationResources = {
         checkingRepository: "正在检查 repository...",
         notRepository: "不是 git repository",
         diffMode: "Diff 模式",
+        all: "全部更改",
         uncommitted: "未 commit",
         committed: "已 commit",
         branchUnknown: "未知",
@@ -1139,6 +1302,7 @@ export const zhCN: TranslationResources = {
       done: "已完成",
     },
     display: {
+      showBackground: "显示后台工作区",
       trigger: "显示偏好",
       heading: "显示",
       grouping: {
@@ -1210,7 +1374,7 @@ export const zhCN: TranslationResources = {
       discord: "Discord",
       github: "创建 GitHub Issue",
       whatsNew: "新功能",
-      appName: "Paseo",
+      appName: "hizuri",
     },
     sections: {
       sessions: "历史",
@@ -1311,8 +1475,9 @@ export const zhCN: TranslationResources = {
     },
     fields: {
       project: "项目",
-      base: "基线",
+      branch: "分支",
       baseNotApplicable: "不适用",
+      host: "主机",
     },
     titlePlaceholder: "标题（可选）",
     errors: {
@@ -1354,7 +1519,7 @@ export const zhCN: TranslationResources = {
       close: "关闭窗口",
     },
     quitting: {
-      title: "正在退出 Paseo...",
+      title: "正在退出 hizuri...",
       detail: "正在停止本地 daemon。",
     },
     daemon: {
@@ -1369,19 +1534,19 @@ export const zhCN: TranslationResources = {
       },
       management: {
         title: "管理内置 daemon",
-        hint: "让 Paseo 启动和停止内置 daemon",
+        hint: "让 hizuri 启动和停止内置 daemon",
         pauseTitle: "暂停内置 daemon",
         pauseMessage:
           "这会立即停止内置 daemon。连接到内置 daemon 的运行中 agents 和 terminals 会被停止。",
         pauseAndStop: "暂停并停止",
         registrationFailed:
-          "内置 daemon 已启动，但 Paseo 无法保存 localhost 连接。请关闭后重新开启 daemon 管理，或手动添加 localhost。",
-        pausedStopFailed: "内置 daemon 管理已暂停，但 Paseo 无法停止 daemon。",
+          "内置 daemon 已启动，但 hizuri 无法保存 localhost 连接。请关闭后重新开启 daemon 管理，或手动添加 localhost。",
+        pausedStopFailed: "内置 daemon 管理已暂停，但 hizuri 无法停止 daemon。",
         updateFailed: "无法更新内置 daemon 管理设置。",
       },
       keepRunning: {
         title: "退出后保持 daemon 运行",
-        hint: "退出 Paseo 后 daemon 会继续运行",
+        hint: "退出 hizuri 后 daemon 会继续运行",
       },
       logs: {
         title: "日志文件",
@@ -1396,7 +1561,7 @@ export const zhCN: TranslationResources = {
       fullStatus: {
         title: "完整状态",
         modalTitle: "Daemon 状态",
-        hint: "运行 `paseo daemon status` 并显示输出",
+        hint: "显示服务器的完整状态报告",
         view: "查看状态",
         copied: "状态已复制到剪贴板。",
         fetchFailed: "获取 daemon 状态失败：{{message}}",
@@ -1446,7 +1611,7 @@ export const zhCN: TranslationResources = {
     },
     rosetta: {
       title: "下载 Apple Silicon 构建",
-      runningIntel: "你正在 Apple Silicon 上通过 Rosetta 运行 Paseo 的 Intel 构建。",
+      runningIntel: "你正在 Apple Silicon 上通过 Rosetta 运行 hizuri 的 Intel 构建。",
       highCpu: "这会导致较高 CPU 使用率。下载 Apple Silicon 构建即可修复。",
       download: "下载",
     },
@@ -1486,7 +1651,7 @@ export const zhCN: TranslationResources = {
         microphone: "尚未检查麦克风状态。",
       },
       testNotification: {
-        title: "Paseo 通知测试",
+        title: "hizuri 通知测试",
         body: "如果你能看到这条通知，说明桌面通知可用。",
         notDelivered: "通知未送达。请检查 System Settings > Notifications。",
         failed: "发送通知失败。",
@@ -1495,18 +1660,18 @@ export const zhCN: TranslationResources = {
     integrations: {
       cli: {
         statusFailed: "无法检查 CLI 安装状态。",
-        installFailed: "无法安装 Paseo CLI。",
+        installFailed: "无法安装 hizuri CLI。",
       },
     },
   },
   rootError: {
-    title: "Paseo 遇到了问题。",
+    title: "hizuri 遇到了问题。",
     body: "请重试以重新加载应用。如果问题持续发生，请在报告时附上下面的详细信息。",
     details: "详情",
   },
   startup: {
     errorTitle: "出现问题",
-    errorDescription: "本地服务器启动失败。如果持续发生，请在 GitHub 报告问题并附上下方日志。",
+    errorDescription: "本地服务器启动失败。如果持续发生，请复制下方日志。",
     logs: {
       loading: "正在加载 daemon 日志...",
       unavailable: "没有可用的 daemon 日志。",
@@ -1595,7 +1760,7 @@ export const zhCN: TranslationResources = {
     },
   },
   onboarding: {
-    title: "欢迎使用 Paseo",
+    title: "欢迎使用 hizuri",
     subtitle: "连接你的电脑即可开始",
     actions: {
       settings: "设置",
@@ -1702,7 +1867,7 @@ export const zhCN: TranslationResources = {
     },
     direct: {
       title: "直接连接",
-      helper: "输入 Paseo server 的地址。",
+      helper: "输入 hizuri server 的地址。",
       fields: {
         host: "Host",
         port: "端口",
@@ -1743,7 +1908,7 @@ export const zhCN: TranslationResources = {
     },
     remoteSsh: {
       title: "远程 SSH",
-      helper: "连接到远程主机上运行的 Paseo 守护进程。",
+      helper: "连接到远程主机上运行的 hizuri 守护进程。",
       fields: {
         target: "SSH 主机",
         password: "守护进程密码",
@@ -1803,15 +1968,15 @@ export const zhCN: TranslationResources = {
       enableTitle: "启用中继？",
       enableDescription: "中继让此设备可以从任何地方连接。配对流量采用端到端加密。",
       relayDocs: "中继如何工作",
-      relayDocsAccessibility: "阅读 Paseo 中继的工作原理",
+      relayDocsAccessibility: "阅读 hizuri 中继的工作原理",
       enableRelay: "启用中继",
       enablingRelay: "正在启用...",
       notNow: "暂不",
       directConnectionHint:
         "不使用中继时，请通过 TCP、Tailscale 或其他 VPN 直接连接。不会生成二维码。",
-      updateRequired: "请更新主机，以便从 Paseo Desktop 启用中继。",
+      updateRequired: "请更新主机，以便从 hizuri Desktop 启用中继。",
       unavailable: "配对 offer 不可用。",
-      hint: "用手机上的 Paseo 扫描此二维码，或复制下方链接。",
+      hint: "用手机上的 hizuri 扫描此二维码，或复制下方链接。",
       securityWarning: "请像保管密码一样保管此配对链接。任何获得此链接的人都可以访问此守护进程。",
       qrUnavailable: "二维码不可用。",
       qrAccessibility: "配对二维码",
@@ -1822,9 +1987,28 @@ export const zhCN: TranslationResources = {
   },
   realtimeVoice: {
     actions: {
+      startSession: "开始会话",
       mute: "静音 realtime voice",
       unmute: "取消静音 realtime voice",
-      stop: "停止 realtime voice 并中断 turn",
+      switchToText: "切换到文字，保留会话",
+      switchToVoice: "切回语音",
+      endSession: "结束会话",
+      attachPhoto: "发送照片",
+    },
+    endSessionConfirm: {
+      title: "结束会话？",
+      message: "语音、代理的语音模式和已保存的会话都将关闭。",
+    },
+    live: {
+      updateHost: "更新主机即可在说话时看到你的话",
+    },
+    status: {
+      starting: "正在开启语音...",
+      stopping: "正在关闭语音...",
+    },
+    moved: "语音模式已切换到这里",
+    errors: {
+      noSession: "请先开始会话",
     },
   },
   rewind: {
@@ -1845,7 +2029,7 @@ export const zhCN: TranslationResources = {
   serviceUrl: {
     title: "打开服务 URL",
     message: "打开 {{url}}？",
-    inPaseo: "在 Paseo 中",
+    inPaseo: "在 hizuri 中",
     externalBrowser: "外部浏览器",
     dontAskAgain: "不再询问",
   },
@@ -1882,12 +2066,32 @@ export const zhCN: TranslationResources = {
       creatingAgent: "正在创建 Agent",
     },
     file: {
+      filePanels: {
+        pickerTitleExtension: "打开 .{{extension}} 文件的方式",
+        pickerTitleFilename: "打开 {{filename}} 的方式",
+        dontAskAgain: "不再询问",
+        use: "使用",
+        openWith: "打开方式…",
+        alwaysUseExtension: "始终用于 .{{extension}}",
+        alwaysUseFilename: "始终用于 {{filename}}",
+        option: "{{title}} — {{owner}}",
+        actions: "文件操作",
+        builtin: {
+          owner: "Paseo",
+          markdown: "Markdown",
+          html: "HTML",
+          image: "图片",
+          source: "源代码",
+        },
+      },
       directoryMissing: "未找到 workspace 目录。",
       loading: "正在加载文件...",
       noPreview: "没有可用预览",
       binaryPreviewUnavailable: "二进制预览不可用",
       tooLargeToDisplay: "此文件过大，无法显示",
+      documentUnsupported: "无法在此设备上显示 {{type}} 文件",
       failedToLoad: "加载文件失败",
+      notFound: "找不到文件",
       failedToLoadPreview: "加载文件预览失败",
       editor: {
         fileSize: "文件大小 {{size}}",
@@ -1899,10 +2103,7 @@ export const zhCN: TranslationResources = {
         changedOnDisk: "磁盘上的文件已更改",
         vimMode: "Vim 模式 {{mode}}",
         cursor: "第 {{line}} 行，第 {{column}} 列",
-        preview: "预览",
-        source: "源代码",
         deletedTitle: "文件已从磁盘删除",
-        checkFailedTitle: "无法检查磁盘上的文件",
         preservedDescription: "打开的副本已保留。",
         conflictDescription: "本地内容已保留。请选择要保留的版本。",
         overwrite: "覆盖",
@@ -1965,10 +2166,28 @@ export const zhCN: TranslationResources = {
       other: "使用了 {{count}} 个其他工具",
     },
     paseoCalls: {
-      one: "调用了 Paseo {{count}} 次",
-      other: "调用了 Paseo {{count}} 次",
+      one: "调用了 hizuri {{count}} 次",
+      other: "调用了 hizuri {{count}} 次",
     },
     and: "并",
+  },
+  showMedia: {
+    youtube: "YouTube",
+    audio: "音频",
+    playerWindow: "播放器",
+    play: "播放",
+    pause: "暂停",
+    back15: "后退 15 秒",
+    forward15: "前进 15 秒",
+    openInYoutube: "在 YouTube 中打开",
+    onlyInYoutube: "YouTube 不允许在这里播放此视频",
+    cannotPlay: "无法播放：{{reason}}",
+    needsDirectConnection: "这需要与主机直接连接",
+    accessTitle: "允许 hizuri 控制媒体",
+    accessMessage:
+      "要暂停、切换或快退您自己应用中的音乐和影片，hizuri 需要通知访问权限。hizuri 不读取任何通知；Android 只通过这个开关授予媒体控制权限。",
+    accessConfirm: "打开设置",
+    accessCancel: "以后再说",
   },
   renameModal: {
     rename: "重命名",
@@ -1987,6 +2206,17 @@ export const zhCN: TranslationResources = {
     accessibility: "上下文窗口已使用 {{percentage}}%",
   },
   review: {
+    feedback: {
+      send: "发送反馈 ({{count}})",
+      sending: "正在发送反馈 ({{count}})",
+      chooseAgent: "选择智能体",
+      sent: "已向 {{recipient}} 发送反馈",
+      "no-agents": "请在此工作区打开智能体标签页以发送反馈。",
+      disconnected: "请连接到主机以发送反馈。",
+      "no-context": "保存的评论不再匹配此差异。",
+      failed: "发送反馈失败。请重试。",
+      prompt: "请处理此代码审查。",
+    },
     comment: {
       add: "添加 review 评论",
       edit: "编辑 review 评论",
@@ -1997,6 +2227,70 @@ export const zhCN: TranslationResources = {
       cancelAccessibility: "取消 review 评论",
       save: "评论",
       saveAccessibility: "保存 review 评论",
+    },
+  },
+  providerUsage: {
+    options: "设置",
+    refreshFailed: "无法刷新用量",
+    noHosts: "没有已连接的主机",
+    agentError: "无法加载用量：{{reason}}",
+    pin: "固定",
+    unpin: "取消固定",
+    displayAs: "百分比",
+    displayUsed: "已使用",
+    displayRemaining: "剩余",
+    showInSidebar: "在侧边栏显示摘要",
+    showInSidebarHint: "固定的时间窗口显示在侧边栏底部",
+    runToRefresh: "运行 {{command}} 以刷新。",
+    signInAgain: "请重新登录。",
+    loginRejected: "登录被拒绝（HTTP {{status}}）。{{remedy}}",
+    loginExpired: "登录已于{{relativeTime}}过期。{{remedy}}",
+    title: "套餐用量",
+    refresh: "刷新",
+    refreshAll: "全部刷新",
+    refreshing: "刷新中...",
+    loading: "正在加载用量...",
+    empty: "暂无用量数据",
+    errorTitle: "无法加载用量",
+    hostUnavailable: "连接到 {{host}} 以查看提供商用量",
+    hostUpgradeRequired: "更新 {{host}} 以查看提供商用量",
+    clientUnavailable: "主机连接尚未就绪",
+    retry: "重试",
+    tooltipLoading: "正在加载套餐用量...",
+    status: {
+      error: "错误",
+      unavailable: "不可用",
+    },
+    values: {
+      used: "已使用 {{percentage}}",
+      remaining: "剩余 {{amount}}",
+    },
+    labels: {
+      session: "会话",
+      weekly: "每周",
+      monthly: "每月",
+      codeReview: "代码审查",
+      credits: "积分",
+      monthlyCredits: "每月积分",
+    },
+    duration: {
+      days: "{{value}}天",
+      hours: "{{value}}小时",
+      minutes: "{{value}}分钟",
+    },
+    timing: {
+      lastUpdated: "上次更新于 {{relativeTime}}",
+      noSuccessfulUpdate: "尚无成功更新",
+      resetTimePassed: "重置时间已过",
+      resettingNow: "正在重置",
+      resetsIn: "将在 {{duration}}后重置",
+      runsOutNow: "即将用尽",
+      runsOutIn: "将在 {{duration}}后用尽",
+      justNow: "刚刚",
+      daysAgo: "{{value}}天前",
+      hoursAgo: "{{value}}小时前",
+      minutesAgo: "{{value}}分钟前",
+      updated: "更新于 {{relativeTime}}",
     },
   },
   settings: {
@@ -2027,6 +2321,7 @@ export const zhCN: TranslationResources = {
       terminal: "终端",
       browser: "浏览器",
       editor: "编辑器",
+      files: "文件",
       shortcuts: "快捷键",
       integrations: "集成",
       notifications: "通知",
@@ -2040,6 +2335,14 @@ export const zhCN: TranslationResources = {
       vimKeybindings: "Vim 键位",
       vimHint: "适用于网页和桌面端的源文件。",
     },
+    files: {
+      title: "文件",
+      askEveryTime: "每次询问",
+      askAgain: "重新询问",
+      askAgainFor: "重新询问 {{label}}",
+      unavailable: "不在已连接的主机上",
+      empty: "插件添加文件面板后会显示在这里",
+    },
     notifications: {
       title: "通知",
       permission: "通知权限",
@@ -2052,7 +2355,7 @@ export const zhCN: TranslationResources = {
       send: "发送",
       sending: "正在发送...",
       sentTitle: "测试通知已发送",
-      sentDescription: "Paseo 已将通知交给操作系统。",
+      sentDescription: "hizuri 已将通知交给操作系统。",
       sendFailedTitle: "无法发送测试通知",
     },
     hostSections: {
@@ -2070,14 +2373,14 @@ export const zhCN: TranslationResources = {
     plugins: pluginSettings["zh-CN"],
     metadataGeneration: {
       title: "元数据生成",
-      description: "选择 Paseo 用于工作区标题、分支名称、提交消息和拉取请求草稿的模型",
+      description: "选择 hizuri 用于工作区标题、分支名称、提交消息和拉取请求草稿的模型",
       selection: "模型选择",
       automatic: "自动",
       preferred: "手动",
-      automaticHint: "Paseo 会选择一个可用的快速模型",
-      preferredHint: "选择 Paseo 使用的模型",
+      automaticHint: "hizuri 会选择一个可用的快速模型",
+      preferredHint: "选择 hizuri 使用的模型",
       model: "模型",
-      fallbackHint: "如果不可用，Paseo 会改用其他可用模型",
+      fallbackHint: "如果不可用，hizuri 会改用其他可用模型",
       docs: "文档",
       saveError: "无法更新元数据生成设置",
     },
@@ -2087,7 +2390,7 @@ export const zhCN: TranslationResources = {
       browserData: {
         title: "浏览器数据",
         siteData: "Cookie 和网站数据",
-        description: "浏览器标签页在 Paseo 中共享登录状态和网站数据。",
+        description: "浏览器标签页在 hizuri 中共享登录状态和网站数据。",
         clear: "清除浏览器数据",
         clearing: "正在清除...",
         confirmTitle: "清除浏览器数据？",
@@ -2111,7 +2414,7 @@ export const zhCN: TranslationResources = {
       serviceUrls: {
         options: {
           ask: "询问",
-          inApp: "在 Paseo 中",
+          inApp: "在 hizuri 中",
           external: "外部浏览器",
         },
       },
@@ -2144,13 +2447,16 @@ export const zhCN: TranslationResources = {
           ja: "日本語",
           ko: "한국어",
           ptBR: "Português brasileiro",
-          ru: "Русский",
           zhCN: "简体中文",
         },
       },
     },
     diagnostics: {
       title: "诊断",
+      uploadLogs: {
+        label: "将应用日志发送到主机",
+        description: "警告、语音状态和麦克风电平会写入主机上的 app-logs",
+      },
       legacyTerminalRenderer: {
         label: "使用旧版终端渲染器",
         description: "重新打开终端后使用之前的 WebView 终端",
@@ -2195,7 +2501,7 @@ export const zhCN: TranslationResources = {
         label: "应用更新",
         readyToInstall: "可安装：{{version}}",
         installTitle: "安装桌面版更新",
-        installMessage: "这会更新此电脑上的 Paseo",
+        installMessage: "这会更新此电脑上的 hizuri",
         installConfirm: "安装更新",
         update: "更新",
         updateTo: "更新到 {{version}}",
@@ -2267,6 +2573,28 @@ export const zhCN: TranslationResources = {
         reset: "重置",
         resetAccessibility: "将内容宽度重置为默认值",
       },
+      show: {
+        title: "Show",
+        switcher: {
+          title: "标签页切换方式",
+          capsule: {
+            label: "胶囊",
+            description: "底部的胶囊：滑动切换标签页，轻点查看全部",
+          },
+          deck: {
+            label: "卡组",
+            description: "底部的小条：轻点、上拉或捏合，以卡片查看全部标签页",
+          },
+          rail: {
+            label: "圆点轨道",
+            description: "右边缘的圆点：按住并上下滑动",
+          },
+          inside: {
+            label: "标签页内滑动",
+            description: "直接滑动标签页；从左边缘翻页",
+          },
+        },
+      },
       syntax: {
         title: "语法",
         highlightTheme: "高亮主题",
@@ -2281,6 +2609,7 @@ export const zhCN: TranslationResources = {
       searchPlaceholder: "搜索快捷键",
       unavailableOnMobile: "键盘快捷键仅在桌面端可用",
       capturePrompt: "按下快捷键...",
+      captureIndexPrompt: "请以 1 到 9 的数字结尾。",
       unassigned: "未设置",
       actions: {
         menu: "{{name}} 的操作",
@@ -2440,10 +2769,10 @@ export const zhCN: TranslationResources = {
         title: "编排 skills",
         description: "教会 Agent 通过 CLI 编排任务",
         updateAvailable: "有更新可用",
-        updateTitle: "更新 Paseo skills？",
+        updateTitle: "更新 hizuri skills？",
         updateFallback: "将内置 skills 同步到你的机器。",
-        uninstallTitle: "卸载 Paseo skills？",
-        uninstallMessage: "会从 ~/.agents、~/.claude、~/.codex 移除所有 Paseo 编排 skills。",
+        uninstallTitle: "卸载 hizuri skills？",
+        uninstallMessage: "会从 ~/.agents、~/.claude、~/.codex 移除所有 hizuri 编排 skills。",
         choose: "选择 skills",
         chooseAll: "全部 skills",
         chooseAllHint: "保持安装所有内置 skills，包括以后新增的。",
@@ -2479,9 +2808,9 @@ export const zhCN: TranslationResources = {
         title: "编排",
         unavailable: "连接到这个 Host 以管理编排",
         enableTools: {
-          title: "启用 Paseo tools",
+          title: "启用 hizuri tools",
           hint: "Agent 将能够管理 worktree、Agent 和计划",
-          accessibilityLabel: "注入 Paseo tools",
+          accessibilityLabel: "注入 hizuri tools",
         },
         systemPrompt: {
           title: "System prompt",
@@ -2580,13 +2909,13 @@ export const zhCN: TranslationResources = {
           unavailableTitle: "Host 不可用",
           unavailableMessage: "这个 Host 尚未连接。请等待它上线后再重启。",
           offlineTitle: "Host 离线",
-          offlineMessage: "这个 Host 已离线。Paseo 会自动重连，请等它恢复在线后再重启。",
+          offlineMessage: "这个 Host 已离线。hizuri 会自动重连，请等它恢复在线后再重启。",
           requestFailedTitle: "错误",
-          requestFailedMessage: "发送重启请求失败。Paseo 会自动重连，请在 Host 显示在线后重试。",
+          requestFailedMessage: "发送重启请求失败。hizuri 会自动重连，请在 Host 显示在线后重试。",
           dialogFailedMessage: "无法打开重启确认对话框。",
         },
         update: {
-          desktopManagedHint: "此 Daemon 由 Paseo Desktop 管理。请在 Host 上更新 Paseo Desktop。",
+          desktopManagedHint: "此 Daemon 由 hizuri Desktop 管理。请在 Host 上更新 hizuri Desktop。",
           title: "Update daemon",
           hint: "Update the daemon to the latest version and restart it",
           confirm: "Update",
@@ -2745,7 +3074,7 @@ export const zhCN: TranslationResources = {
         newScript: "新建 script",
         editScript: "编辑 {{name}}",
         runAsService: "作为服务运行",
-        serviceHint: "Paseo 会监管该进程，并通过 $PASEO_PORT 分配端口",
+        serviceHint: "hizuri 会监管该进程，并通过 $PASEO_PORT 分配端口",
         actions: {
           add: "添加 script",
           edit: "编辑",
@@ -2754,7 +3083,7 @@ export const zhCN: TranslationResources = {
       },
       metadata: {
         title: "元数据生成",
-        info: "注入到 Paseo 用来生成元数据的 AI prompts 中的 Project 专属指令，可用于强制执行团队约定，例如分支命名、提交风格或 PR 格式",
+        info: "注入到 hizuri 用来生成元数据的 AI prompts 中的 Project 专属指令，可用于强制执行团队约定，例如分支命名、提交风格或 PR 格式",
         branchName: "分支名称",
         branchNamePlaceholder: "分支以 feat/ 或 fix/ 开头，个人分支使用 mb/",
         commitMessage: "提交消息",

@@ -1,4 +1,5 @@
-const shared = {
+/** The logs screen, the same in every language. */
+export const pluginSettingsShared = {
   logs: {
     action: "Logs",
     title: "Logs: {{id}}",
@@ -12,7 +13,7 @@ const shared = {
 
 export const pluginSettings = {
   ar: {
-    ...shared,
+    ...pluginSettingsShared,
     screens: {
       open: "فتح",
       offline: "اتصل بهذا المضيف لفتح إعدادات الإضافة.",
@@ -67,7 +68,7 @@ export const pluginSettings = {
     },
   },
   es: {
-    ...shared,
+    ...pluginSettingsShared,
     screens: {
       open: "Abrir",
       offline: "Conéctate a este host para abrir los ajustes del plugin.",
@@ -122,7 +123,7 @@ export const pluginSettings = {
     },
   },
   fr: {
-    ...shared,
+    ...pluginSettingsShared,
     screens: {
       open: "Ouvrir",
       offline: "Connectez-vous à cet hôte pour ouvrir les paramètres du plugin.",
@@ -177,7 +178,7 @@ export const pluginSettings = {
     },
   },
   ja: {
-    ...shared,
+    ...pluginSettingsShared,
     screens: {
       open: "開く",
       offline: "このホストに接続してプラグイン設定を開いてください。",
@@ -232,7 +233,7 @@ export const pluginSettings = {
     },
   },
   ko: {
-    ...shared,
+    ...pluginSettingsShared,
     screens: {
       open: "열기",
       offline: "플러그인 설정을 열려면 이 호스트에 연결하세요.",
@@ -286,7 +287,7 @@ export const pluginSettings = {
     },
   },
   "pt-BR": {
-    ...shared,
+    ...pluginSettingsShared,
     screens: {
       open: "Abrir",
       offline: "Conecte-se a este host para abrir as configurações do plugin.",
@@ -340,63 +341,8 @@ export const pluginSettings = {
       empty: "Nenhum plugin configurado",
     },
   },
-  ru: {
-    ...shared,
-    screens: {
-      open: "Открыть",
-      offline: "Подключитесь к этому хосту, чтобы открыть настройки плагина.",
-      update: "Обновите этот хост, чтобы использовать настройки плагина.",
-      unavailable: "Этот экран настроек плагина недоступен.",
-      backToPlugins: "Вернуться к плагинам",
-    },
-    title: "Плагины",
-    trustedTitle: "Плагины — доверенный код",
-    trustedDescription:
-      "Они выполняются на хосте и в приложении без изоляции. Устанавливайте только доверенный код.",
-    globalTitle: "Включить плагины",
-    globalHint: "Общий переключатель для всех настроенных плагинов",
-    sourceLabel: "Источник плагина",
-    sourcePlaceholder: "owner/slug, Каталог, URL Git или пакет npm",
-    docs: "Документация",
-    install: "Установить плагин",
-    installing: "Установка…",
-    status: { running: "работает", disabled: "отключён", failed: "ошибка" },
-    actions: {
-      menu: "Действия для {{id}}",
-      reload: "Перезагрузить",
-      reloading: "Перезагрузка…",
-      enable: "Включить",
-      enabling: "Включение…",
-      disable: "Отключить",
-      disabling: "Отключение…",
-      remove: "Удалить",
-      removing: "Удаление…",
-    },
-    feedback: {
-      installed: "{{id}} установлен",
-      reload: "{{id}} перезагружен",
-      enable: "{{id}} включён",
-      disable: "{{id}} отключён",
-      remove: "{{id}} удалён",
-      kept: "{{id}} сохранён",
-      globalEnabled: "Плагины включены",
-      globalDisabled: "Плагины отключены",
-    },
-    removeConfirmTitle: "Удалить {{id}}?",
-    removeConfirmMessage: "Конфигурация будет удалена. Исходный каталог останется на месте.",
-    states: {
-      offlineTitle: "Хост плагинов не в сети",
-      offlineDescription: "Подключите хост снова, чтобы управлять плагинами.",
-      updateTitle: "Обновите хост для управления плагинами",
-      sourceUpdateTitle: "Обновите этот хост для установки плагинов",
-      loading: "Загрузка плагинов…",
-      errorTitle: "Не удалось загрузить плагины",
-      retry: "Повторить",
-      empty: "Нет настроенных плагинов",
-    },
-  },
   "zh-CN": {
-    ...shared,
+    ...pluginSettingsShared,
     screens: {
       open: "打开",
       offline: "连接到此主机以打开插件设置。",

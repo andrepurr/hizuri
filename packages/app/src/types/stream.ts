@@ -1,3 +1,4 @@
+import type { AgentMessage } from "@getpaseo/protocol/agent-message";
 import type {
   AgentProvider,
   AgentTimelineItem,
@@ -100,6 +101,11 @@ export interface UserMessageItem {
   timestamp: Date;
   images?: UserMessageImageAttachment[];
   attachments?: AgentAttachment[];
+  /**
+   * Hizuri: set by the chat presentation when the text is the user's spoken words with the voice
+   * envelope removed; `correction` is the recogniser's accurate text of an earlier draft.
+   */
+  spoken?: "phrase" | "correction";
 }
 
 export interface UserMessageInput {
@@ -711,8 +717,6 @@ export interface AssistantMessageItem {
   text: string;
   timestamp: Date;
   /** Display-only fields, assigned after source-item plugin transforms. */
-  blockGroupId?: string;
-  blockIndex?: number;
 }
 
 export interface TimelinePosition {
@@ -745,6 +749,7 @@ interface OrchestratorToolCallData {
 }
 
 export interface AgentToolCallData {
+  agentMessage?: AgentMessage;
   provider: AgentProvider;
   callId: string;
   name: string;
@@ -802,6 +807,8 @@ export interface CompactionItem {
 export interface PluginTimelineStreamItem {
   kind: "plugin";
   id: string;
+  /** The id of the stream item a timeline transformer replaced; set only by projection. */
+  sourceId?: string;
   timelineCursor?: TimelinePosition;
   turnId?: string;
   timestamp: Date;
@@ -1446,6 +1453,7 @@ function reduceTimelineToolCall(
       error: item.error,
       detail: item.detail,
       metadata: item.metadata,
+      ...(item.agentMessage ? { agentMessage: item.agentMessage } : {}),
     },
     timestamp,
     timelineCursor,

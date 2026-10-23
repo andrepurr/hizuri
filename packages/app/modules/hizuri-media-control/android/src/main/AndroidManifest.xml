@@ -1,0 +1,15 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <application>
+    <!-- Bound by Android once the user turns on Notification access for hizuri. It does nothing
+         itself: its being enabled is what lets the app list and steer other apps' media sessions. -->
+    <service
+      android:name="com.hizuri.media.HizuriMediaListener"
+      android:label="hizuri media control"
+      android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
+      android:exported="false">
+      <intent-filter>
+        <action android:name="android.service.notification.NotificationListenerService" />
+      </intent-filter>
+    </service>
+  </application>
+</manifest>

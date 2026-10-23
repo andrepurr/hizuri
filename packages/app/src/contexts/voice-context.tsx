@@ -15,12 +15,21 @@ import {
   createVoiceRuntime,
   type VoiceRuntime,
   type VoiceRuntimeSnapshot,
-  type VoiceRuntimeTelemetrySnapshot,
 } from "@/voice/voice-runtime";
+import { createVoiceBackground } from "@/voice/voice-background";
+import { createVoiceSessionStore } from "@/voice/voice-session-store";
+import { voiceDiagnostics } from "@/voice/voice-diagnostics";
+import { appLogBuffer } from "@/diagnostics/app-log-uploader";
 
 interface VoiceContextValue extends VoiceRuntimeSnapshot {
   startVoice: (serverId: string, agentId: string) => Promise<void>;
+  moveVoice: VoiceRuntime["moveVoice"];
   stopVoice: () => Promise<void>;
+  switchToText: () => Promise<void>;
+  endSession: () => Promise<void>;
+  canKeepSession: (serverId: string) => boolean;
+  isSessionForAgent: (serverId: string, agentId: string) => boolean;
+  isVoiceStartingForAgent: (serverId: string, agentId: string) => boolean;
   isVoiceModeForAgent: (serverId: string, agentId: string) => boolean;
   toggleMute: () => void;
 }
@@ -32,12 +41,7 @@ const EMPTY_SNAPSHOT: VoiceRuntimeSnapshot = {
   isMuted: false,
   activeServerId: null,
   activeAgentId: null,
-};
-
-const EMPTY_TELEMETRY: VoiceRuntimeTelemetrySnapshot = {
-  volume: 0,
-  isSpeaking: false,
-  segmentDuration: 0,
+  session: null,
 };
 
 const VoiceRuntimeContext = createContext<VoiceRuntime | null>(null);
@@ -45,7 +49,6 @@ const VoiceAudioEngineContext = createContext<AudioEngine | null>(null);
 
 const noopSubscribe = () => () => {};
 const getEmptySnapshot = () => EMPTY_SNAPSHOT;
-const getEmptyTelemetry = () => EMPTY_TELEMETRY;
 
 export function useVoice() {
   const value = useVoiceOptional();
@@ -74,30 +77,17 @@ export function useVoiceOptional(): VoiceContextValue | null {
     return {
       ...snapshot,
       startVoice: runtime.startVoice,
+      moveVoice: runtime.moveVoice,
       stopVoice: runtime.stopVoice,
+      switchToText: runtime.switchToText,
+      endSession: runtime.endSession,
+      canKeepSession: runtime.canKeepSession,
+      isSessionForAgent: runtime.isSessionForAgent,
+      isVoiceStartingForAgent: runtime.isVoiceStartingForAgent,
       isVoiceModeForAgent: runtime.isVoiceModeForAgent,
       toggleMute: runtime.toggleMute,
     };
   }, [snapshot, runtime]);
-}
-
-export function useVoiceTelemetry() {
-  const telemetry = useVoiceTelemetryOptional();
-  if (!telemetry) {
-    throw new Error("useVoiceTelemetry must be used within VoiceProvider");
-  }
-  return telemetry;
-}
-
-export function useVoiceTelemetryOptional(): VoiceRuntimeTelemetrySnapshot | null {
-  const runtime = useContext(VoiceRuntimeContext);
-  const snapshot = useSyncExternalStore(
-    runtime ? runtime.subscribeTelemetry.bind(runtime) : noopSubscribe,
-    runtime ? runtime.getTelemetrySnapshot.bind(runtime) : getEmptyTelemetry,
-    runtime ? runtime.getTelemetrySnapshot.bind(runtime) : getEmptyTelemetry,
-  );
-
-  return runtime ? snapshot : null;
 }
 
 export function useVoiceRuntimeOptional(): VoiceRuntime | null {
@@ -120,15 +110,17 @@ export function VoiceProvider({ children }: VoiceProviderProps) {
     let runtime: VoiceRuntime | null = null;
     const engine = createAudioEngine({
       onCaptureData: (pcm) => {
+        voiceDiagnostics.recordMicChunk(pcm);
         runtime?.handleCapturePcm(pcm);
       },
       onVolumeLevel: (level) => {
+        voiceDiagnostics.recordLevel(level);
         runtime?.handleCaptureVolume(level);
       },
       onInterruption: () => {
-        void runtime?.stopVoice().catch((error) => {
-          console.error("[VoiceEngine] Failed to stop after audio interruption:", error);
-        });
+        // Another app or the OS took the microphone. Voice mode, the host session and the
+        // Android foreground service stay up; the runtime reopens the microphone by itself.
+        runtime?.handleCaptureInterrupted();
       },
       onError: (error) => {
         console.error("[VoiceEngine] Capture error:", error);
@@ -145,6 +137,9 @@ export function VoiceProvider({ children }: VoiceProviderProps) {
       deactivateKeepAwake: async (tag) => {
         await deactivateKeepAwake(tag);
       },
+      background: createVoiceBackground(),
+      sessionStore: createVoiceSessionStore(),
+      log: (level, message) => appLogBuffer.record({ level, tag: "voice", message }),
     });
 
     engineRef.current = engine;

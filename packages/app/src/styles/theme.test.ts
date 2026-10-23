@@ -68,9 +68,9 @@ describe("Pure black theme", () => {
 });
 
 describe("Sidebar interaction surfaces", () => {
-  it("keeps Light selection distinct from the sidebar surface", () => {
-    expect(lightTheme.colors.surfaceSidebarHover).toBe(lightTheme.colors.surface1);
-    expect(lightTheme.colors.surfaceSidebarSelected).toBe(lightTheme.colors.surface3);
+  it("keeps Light hover and selection darker than the sidebar surface", () => {
+    expect(lightTheme.colors.surfaceSidebarHover).toBe(lightTheme.colors.surface3);
+    expect(lightTheme.colors.surfaceSidebarSelected).toBe(lightTheme.colors.surface4);
     expect(lightTheme.colors.surfaceSidebarSelected).not.toBe(lightTheme.colors.surfaceSidebar);
   });
 
@@ -83,13 +83,13 @@ describe("Sidebar interaction surfaces", () => {
 describe("Built-in light theme", () => {
   it("preserves its authored aliases and terminal contrast through the semantic builder", () => {
     expect(lightTheme.colors).toMatchObject({
-      primary: "#18181b",
-      primaryForeground: "#fafafa",
-      destructiveForeground: "#ffffff",
+      primary: "#0B0E14",
+      primaryForeground: "#FAFBFD",
+      destructiveForeground: "#FAFBFD",
       successForeground: "#ffffff",
       terminal: {
-        black: "#1a1a1e",
-        brightBlack: "#3f3f46",
+        black: "#0B0E14",
+        brightBlack: "#3E4452",
       },
     });
   });
