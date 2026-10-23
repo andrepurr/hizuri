@@ -53,7 +53,6 @@ app:
 sdk:
   - "packages/plugin/**"
   - "plugin-examples/**"
-  - "public-docs/plugins/**"
   - "packages/client/**"
   - "packages/highlight/**"
   - "packages/protocol/**"

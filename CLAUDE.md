@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Paseo is a mobile app for monitoring and controlling your local AI coding agents from anywhere. Your dev environment, in your pocket. Connects directly to your actual development environment — your code stays on your machine.
+hizuri turns Claude Code into one assistant with a voice, a face and a screen of its own, on your own machine. It is a fork of [Paseo](https://github.com/getpaseo/paseo), the app that runs coding agents on your machine and streams them to your phone, browser and desktop; most of this repo is Paseo's code, and the rules below are Paseo's unless they name hizuri.
 
 **Supported agents:** Claude Code, Codex, GitHub Copilot, OpenCode, Pi, Antigravity, and Muse Code.
 
@@ -13,7 +13,15 @@ This is an npm workspace monorepo:
 - `packages/cli` — Docker-style CLI (`paseo run/ls/logs/wait`)
 - `packages/relay` — E2E encrypted relay for remote access
 - `packages/desktop` — Electron desktop wrapper
-- `packages/website` — Marketing site (paseo.sh)
+
+## Files map
+
+`FILES.md` at the root lists every tracked file: what it holds, why it is needed, and `checked: nothing personal`. A file without its line does not ship: the commit hook refuses it.
+
+- Adding, moving or deleting a file changes `FILES.md` in the same commit. Run `node scripts/files-map.mjs --update`, then replace each `not checked` stub with `<what it holds>. Why: <what uses it>. checked: nothing personal`, written from reading the file.
+- Editing a file keeps its line true: rewrite the line when the file's content or purpose changes. A Paseo file you edit for the first time loses its `Paseo, unchanged` line and gets its own.
+- `node scripts/files-map.mjs --check` checks the whole map. In review, a file added, moved or deleted without its line, or a line that no longer matches the file, is a finding.
+- In review, `node scripts/personal-guard.mjs --tree` must come back clean, and anything in the diff about one real person (their records, recordings, data, voice or avatar models, their own skills) is a finding even when the guard passes it.
 
 ## Docs
 
@@ -23,6 +31,7 @@ At the start of non-trivial work, list `docs/` and skim anything relevant to the
 
 | Doc                                                                  | What's in it                                                                                                                   |
 | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| [docs/face-mouth.md](docs/face-mouth.md)                             | hizuri: what drives the face's mouth, and how to bring your own mouth model                                                    |
 | [docs/product.md](docs/product.md)                                   | What Paseo is, who it's for, where it's going                                                                                  |
 | [docs/architecture.md](docs/architecture.md)                         | System design, package layering, WebSocket protocol, agent lifecycle, data flow                                                |
 | [docs/agent-lifecycle.md](docs/agent-lifecycle.md)                   | Agent states, parent/child relationships, archive semantics, tabs vs archive, subagents track                                  |
@@ -30,6 +39,7 @@ At the start of non-trivial work, list `docs/` and skim anything relevant to the
 | [docs/glossary.md](docs/glossary.md)                                 | Authoritative terminology — UI label wins, no synonyms                                                                         |
 | [docs/coding-standards.md](docs/coding-standards.md)                 | Type hygiene, error handling, state design, React patterns, file organization                                                  |
 | [docs/design.md](docs/design.md)                                     | Design system — tokens, buttons, hierarchy, density, alignment rails, states, what's forbidden                                 |
+| [docs/brand.md](docs/brand.md)                                       | hizuri brand: the Fluctuation concept, the mark, type, and the wordmark spec                                                   |
 | [docs/forms.md](docs/forms.md)                                       | Form architecture — non-React form model, form kit, load-state gating; the schedule form is the golden example                 |
 | [docs/hover.md](docs/hover.md)                                       | Hover — the canonical pattern (plain View + onPointerEnter/Leave, separate inner Pressable) and the three ways agents break it |
 | [docs/unistyles.md](docs/unistyles.md)                               | Unistyles gotchas — `useUnistyles()` is forbidden, alternatives in order                                                       |
@@ -41,35 +51,36 @@ At the start of non-trivial work, list `docs/` and skim anything relevant to the
 | [docs/forge-providers.md](docs/forge-providers.md)                   | Adding a git forge: registry/manifest, drop-in checklist, self-host/GHES, the two facts tiers                                  |
 | [docs/custom-providers.md](docs/custom-providers.md)                 | Custom provider config: Z.AI, Alibaba/Qwen, ACP agents, profiles, custom binaries                                              |
 | [docs/plugins.md](docs/plugins.md)                                   | Local plugin manifest, directory source config, RPCs, native surfaces, and attachment sources                                  |
+| [docs/tool-hub.md](docs/tool-hub.md)                                 | Tool hub: agents find, install (user's yes), call and review third-party MCP tools; pinning, sandbox, receipts                 |
 | [docs/service-proxy.md](docs/service-proxy.md)                       | Service proxy: exposing workspace scripts at public URLs, DNS setup, reverse proxy config                                      |
 | [docs/development.md](docs/development.md)                           | Dev server, build sync gotchas, CLI reference, agent state, Playwright MCP                                                     |
 | [docs/rpc-namespacing.md](docs/rpc-namespacing.md)                   | WebSocket RPC naming convention — dotted namespaces and `.request`/`.response` pairs                                           |
 | [docs/protocol-compatibility.md](docs/protocol-compatibility.md)     | Why app/daemon versions drift, protocol vs feature contract, capability gating, COMPAT tagging                                 |
 | [docs/protocol-validation.md](docs/protocol-validation.md)           | zod-aot generated inbound WebSocket validation, patched compiler regressions, schema-purity rules                              |
+| [docs/connected-hosts.md](docs/connected-hosts.md)                   | Daemon-owned host registrations, routed SDK scopes, identity and authority boundaries                                          |
 | [docs/permissions.md](docs/permissions.md)                           | Semantic daemon permissions, principals, credentials, pairing invitations, and Hub authority                                   |
 | [docs/terminal-performance.md](docs/terminal-performance.md)         | Terminal latency pipeline, coalescing/backpressure invariants, benchmark + perf spec usage                                     |
 | [docs/agent-stream-performance.md](docs/agent-stream-performance.md) | Assistant text pipeline — coalescing window, paced reveal, why arrival lumps are smoothed at render                            |
+| [docs/markdown-renderer.md](docs/markdown-renderer.md)               | Shared Markdown engine, native selection, links, images and library constraints                                                |
+| [docs/native-text-selection.md](docs/native-text-selection.md)       | Native diagram grouping, selection boundaries and leading inline image limitations                                             |
 | [docs/file-observation.md](docs/file-observation.md)                 | Recursive watcher ownership, Linux constraints, teardown invariants, and Parcel comparison                                     |
 | [docs/testing.md](docs/testing.md)                                   | TDD workflow, determinism, real dependencies over mocks, test organization                                                     |
 | [docs/qa.md](docs/qa.md)                                             | QA evidence bar for pull requests — platform matrix, version drift, performance, UI proof                                      |
 | [docs/mobile-testing.md](docs/mobile-testing.md)                     | Maestro and mobile test workflows                                                                                              |
 | [docs/mobile-panels.md](docs/mobile-panels.md)                       | Compact left/center/right panel ownership, worklet motion, gesture revisions, and Fabric constraints                           |
-| [docs/explorer-sidebar.md](docs/explorer-sidebar.md)                 | Explorer sidebar and ordinary side-pane host contracts, lifecycle, placement, and routing preferences                          |
+| [docs/explorer-sidebar.md](docs/explorer-sidebar.md)                 | Explorer sidebar, side-pane, and compact workspace sheet host contracts, lifecycle, placement, routing preferences             |
 | [docs/ad-hoc-daemon-testing.md](docs/ad-hoc-daemon-testing.md)       | Isolated in-process daemon test harness                                                                                        |
 | [docs/browser-capture-harness.md](docs/browser-capture-harness.md)   | Real-Electron browser screenshot harness and compositor-surface gotcha                                                         |
 | [docs/android.md](docs/android.md)                                   | App variants, local/cloud builds, EAS workflows, version codes, F-Droid source builds and store metadata                       |
 | [docs/docker.md](docs/docker.md)                                     | Running the daemon and bundled web UI in Docker, volumes, agent images, security                                               |
-| [docs/release.md](docs/release.md)                                   | Release playbook, draft releases, completion checklist                                                                         |
 | [docs/terminal-activity.md](docs/terminal-activity.md)               | Terminal activity indicators — source-agnostic tracker, agent hook reporting, adding a new hook provider                       |
-| [SECURITY.md](SECURITY.md)                                           | Relay threat model, E2E encryption, DNS rebinding, agent auth                                                                  |
-| [public-docs/hub/security.md](public-docs/hub/security.md)           | Public Hub guide — trust boundaries, untrusted triggers, provider controls, and output authority                               |
 
 ### Writing docs
 
 - **Integrate, don't append.** Find the doc that owns the subject and rewrite the part that is now wrong. The standard failure is finishing a task and adding a paragraph to the bottom of the closest-looking doc; ten tasks later the doc is a pile of paragraphs in discovery order. `docs/custom-providers.md` is what that looks like.
 - **Don't document logic.** Prose that restates code drifts from the code and loses. Write down what the code can't tell you: why something is shaped the way it is, the gotcha that cost an afternoon, conventions nothing enforces, constraints that span packages or versions. If a reader could get it in two minutes by opening the file, cut it.
 - **One fact, one doc.** Every other mention is a link. If you are about to write the same paragraph in two docs, one of them is a link.
-- **Respect the layers.** `CONTRIBUTING.md` and this file name things and link out. Activity docs like `docs/qa.md` and `docs/testing.md` set the bar for a kind of work. Subject docs like `docs/unistyles.md` own one thing completely. A layer never re-explains the one below it.
+- **Respect the layers.** This file names things and links out. Activity docs like `docs/qa.md` and `docs/testing.md` set the bar for a kind of work. Subject docs like `docs/unistyles.md` own one thing completely. A layer never re-explains the one below it.
 - **One subject per doc.** If the subject doesn't fit in a sentence, split the doc. A section per provider, vendor, or platform is a table plus one worked example.
 - **Delete.** Obsolete sections go. Prefer a `packages/app/src/thing.ts:120` reference over a pasted block.
 - **New doc?** Add a row to the table above and link it from the docs that should send readers there.
@@ -104,14 +115,9 @@ npm run format:check                 # Check formatting without writing
 
 Repo dev commands use checkout-local state by default. In this checkout, `PASEO_HOME` resolves to `.dev/paseo-home`, and `npm run cli -- ...` targets that same dev home automatically. The packaged desktop app and production-style daemon keep using `~/.paseo` on port `6767`.
 
+For an APK, use `npm run build:apk:arm64` for an ARM64 build: writes `artifacts/paseo-dogfood-arm64.apk` with diagnostics without starting a device; `npm run build:apk` builds all four Android architectures.
+
 See [docs/development.md](docs/development.md) for full setup, build sync requirements, and debugging.
-
-## Release branches
-
-When the user says "this goes to next", create or
-retarget the PR to `next` and preserve that destination through delivery. Follow
-[release branch discipline](docs/release.md#release-branch-discipline) for creating
-and updating `next`, integrating it after a release, and releasing a hotfix from a tag.
 
 ## Critical rules
 

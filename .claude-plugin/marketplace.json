@@ -1,0 +1,12 @@
+{
+  "name": "hizuri",
+  "owner": { "name": "hizuri" },
+  "description": "hizuri: a voice-first home for your own self-learning agent.",
+  "plugins": [
+    {
+      "name": "hizuri",
+      "source": "./claude",
+      "description": "The self-learning agent: memory, Guardian, retro, reviewed skills, the hizuri daemon's tools, secrets from your vault."
+    }
+  ]
+}

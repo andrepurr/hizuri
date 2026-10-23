@@ -85,6 +85,8 @@ valknut-report.json/
 packages/server/src/server/fixtures/dictation/dictation-debug-largest.wav
 packages/server/src/server/fixtures/dictation/dictation-debug-largest.transcript.txt
 packages/protocol/src/generated/validation/*.aot.ts
+packages/protocol/src/generated/validation/ws-outbound-schema-metadata.ts
+packages/protocol/codegen/generated/
 
 /artifacts
 packages/desktop/.cache/
@@ -96,3 +98,73 @@ app.json
 
 # Project-local Serena configuration and memories.
 .serena/
+
+# Generated after install by scripts/build-app-generated.mjs: each embeds a whole third-party library.
+packages/app/src/terminal/webview/terminal-emulator-webview-html.ts
+packages/app/src/components/markdown/fence/mermaid/runtime/html.gen.ts
+
+# Product docs kept outside the repository.
+docs/VISION.md
+docs/TECH-DESIGN.md
+docs/plans/modular.md
+
+# Streaming recogniser clients: each lives in the user's setup folder ($HIZURI_HOME/setup/modules),
+# next to the server it talks to (speech/providers/openai/stt-stream-module.ts).
+packages/server/src/server/speech/providers/openai/*-stream-stt.ts
+packages/server/src/server/speech/providers/openai/*-stream-stt.test.ts
+
+# Voice tests stay local.
+packages/app/src/voice/live-words.test.ts
+packages/app/src/voice/voice-contacts.test.ts
+packages/app/src/voice/voice-diagnostics.test.ts
+packages/app/src/voice/voice-follows-chat.test.ts
+packages/app/src/voice/voice-runtime.test.ts
+packages/server/src/server/agent/tts-gain.test.ts
+packages/server/src/server/agent/tts-manager.test.ts
+packages/server/src/server/agent/tts-speed.test.ts
+packages/server/src/server/session.voice-mcp-config.test.ts
+packages/server/src/server/session/voice/barge-hold.test.ts
+packages/server/src/server/session/voice/compact-hold.test.ts
+packages/server/src/server/session/voice/echo-canceller.test.ts
+packages/server/src/server/session/voice/echo-drop.test.ts
+packages/server/src/server/session/voice/echo-filter.test.ts
+packages/server/src/server/session/voice/echo-route.test.ts
+packages/server/src/server/session/voice/fallback-stt.test.ts
+packages/server/src/server/session/voice/fast-front.test.ts
+packages/server/src/server/session/voice/fast-reply.test.ts
+packages/server/src/server/session/voice/floor-manager.test.ts
+packages/server/src/server/session/voice/front-facts.test.ts
+packages/server/src/server/session/voice/front-stream.test.ts
+packages/server/src/server/session/voice/index.test.ts
+packages/server/src/server/session/voice/mic-gain.test.ts
+packages/server/src/server/session/voice/raw-recorder.test.ts
+packages/server/src/server/session/voice/reply-reference.test.ts
+packages/server/src/server/session/voice/secretary.test.ts
+packages/server/src/server/session/voice/short-phrase.test.ts
+packages/server/src/server/session/voice/speaker-gate.test.ts
+packages/server/src/server/session/voice/stop-spotter.test.ts
+packages/server/src/server/session/voice/think-hint.test.ts
+packages/server/src/server/session/voice/visual-front.test.ts
+packages/server/src/server/session/voice/voice-mode.test.ts
+packages/server/src/server/session/voice/voice-session.test.ts
+packages/server/src/server/session/voice/voice-turn-controller.test.ts
+packages/server/src/server/speech/providers/local/sherpa/silero-vad-session.test.ts
+packages/server/src/server/speech/providers/local/sherpa/smart-turn.test.ts
+packages/server/src/server/speech/providers/local/worker-client.test.ts
+packages/server/src/server/speech/providers/openai/stt-stream-module.test.ts
+packages/server/src/server/speech/providers/openai/stt-transcript-fixes.test.ts
+packages/server/src/server/speech/providers/openai/stt.test.ts
+packages/server/src/server/speech/speech-denoiser.test.ts
+packages/server/src/server/voice-env.test.ts
+packages/server/src/server/voice-language/assistant-name.test.ts
+packages/server/src/server/voice-language/detect.test.ts
+packages/server/src/server/voice-language/languages.test.ts
+packages/server/src/server/voice-language/setup-languages.test.ts
+packages/server/src/server/voice-permission-policy.test.ts
+packages/server/src/server/voice-settings/store.test.ts
+packages/server/src/server/voice-settings/tool.test.ts
+
+# Removed from the repository and kept out.
+SECURITY.md
+CONTRIBUTING.md
+public-docs/

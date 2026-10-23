@@ -1,0 +1,4 @@
+# Never commit secrets, even to this private repo: they live in your vault.
+.env
+*.key
+secrets/

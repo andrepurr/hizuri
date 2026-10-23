@@ -12,3 +12,9 @@ pre-commit:
       run: npm run lint -- {staged_files}
     - name: typecheck
       run: npm run typecheck
+    - name: personal-guard
+      run: node scripts/personal-guard.mjs --staged
+commit-msg:
+  jobs:
+    - name: personal-guard
+      run: node scripts/personal-guard.mjs --message {1}

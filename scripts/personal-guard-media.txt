@@ -1,0 +1,15 @@
+# Pictures, videos and PDFs a person has looked at (scripts/personal-guard.mjs reads this file).
+# One per line: the git blob id, the path, what it shows. A changed file has a new blob id, so it
+# is checked again. Get the id with: git hash-object <file>
+6fbcb1cdd9aa5b7aea30f62dd6355ed1ad3b9ba0 docs/images/readme-show.png Show page demo: a made-up TV purchase (prices, shop count); no names
+23f325a8baef95a8409827bd12ece854130db4a3 packages/app/assets/images/android-icon-foreground.png the brand dot mark
+24c4e90aabaf04c1af658c810c88dcb32dd69f86 packages/app/assets/images/android-icon-monochrome.png the brand mark in white on transparency
+5e27afd35b4e2c74b995f18ce7236efe49a30307 packages/app/assets/images/favicon-dark-attention.png the brand dot mark with a green status dot
+65e1c85c334101749f1a6c8e2a6de42b6f17fe95 packages/app/assets/images/favicon-dark-running.png the brand dot mark with a blue status dot
+b3da7d91cfc1af6f324a36a66cda9411e549f20f packages/app/assets/images/favicon-dark.png the brand dot mark
+04935d67a1550a8b2ada98634516d3a80c855d30 packages/app/assets/images/favicon.png the brand dot mark
+4b4c5b1ada68509f99a04f821b71fa6d07c79067 packages/app/assets/images/icon.png the brand dot mark
+37ec0291c1a3f1ebfacc604684249cf724f85a08 packages/app/assets/images/splash-icon.png the brand dot mark
+653f1c347a7a4a1dc0fd0763fac0d21b21cbce23 packages/app/public/apple-touch-icon.png the brand dot mark
+16b454b1318a253b7ab99714870b7067b4da423f packages/app/public/pwa-icon-192.png the brand dot mark
+90c3eec12dfbe1fd1e7dea0fbdade99f4dd6b1b2 packages/app/public/pwa-icon-512.png the brand dot mark

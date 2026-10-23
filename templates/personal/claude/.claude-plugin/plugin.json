@@ -1,0 +1,6 @@
+{
+  "name": "personal",
+  "description": "The user's own skills, kept in their hizuri personal folder.",
+  "author": { "name": "me" },
+  "version": "0.1.0"
+}
