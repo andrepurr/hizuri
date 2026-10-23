@@ -39,6 +39,13 @@ remembered workspace for that host after the remembered selection has hydrated
 and the workspace has not been proven missing. If there is no restorable
 workspace, it goes to global `/open-project`.
 
+hizuri puts one step before that restore, once per app run: the first open goes
+to the agent the user talks to (the order is in `src/navigation/first-open.ts`). It stays inside the host boundary: the
+host index redirects to the workspace leaf with `?open=agent:<id>`, or to
+`agent/[agentId]` when the workspace is not known yet. Later visits to the host
+index skip it, because the agent route sends a missing agent back to the host
+root and a second jump would loop.
+
 This restore is based on the last navigated workspace, not current connection
 status. Do not redirect to another online host just because the remembered host
 is still connecting or offline; the workspace screen owns that offline/loading
@@ -157,7 +164,9 @@ a small `withUnistyles` boundary without subscribing the route tree itself to
 every Unistyles runtime update.
 
 Navigators keep their identity across appearance changes. `ThemedStack` remounts
-each screen's content below the native stack when appearance tokens change; a
+each ordinary screen's content below the native stack when appearance tokens change.
+Workspace screens own retained panel lifetimes and update appearance at their
+leaves through `screenOwnedAppearance` ([Explorer](explorer-sidebar.md)). A
 keyed wrapper above a stack remounts the stack itself, and Android crashes when
 that happens while a FragmentManager transaction is running, which settings
 hydration at startup makes likely. A screen that mounts a nested navigator (the

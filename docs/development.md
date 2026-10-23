@@ -311,6 +311,22 @@ frames non-stop, pinning ProMotion displays at 120Hz forever and draining the
 battery while the app is idle — so do not re-add it. The probe's visibility
 guards already prevent throttling from causing a false stall.
 
+### Desktop Linux hidden-window fallback
+
+On Wayland (seen on ChromeOS Linux) a window created with `show: false` can sit
+forever without a single compositor frame: the renderer loads and runs, but
+`ready-to-show` never fires, so the window is never shown and the app looks like
+it did not start while every process is alive. `showWindowWhenReady`
+(`packages/desktop/src/window/show-when-ready.ts`) shows the main window when
+the document finishes loading if the event has not arrived. The fallback is
+Linux-only; macOS and Windows keep waiting for `ready-to-show`.
+
+Run the startup regression on Linux with an isolated display:
+
+```bash
+xvfb-run -a npm run test:e2e:window-startup --workspace=@getpaseo/desktop
+```
+
 ### Daemon logs
 
 Check `$PASEO_HOME/daemon.log` for daemon logs. The default level is `info`; set
@@ -440,7 +456,7 @@ so the port may already be bound. `portScript` takes precedence when both values
 
 ## Bundled daemon web UI
 
-> The user-facing guide for this feature (enabling it, reverse proxy, TLS, tunnels, security) lives at [public-docs/web-ui.md](../public-docs/web-ui.md). This section is the contributor/build reference: how the artifact is produced, bundled, and excluded from desktop packaging.
+> The user-facing guide for this feature (enabling it, reverse proxy, TLS, tunnels, security) lives at [public-docs/web-ui.md](https://github.com/getpaseo/paseo/blob/main/public-docs/web-ui.md). This section is the contributor/build reference: how the artifact is produced, bundled, and excluded from desktop packaging.
 
 The daemon can optionally serve the browser web client from the same HTTP server. This is disabled by default.
 
@@ -519,7 +535,9 @@ For tighter loops, you can rebuild a single workspace:
 `patches/*.patch` are applied by `scripts/postinstall-patches.mjs` on every install. A patch only
 runs when its package is actually present, so add the package to that script's `patchedPackages`
 list when you introduce a new patch — otherwise the file sits in `patches/` and never applies.
-Regenerate a patch with `npx patch-package <package>` after editing `node_modules/<package>`, and
+patch-package cannot apply a patch that changed after an earlier version was applied, so the
+script removes that package and fails the install; the next `npm install` reinstalls it clean
+with the current patch. Regenerate a patch with `npx patch-package <package>` after editing `node_modules/<package>`, and
 patch every build the consumers use: Metro resolves the `react-native` field of a package
 (`src/*.ts` for `react-native-svg`), while Node and Vitest resolve `main`/`module`
 (`lib/commonjs`, `lib/module`). Patching only `lib/` leaves the app bundle unfixed.
@@ -565,9 +583,9 @@ npm run cli -- --host ssh://user@host ls -a
 ```
 
 Set `PASEO_HOST` to use the same target across invocations. An explicit
-selector overrides both environment selectors. With both `PASEO_HOME` and `PASEO_HOST` set, pass an explicit selector. See [CLI target selection](../public-docs/cli.md#select-one-daemon).
+selector overrides both environment selectors. With both `PASEO_HOME` and `PASEO_HOST` set, pass an explicit selector. See [CLI target selection](https://github.com/getpaseo/paseo/blob/main/public-docs/cli.md#select-one-daemon).
 
-In an SSH URI, the URL port is the SSH server port. The remote daemon defaults to `127.0.0.1:6767`; use `?daemonPort=7777` to override it. The transport runs non-interactively through the local OpenSSH client and never installs, starts, or configures the remote daemon. User-facing setup and troubleshooting live in [public-docs/connectivity.md](../public-docs/connectivity.md#ssh).
+In an SSH URI, the URL port is the SSH server port. The remote daemon defaults to `127.0.0.1:6767`; use `?daemonPort=7777` to override it. The transport runs non-interactively through the local OpenSSH client and never installs, starts, or configures the remote daemon. User-facing setup and troubleshooting live in [public-docs/connectivity.md](https://github.com/getpaseo/paseo/blob/main/public-docs/connectivity.md#ssh).
 
 Desktop integrations can focus an existing agent without creating one or
 sending a message. Use `paseo://h/<server-id>/agent/<agent-id>`, or run

@@ -32,7 +32,9 @@ The UI worklet owns transient motion:
 
 React publishes the active panel only when the canonical target and the UI-thread position agree at
 the final anchor. Retained content never observes gesture previews, progress, or an unsettled target.
-The gesture hosts stay mounted. Native worklets own overlay opacity and pointer events while
+The gesture hosts stay mounted. The Gesture Handler web patch keeps initially disabled hosts
+from capturing paragraph pointers; that capture confines browser selection to its starting paragraph.
+Native worklets own overlay opacity and pointer events while
 React owns settled panel activity and accessibility. Keep hidden native overlays laid out: collapsing
 their scroll ranges makes Android spring retained offsets back to zero during touch cancellation or
 release. Native panel hosts and their dependent draggable lists
@@ -81,7 +83,17 @@ definition, no longer eligible to begin.
 - A focused interactive surface may block panel-opening gestures through
   `useBlockMobilePanelOpenGestures`. Register only while the conflicting interaction is active and
   unregister when the surface is hidden or unfocused. The blocker never disables gestures that close
-  an already-open panel.
+  an already-open panel. A blocker names its side: a terminal selection blocks both, the agent pages
+  (`packages/app/src/agent-pages/`) block only the side they can still page toward.
+- A control whose own drag starts on touch (Show's tab switchers) cannot wait for a React blocker:
+  the open gestures take a sideways drag after 15 dp. It sets `openTouchHeld`
+  (`useMobilePanelOpenTouchHold`) from its `onTouchesDown` worklet and clears it when the touch
+  ends. The open gestures also copy it at their own touch-down, because the control's pan can fail
+  mid-touch (a whole flick in one slow frame) and release the hold before they see a move.
+- The agent pages are a horizontal pager inside the center panel. Their pan fails at once on a
+  swipe past the first or last page, and the open gesture on that side is unblocked there, so the
+  swipe opens the agent list (past the face) or the file explorer (past Show). Never let both claim
+  the same direction: they would race on the same touch moves.
 - Keep `SidebarModelProvider` outside `MobileGestureWrapper`. The provider shares sidebar derivation
   across consumers, while Gesture Handler requires the wrapper's direct child to be a native `View`
   so its injected `collapsable={false}` reaches Android/Fabric.

@@ -61,6 +61,20 @@ The generated `package.json` installs `@getpaseo/plugin` and the other host modu
 dependencies for local typechecking and tests. Paseo compiles TypeScript and TSX and supplies the
 runtime modules, so consumers do not install these packages when adding the plugin.
 
+Client bundles also receive the app's own native engines: `react-native-reanimated`,
+`react-native-worklets`, `react-native-svg`, `@shopify/react-native-skia` and
+`lottie-react-native` (native only), `expo-linear-gradient`, `expo-blur`, `expo-video`,
+`react-native-gesture-handler` and `expo-haptics` (`PLUGIN_CLIENT_NATIVE_MODULES` in
+`packages/server/src/server/plugins/plugin-sdk-specifiers.ts`). Never bundle a second copy. The app
+evaluates the bundle from source with Hermes, which sets two limits:
+
+- No `class` syntax. Hermes rejects it in evaluated code, and esbuild cannot lower it. Write
+  function components; build an error boundary on `Component.prototype` without `class`.
+- Worklets (`useAnimatedStyle`, gesture callbacks, `useDerivedValue`) run only when the source
+  went through `react-native-worklets/plugin` at the app's version before the daemon compiles
+  it. An unprepared worklet throws on the UI thread and takes the whole app down, so an error
+  boundary does not help. Reanimated's CSS animations and entering presets need no worklets.
+
 ```json
 {
   "id": "my-plugin",
@@ -69,7 +83,7 @@ runtime modules, so consumers do not install these packages when adding the plug
 ```
 
 Declare the supported Paseo range and keep it current when adopting newer APIs. See the
-[requirements contract](../public-docs/plugins/reference.md#requirements), including legacy
+[requirements contract](https://github.com/getpaseo/paseo/blob/main/public-docs/plugins/reference.md#requirements), including legacy
 manifests and prerelease matching.
 
 The config key is the runtime plugin ID. The manifest ID is the default selected during install;
@@ -85,6 +99,12 @@ Source changes are explicit. Run `paseo plugin reload <id>` to stop and fully te
 plugin before compiling and starting from disk. A failed reload stays failed; Paseo does not restore
 the old code. Use `enable`, `disable`, and `remove` to manage one plugin. Removing a directory source
 never deletes it. The global `pluginsEnabled` switch remains available.
+
+## Client translations
+
+Plugin runtime translations follow the connected app, so never send a daemon locale through RPCs or add plugin resources to the app catalog. The installation owns the translation engine; native portal bridges must carry it alongside RPC and client-state contexts. Keep host label resolution at presentation time so language changes preserve the installation lifetime.
+
+The author contract is in [runtime translations](https://github.com/getpaseo/paseo/blob/main/public-docs/plugins/reference.md#runtime-translations).
 
 ## Built-in plugins
 
@@ -119,7 +139,7 @@ availability and a diagnostic after the daemon resolves the executable. Configur
 environment, or enablement overrides under `agents.providers.muse`. Omit `extends` to keep
 the bundled integration; an entry with `extends` shadows it with a custom provider. See
 [provider contributions](#contribute-a-provider) for the contract and
-[Muse Code](../public-docs/muse-code.md) for setup, per-agent options, and version limitations.
+[Muse Code](https://github.com/getpaseo/paseo/blob/main/public-docs/muse-code.md) for setup, per-agent options, and version limitations.
 
 ## Install from a registry
 
@@ -131,8 +151,7 @@ selection is unavailable for registry installs; install an explicit source to se
 
 Registry overviews are untrusted author content, even before installation. Render them with
 `@getpaseo/protocol/plugin-overview`: no raw HTML, HTTPS-only links and images, no relative
-URLs, and isolated external links. The website adapter and corpus tests live in
-`packages/website/src/plugins/overview.tsx` and `overview.test.tsx`; the reusable corpus is
+URLs, and isolated external links. The reusable corpus is
 `packages/protocol/tests/fixtures/plugin-overview.json`. A future app overview must share
 this policy. Installed-plugin descriptions in the app remain plain text.
 
@@ -164,8 +183,8 @@ and ask for approval. `ls` reports the installed commit without contacting the r
 
 ## Managed source ownership
 
-The [public source reference](../public-docs/plugins/reference.md#plugin-sources) owns identifier
-syntax and npm prerequisites; the [publishing guide](../public-docs/plugins/publishing.md) owns distribution. The CLI resolves directory sources before
+The [public source reference](https://github.com/getpaseo/paseo/blob/main/public-docs/plugins/reference.md#plugin-sources) owns identifier
+syntax and npm prerequisites; the [publishing guide](https://github.com/getpaseo/paseo/blob/main/public-docs/plugins/publishing.md) owns distribution. The CLI resolves directory sources before
 calling `installPluginSource`; see the public source reference for CLI and app path semantics.
 Only the daemon reads plugin files and acquires sources.
 
@@ -240,14 +259,15 @@ Do not put any other code modules in the plugin root.
 
 Shared files import contract helpers and types from `@getpaseo/plugin`. Server handler files import
 `PluginHandlerContext` from `@getpaseo/plugin/server`. Client files import Paseo UI from
-`@getpaseo/plugin/client/react-native`. Its `Icon` resolves a Lucide name using the client's installed icon
-set; an unknown name renders nothing so it cannot break the plugin surface.
+`@getpaseo/plugin/client/ui`. Its `Icon` draws a Lucide name from the client's installed
+icon set, or any `PluginIcon` through its `icon` prop; an unknown name or unsafe SVG renders nothing
+so it cannot break the plugin surface.
 Its controlled modal keeps presentation metadata on `<Modal title="…" icon={…}>` and body UI in
 `<Modal.Content>`. Body layout, sheet-aware scrolling, and clipboard actions follow the
-[host UI contract](../public-docs/plugins/reference.md#host-ui).
+[host UI contract](https://github.com/getpaseo/paseo/blob/main/public-docs/plugins/reference.md#host-ui).
 Plugin UI runs on desktop and mobile across multiple themes: color every `Text` from
 `theme.colors.foreground` or `theme.colors.foregroundMuted`, and size layout from `layout.compact`.
-See `public-docs/plugins/reference.md`.
+See Paseo's [plugin reference](https://github.com/getpaseo/paseo/blob/main/public-docs/plugins/reference.md).
 
 ### SDK import boundaries
 
@@ -256,14 +276,14 @@ Classify every SDK export before adding it. All client entry points and implemen
 Zod schemas, and functions that run in both runtimes. A type-only import is still an architectural
 dependency; shared types must not refer to React components, hooks, Node APIs, or server contexts.
 
-| Entry                                                | Owns                                                                       | May depend on          |
-| ---------------------------------------------------- | -------------------------------------------------------------------------- | ---------------------- |
-| `@getpaseo/plugin`                                   | Shared data, schemas, RPC/settings definitions, runtime-neutral helpers    | Shared code only       |
-| `@getpaseo/plugin/server`                            | Server contexts, lifecycle contracts, and CLI process launch               | Shared and server code |
-| `@getpaseo/plugin/server/provider`, `/server/acp`    | Server provider contracts and adapters                                     | Shared and server code |
-| `@getpaseo/plugin/client`                            | Client contribution contexts, hooks, navigation, and UI contribution types | Shared and client code |
-| `@getpaseo/plugin/client/react-native`, `/client/ui` | Host-provided UI components                                                | Shared and client code |
-| `@getpaseo/plugin/client/host`                       | App-owned rendering integration; not a plugin-author entry                 | Shared and client code |
+| Entry                                             | Owns                                                                       | May depend on          |
+| ------------------------------------------------- | -------------------------------------------------------------------------- | ---------------------- |
+| `@getpaseo/plugin`                                | Shared data, schemas, RPC/settings definitions, runtime-neutral helpers    | Shared code only       |
+| `@getpaseo/plugin/server`                         | Server contexts, lifecycle contracts, and CLI process launch               | Shared and server code |
+| `@getpaseo/plugin/server/provider`, `/server/acp` | Server provider contracts and adapters                                     | Shared and server code |
+| `@getpaseo/plugin/client`                         | Client contribution contexts, hooks, navigation, and UI contribution types | Shared and client code |
+| `@getpaseo/plugin/client/ui`                      | Host-provided UI components                                                | Shared and client code |
+| `@getpaseo/plugin/client/host`                    | App-owned rendering integration; not a plugin-author entry                 | Shared and client code |
 
 Server code imports shared helpers from the root and server capabilities from `/server`. Client
 code imports shared helpers from the root and client capabilities from `/client`. Neither runtime
@@ -288,7 +308,7 @@ The scaffold omits `"DOM"` from `tsconfig.json` and does not use `/// <reference
 browser globals are not available across the plugin. Put sanctioned web-only APIs in
 `client/web.ts`, declare only the globals that module uses, gate each export with
 `Platform.OS === "web"`, and provide a native implementation or no-op. See the
-[public plugin reference](../public-docs/plugins/reference.md#works-on-mobile) for the complete
+[public plugin reference](https://github.com/getpaseo/paseo/blob/main/public-docs/plugins/reference.md#works-on-mobile) for the complete
 pattern.
 
 ```ts
@@ -332,7 +352,7 @@ created by plugin code. Paseo removes registered contributions, unmounts surface
 state, rejects pending RPCs, closes the plugin's daemon session, and stops the subprocess. Cleanup
 errors are logged and do not interrupt host teardown.
 
-Paseo owns the route, screen header, Lucide icon validation, close action, theme DTO, layout facts,
+Paseo owns the route, screen header, icon validation, close action, theme DTO, layout facts,
 and render error boundary. The contributed component owns the complete body below the header.
 The plugin owns the header's text through the screen's `title` (`resolvePluginScreenTitle` in
 `plugins/surface-contribution.ts`). A legacy `addSidebarItem` route (`/sidebar/<id>`) shows the
@@ -359,7 +379,7 @@ workspaces, agents, terminals, providers, and daemon config. They do not expose 
 `client.paseo`. Authors release their subscriptions in their own cleanup, and teardown (disable,
 reload, removal, host removal) disposes the client, which ends the rest; nothing is created or
 disposed per mounted surface. See the
-[public example](../public-docs/plugins/reference.md#use-the-paseo-sdk). Switching the screen's host
+[public example](https://github.com/getpaseo/paseo/blob/main/public-docs/plugins/reference.md#use-the-paseo-sdk). Switching the screen's host
 changes both `usePaseo()` and `useRpc()` to that host's installation. An offline selected host fails there and never falls through to another
 installation. A server handler owns an IPC-backed daemon session for the life of its subprocess.
 Use plugin RPC for plugin-specific backend behavior that is not a normal Paseo operation.
@@ -367,7 +387,7 @@ Use plugin RPC for plugin-specific backend behavior that is not a normal Paseo o
 Host-targeted clients and discovery are owned by `packages/app/src/plugins/hosts`, with per-installation
 bindings supplied by the bundle loader. Bind the imperative getter to that installation; do not
 resolve ownership through a mutable current-plugin global. Keep observation ownership in this module
-and transport ownership in the app host runtime. See the [public host API contract](../public-docs/plugins/reference.md#discover-hosts-and-target-another-host).
+and transport ownership in the app host runtime. See the [public host API contract](https://github.com/getpaseo/paseo/blob/main/public-docs/plugins/reference.md#discover-hosts-and-target-another-host).
 
 Each subprocess gets an exclusively owned `plugin:<id>` session. That identity is reserved from
 normal clients, never resumes another session, and is cleaned immediately on exit without reconnect
@@ -377,7 +397,7 @@ catalog is complete.
 
 When the same plugin contribution exists on multiple hosts, Paseo shows it once in the sidebar and
 adds a host picker to the screen header. The selected host supplies the bundle, RPC transport, and
-query cache. Explicit SDK targets follow the [host API contract](../public-docs/plugins/reference.md#discover-hosts-and-target-another-host).
+query cache. Explicit SDK targets follow the [host API contract](https://github.com/getpaseo/paseo/blob/main/public-docs/plugins/reference.md#discover-hosts-and-target-another-host).
 
 Workspace panels, Command Center items, and client slash commands are client contributions. The
 daemon transports their compiled bundle without interpreting placement or callbacks. Panel props
@@ -396,14 +416,33 @@ existing agent-context instances, but it cannot create an agent panel without an
 Command Center callbacks use the selected host's existing `PaseoApi` for normal Paseo operations.
 They use typed plugin RPC only for plugin-specific backend work. Surface and panel navigation
 belongs to the app; plugins do not receive Expo Router or workspace-layout store access.
-See the public [navigation fields](../public-docs/plugins/reference.md#screens-and-sidebar-items)
-and [external links and workspace browsers](../public-docs/plugins/reference.md#external-links-and-workspace-browsers)
+See the public [navigation fields](https://github.com/getpaseo/paseo/blob/main/public-docs/plugins/reference.md#screens-and-sidebar-items)
+and [external links and workspace browsers](https://github.com/getpaseo/paseo/blob/main/public-docs/plugins/reference.md#external-links-and-workspace-browsers)
 for the author-facing contract.
+
+### Plugin icons
+
+The [public reference](https://github.com/getpaseo/paseo/blob/main/public-docs/plugins/reference.md#icons) owns the author API: a contribution
+`icon` is a Lucide name, `{ svg }`, or a component.
+
+- `findSvgIconProblem` in the SDK root (`packages/plugin/src/icons.ts`) is the only SVG rule set.
+  The daemon applies it to provider and usage-source icon files; the app applies it to inline
+  icons. Change the rules there, never at a call site.
+- The app validates each icon once, at registration, through `parsePluginIcon` in
+  `packages/app/src/plugins/icons.ts`. Rendering trusts the stored icon.
+- That module is the only code that branches on the icon form. Surfaces draw with
+  `PluginIconView`, or take a stable component from `pluginIconComponent` when their slot expects
+  one. Lucide and SVG icons receive only size and color, so the host props a button passes to its
+  component icon never reach an SVG element.
+- Attachment sources take `PluginSerializableIcon`: composer drafts persist the source's icon with
+  each attachment, and a component cannot be stored.
+- The plugin compiler loads `.svg` imports as text, so `import icon from "./client/icon.svg"` is the
+  markup string.
 
 ## Lifecycle hooks
 
 Server entries register lifecycle observers with `server.on()` and request transforms with
-`server.before()`. The [public reference](../public-docs/plugins/reference.md#lifecycle-hooks)
+`server.before()`. The [public reference](https://github.com/getpaseo/paseo/blob/main/public-docs/plugins/reference.md#lifecycle-hooks)
 owns callback shapes, ordering, and failure behavior. `plugin-examples/lifecycle-logger` registers all
 eleven hooks; `plugin-examples/lifecycle-actions` demonstrates common automation callbacks.
 
@@ -487,26 +526,24 @@ and `plugin-examples/provider-acp-transformer`.
 Provider-emitted plugin timeline items use the same renderer registration as transformed and
 daemon-appended plugin items. The direct example includes both sides. The renderer-only
 `plugin-examples/inline-thinking` example shows that timeline presentation remains independent of a
-provider implementation. The public [provider plugin guide](../public-docs/plugins/providers.md)
+provider implementation. The public [provider plugin guide](https://github.com/getpaseo/paseo/blob/main/public-docs/plugins/providers.md)
 owns author workflow, lifecycle, testing, and distribution guidance.
 
 `ProviderRegistration.icon` is a file path relative to the plugin directory, such as `icon.svg`.
-It must resolve inside that directory to a regular SVG file no larger than 64 KiB. The SVG must be
-self-contained: scripts, styles, `foreignObject`, event-handler attributes, JavaScript URLs, and
-external `href` or `xlink:href` references are rejected. Fragment references such as `#mark` are
-allowed. Paseo reads and sanitizes the file when the plugin starts; the string is never an inline
-SVG or URL.
+It must resolve inside that directory to a regular file that passes the shared SVG icon rules
+(see [Plugin icons](#plugin-icons)). Paseo reads and validates the file when the plugin starts; the
+string is never inline SVG or a URL.
 
 ## Usage sources
 
-Register a usage source from `index.server.ts` with `server.registerUsageSource()`. Import `UsageSourceRegistration` and normalization helpers from `@getpaseo/plugin/server/usage`. The plugin owns account discovery, harness labels, and credential-store reads; the daemon owns account grouping and the fetch cache. Agent popovers use only the agent's own login. The host-wide Usage modal falls back across an account's logins; any success shows usage only, and all failures show every login's labeled error and remedy. Follow the [usage source discovery contract](../public-docs/plugins/reference.md#usage-sources). The resolved launch environment crosses into the trusted, unsandboxed plugin subprocess for session discovery. Usage queries never run lifecycle hooks. Inputs are validated in the plugin process and remain daemon-side. `icon` uses the same sanitized SVG file rules as provider icons.
+Register a usage source from `index.server.ts` with `server.registerUsageSource()`. Import `UsageSourceRegistration` and normalization helpers from `@getpaseo/plugin/server/usage`. The plugin owns account discovery, harness labels, and credential-store reads; the daemon owns account grouping and the fetch cache. Agent popovers use only the agent's own login. The host-wide Usage modal falls back across an account's logins; any success shows usage only, and all failures show every login's labeled error and remedy. Follow the [usage source discovery contract](https://github.com/getpaseo/paseo/blob/main/public-docs/plugins/reference.md#usage-sources). The resolved launch environment crosses into the trusted, unsandboxed plugin subprocess for session discovery. Usage queries never run lifecycle hooks. Inputs are validated in the plugin process and remain daemon-side. `icon` uses the same SVG file rules as provider icons.
 
 The daemon calls discovery for `usage.list_reports`; the client gates this RPC on `server_info.features.usageSources`. The old `provider.usage.list` RPC maps discovered reports for older clients.
 
 ## Contribute sidebar items
 
 Sidebar header and footer items are plugin components, not descriptors. The
-[public reference](../public-docs/plugins/reference.md#sidebar-items) owns the author API. The host
+[public reference](https://github.com/getpaseo/paseo/blob/main/public-docs/plugins/reference.md#sidebar-items) owns the author API. The host
 lives in `packages/app/src/plugins/sidebar-items/`; `packages/app/src/sidebar-nav/model.ts` resolves
 one section's order from built-ins, plugin groups, and the section's preference
 (`sidebarNavItems` or `sidebarFooterItems`).
@@ -538,10 +575,28 @@ one section's order from built-ins, plugin groups, and the section's preference
   remembers under its own key. It shares header ids and the `plugin:<pluginId>:<id>` settings key
   with new-API items.
 
+## Contribute file panels
+
+Client `addFilePanel` registrations become the body of a file tab. The tab stats the file, picks a
+panel, and mounts it with a `PluginFile` handle; the panel reads, shows its own `Loading`, writes,
+and resolves conflicts. The bar only switches panels and shows the dot the panel sets through
+`tab.setModified`. Built-in panels (Markdown, HTML, Image, and Source, Paseo's editor) take the
+same handle as plugin panels, so a fix to reading, watching, or writing lands in one place:
+`packages/app/src/file-panels/file/`. Do not add a host-side read or loading gate for one panel;
+make that panel faster instead. Source highlights a large file on native in idle-time slices,
+the lines around the opening line first.
+
+The handle checks every write against the version it last read or wrote, so two panels or a panel
+and an agent cannot silently overwrite each other. The daemon reports the file's kind (text,
+image, binary) with its stat from a bounded sniff, which is how Source claims text files without a
+read. See the [public file panel reference](https://github.com/getpaseo/paseo/blob/main/public-docs/plugins/reference.md#file-panels) for
+the author API, selection, `DocumentFrame`, and the version requirement. The examples live in
+`plugin-examples/pdf-panel` and `plugin-examples/markdown-panel`.
+
 ## Contribute buttons
 
 Header buttons and composer pills share the client-only descriptor and registration lifecycle in
-`packages/app/src/plugins/buttons/`. The [public button reference](../public-docs/plugins/reference.md#header-buttons)
+`packages/app/src/plugins/buttons/`. The [public button reference](https://github.com/getpaseo/paseo/blob/main/public-docs/plugins/reference.md#header-buttons)
 owns the author API and placement rules. Keep presentation policy in this module so another
 placement can reuse behavior without copying registration or action state.
 
@@ -665,7 +720,7 @@ drops the optional presentation fields.
 
 Register ordinary components with `client.addSettingsScreen` and open them with `openSettings`.
 The host settings shell owns navigation and layout; plugin content must not add another page
-scroll view or header. See the [author contract](../public-docs/plugins/reference.md#settings-screens)
+scroll view or header. See the [author contract](https://github.com/getpaseo/paseo/blob/main/public-docs/plugins/reference.md#settings-screens)
 and `plugin-examples/settings` for the named UI components and persistence API.
 
 Settings storage is scoped to the runtime installation ID, never the source path or manifest ID.
@@ -700,7 +755,7 @@ stable rather than arrival-ordered. The app resolves that id
 against the installed catalog on every change; an id nothing contributes falls back to the default
 preference instead of painting the reserved slot's placeholder colors.
 
-Existing plugin authors should follow the standalone [v0.8 runtime-entry migration guide](../public-docs/plugins/migration.md).
+Existing plugin authors should follow the standalone [v0.8 runtime-entry migration guide](https://github.com/getpaseo/paseo/blob/main/public-docs/plugins/migration.md).
 
 See `plugin-examples/local-plugin` for a native surface, `plugin-examples/linear` for a complete
 attachment-source example, `plugin-examples/timeline-items` for timeline projection, and

@@ -6,7 +6,11 @@ Tokens — every color, font size, weight, spacing step, radius, icon size — l
 
 ## 1. Character
 
-Paseo is minimal, spacious, quiet, confident. Whitespace is deliberate. Nothing crowds, nothing decorates, nothing apologizes. A row, a label, a control. That is the bar.
+hizuri is minimal, spacious, quiet, confident. Whitespace is deliberate. Nothing crowds, nothing decorates, nothing apologizes. A row, a label, a control. That is the bar.
+
+hizuri's world is "Fluctuation — Spectrum" (brand spec: `docs/brand.md`): a near-black field, one spectrum-blue accent, and the mark — a 7×7 dot field pulled toward a warm core (`packages/app/src/components/icons/hizuri-mark.tsx`). Dark is the default theme. The warm spectrum colours (amber, rose, violet) belong to the mark only. Interface chrome stays neutral plus the blue accent.
+
+Motion has two authored moments: the field breathes from the core outwards (the mark on first-run screens), and in voice mode the user's words type in at the top of the chat while they speak, then fly down into the chat as their message (`packages/app/src/components/voice-live-words.tsx`). Those words are the sign that the user is heard, so voice mode has no level meter. Everything else is quiet, and it all stops under the system's reduced-motion setting.
 
 The app is calm so the user's work is not. Every visual decision serves either _act on this_ or _understand this_ — never _look at this_.
 
@@ -20,7 +24,7 @@ A semantic element used in three or more places is a primitive. One of a kind is
 
 Primitives live in `packages/app/src/components/ui/` and `packages/app/src/components/headers/`. Card and row layout live in `packages/app/src/styles/settings.ts`. Section structure lives in `packages/app/src/screens/settings/settings-section.tsx`.
 
-A pressable styled to look like a button is wrong; the button is `<Button>` (`packages/app/src/components/ui/button.tsx`). A bare `<Text>` styled to look like a section header is wrong; the section header is `<SettingsSection>` (`packages/app/src/screens/settings/settings-section.tsx`). A custom `Modal` for a confirmation is wrong; the confirmation is `confirmDialog` (`packages/app/src/utils/confirm-dialog.ts`). A hand-rolled overflow menu is wrong; the menu is `<DropdownMenu>` (`packages/app/src/components/ui/dropdown-menu.tsx`). A hand-rolled status pill is wrong; the pill is `<StatusBadge>` (`packages/app/src/components/ui/status-badge.tsx`). A circle pinned over a scrolling surface is wrong; the floating action is `<FloatingActionButton>` (`packages/app/src/components/ui/floating-action-button.tsx`), one per surface, and the surface reserves `FLOATING_ACTION_BUTTON_CLEARANCE` below its content so the button never traps the last row.
+A pressable styled to look like a button is wrong; the button is `<Button>` (`packages/app/src/components/ui/button.tsx`). A pressable wrapping an icon is wrong; the icon action is `<ToolbarButton>` (`packages/app/src/components/ui/pane-content-toolbar.tsx`), which owns the hitbox, the rounded `interactionHighlight` fill on hover and press, the compact size, and the tooltip. Rows on a menu surface are `<MenuItem>`, or `<ComposerTrackRow>` in a track panel; other rows are `<PressHighlight>` (`packages/app/src/components/ui/press-highlight.tsx`), which flashes on native the moment a finger lands. A bare `<Text>` styled to look like a section header is wrong; the section header is `<SettingsSection>` (`packages/app/src/screens/settings/settings-section.tsx`). A custom `Modal` for a confirmation is wrong; the confirmation is `confirmDialog` (`packages/app/src/utils/confirm-dialog.ts`). A hand-rolled overflow menu is wrong; the menu is `<DropdownMenu>` (`packages/app/src/components/ui/dropdown-menu.tsx`). A hand-rolled status pill is wrong; the pill is `<StatusBadge>` (`packages/app/src/components/ui/status-badge.tsx`). A circle pinned over a scrolling surface is wrong; the floating action is `<FloatingActionButton>` (`packages/app/src/components/ui/floating-action-button.tsx`), one per surface, and the surface reserves `FLOATING_ACTION_BUTTON_CLEARANCE` below its content so the button never traps the last row.
 
 Before adding a new component, read `components/ui/`. The primitive usually exists.
 
@@ -72,6 +76,8 @@ Sizes: `xs` for ultra-tight inline triggers. `sm` for any button sitting in a ro
 
 Sizes are a shared contract across control kinds, defined once in `control-geometry.ts`: `xs` = 28px tall with `fontSize.sm` labels, `sm` = 32px with `fontSize.base`, `md`/`lg` = 44px with `fontSize.base`. `<SegmentedControl>` (`packages/app/src/components/ui/segmented-control.tsx`) takes the same `xs`/`sm`/`md` sizes — a segmented control next to a `<Button>` of the same size always matches in height, label size, and corner radius. Its segments run one padding step tighter than a button, because the gap between segments already reads as padding. The selected segment is a `surface3` fill with `foreground` text, not an inverted one — inverting it inside thin chrome puts a white slab in the toolbar. Thin chrome such as the file toolbar uses `xs`; settings rows use `sm`. Never shrink a control's font or padding locally to fit a context — if the context needs a smaller control, the size tier is missing or the wrong one is in use.
 
+The chat composer is the toolbar a thumb works all day, so it stays bare: “+”, dictate, send or stop, and the voice ↔ text switch right-most. The voice bar puts its switch to typing in the same spot at the same size, so the two read as one toggle. On a phone each button is a 44pt target, spaced apart, and the toggle is a 48pt ring (`packages/app/src/composer/action-geometry.ts`). The voice bar has no box: its rings and the filled mute stand on the open field, as in the brand's live-voice screen. A live agent's model, effort, mode and context meter sit in the screen header on wide layouts (`packages/app/src/composer/agent-controls/header.tsx`). A phone agent chat has no header (three pages, `packages/app/src/agent-pages/`): the agent switches its own model and effort, and the chat page keeps one “…” with “End session”. A new composer control goes to a menu, not the bar.
+
 A `<Pressable>` wrapping a `<Text>` is a sixth variant. It is wrong. `<Button>` accepts `style`, `textStyle`, `leftIcon`, `disabled`, `size`, and `variant`.
 
 ---
@@ -98,7 +104,7 @@ Five primitives. The pick is determined by option count, the need to search, and
 
 `<DropdownMenu>` is for a small fixed set anchored to a trigger. Theme picker, kebab menus on workspace and project rows (`packages/app/src/components/sidebar-workspace-list.tsx:684-770`), row "more" menus. Items can be async (`status: "pending"`) and can include destructive entries. Under ~10 options where the user knows what they're looking for.
 
-`<Combobox>` is for a large or searchable list. Host switcher in the sidebar footer, model selector in the composer, branch switcher in the workspace header (`packages/app/src/components/branch-switcher.tsx`). The user types to find the option, or the list is long enough to scroll.
+`<Combobox>` is for a large or searchable list. Host switcher in the sidebar footer, model selector in a draft's composer, branch switcher in the workspace header (`packages/app/src/components/branch-switcher.tsx`). The user types to find the option, or the list is long enough to scroll.
 
 `<ContextMenu>` is for right-click and long-press on a target. The row is the trigger; there is no visible affordance. Used for incidental actions on workspace rows in the sidebar (`packages/app/src/components/sidebar-workspace-list.tsx`).
 
@@ -249,6 +255,7 @@ New status pills use `<StatusBadge>`. Identity, shortcut, and interactive link b
 
 - `fontWeight.medium` on row titles, body text, button labels, badge text, or `<SidebarCallout>` titles. Medium is reserved for the structural-label tier described in §3 — section labels, modal/sheet titles, dense metadata emphasis, and tight action labels. Anything else is `normal`. `<ScreenTitle>` is responsive `400/300` and is never overridden.
 - `<Pressable>` wrapping `<Text>` to make a button. `<Button>` exists.
+- Importing `Pressable` or a `Touchable*` outside `components/ui/`. A raw pressable has no standard press or hover feedback, so every one drifts. `paseo/no-raw-pressable` reports it; the files on its burn-down list in `.oxlintrc.json` may only leave it.
 - Bare `<Text>` for a section header inside settings. `<SettingsSection>` exists.
 - A muted paragraph between a section header and its card. Section-level explanation is the header's `info` tooltip (§7).
 - A "Settings" CTA on a detail page. Detail pages are settings; settings is reached from the sidebar, the host entry, or a row's kebab menu.

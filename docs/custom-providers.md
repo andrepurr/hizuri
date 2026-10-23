@@ -57,7 +57,7 @@ base provider's options unless it sets its own options record.
 }
 ```
 
-See the [SDK provider options guide](../public-docs/sdk/provider-options.md) for
+See the [SDK provider options guide](https://github.com/getpaseo/paseo/blob/main/public-docs/sdk/provider-options.md) for
 per-agent examples and provider-specific keys.
 
 ---

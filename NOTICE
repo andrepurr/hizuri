@@ -1,0 +1,15 @@
+hizuri
+Copyright 2026 the hizuri authors
+
+This product is a modified version of Paseo (https://github.com/getpaseo/paseo),
+Copyright (c) 2025-present Mohamed Boudra and the Paseo contributors,
+licensed under the Apache License, Version 2.0 (see LICENSE).
+
+Files changed in this fork are the changes made after Paseo's commit
+"fix(app): make the compact Explorer tab rail usable on phones (#7589)"
+(e522e6ea8e25140d2ef0c819986175ad6d6379b8 in Paseo's repository). In this repository
+`git log --grep "(#7589)"` finds that commit, and the commits after it are the changes.
+
+Third-party notices kept from Paseo:
+- packages/expo-two-way-audio: MIT, Copyright (c) 2023 Cantab Research Ltd (Speechmatics)
+- packages/highlight/src/astro: MIT, Copyright (c) 2026 Zulfazli

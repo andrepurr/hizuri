@@ -4,6 +4,9 @@ Paseo is a client-server system for monitoring and controlling local AI coding a
 
 Your code never leaves your machine. Paseo is local-first.
 
+Daemon-owned outbound connections and routed API scope ownership are described in
+[Connected hosts](connected-hosts.md).
+
 ## System overview
 
 ```
@@ -50,7 +53,7 @@ The heart of Paseo. A Node.js process that:
 - Streams agent output in real time via a timeline model
 - Provides agent-to-agent tools through a transport-neutral tool catalog, with MCP as one adapter
 - Optionally connects outbound to a relay for remote access
-- Optionally serves the browser web client from the same HTTP server (self-hosting guide: [public-docs/web-ui.md](../public-docs/web-ui.md))
+- Optionally serves the browser web client from the same HTTP server (self-hosting guide: [public-docs/web-ui.md](https://github.com/getpaseo/paseo/blob/main/public-docs/web-ui.md))
 
 All paths are under `packages/server/src/`.
 
@@ -182,7 +185,7 @@ Enables remote access when the daemon is behind a firewall.
 
 The production relay server lives in [getpaseo/paseo-relay](https://github.com/getpaseo/paseo-relay). It is a distributed Elixir service. The Cloudflare relay implementation in this monorepo is retained as legacy code and is not deployed.
 
-See [SECURITY.md](../SECURITY.md) for the full threat model.
+See Paseo's [SECURITY.md](https://github.com/getpaseo/paseo/blob/main/SECURITY.md) for the full threat model.
 
 ### Paseo Hub
 
@@ -224,10 +227,6 @@ Agent browser_keypress -> guest sendInputEvent(skipIfUnhandled)
   |-- guest handles ------------> page owns it
   `-- guest does not handle ----> stop; never redispatch to the host window
 ```
-
-### `packages/website` — Marketing site
-
-TanStack Router + Cloudflare Workers. Serves paseo.sh.
 
 ## WebSocket protocol
 
@@ -344,6 +343,10 @@ key. Reconnect subscribes to that key; retries
 join active work or reuse committed stages. A persisted resource alone cannot prove
 that a provider accepted its initial prompt. Interrupted side effects with no conclusive
 receipt return an unknown outcome instead of being repeated.
+
+Agent registration commits creation. Rejecting the first prompt is a turn error on that
+agent; reporting creation failure leaves an orphaned agent and invites another Create.
+Receipt replay must not resend the prompt.
 
 `packages/client/src/creation/` owns capability selection and legacy orchestration.
 Callers always pass the initial prompt to agent creation. On an older host, the client
@@ -474,7 +477,7 @@ $PASEO_HOME/
 
 The supervisor alone publishes its ready worker's endpoint in `paseo.pid`, clears it before respawn, and fails if any worker exits before first readiness. CLI home selection trusts only that live record; config expresses desired state, never an endpoint fallback. POSIX home stop signals the captured supervisor without TCP. Windows graceful stop and ordinary RPCs trust the published endpoint. This metadata is not cryptographic listener ownership: edited endpoints, copied identities, PID reuse, and address takeover races remain outside that guarantee. A stale heartbeat never permits reclaiming a live lock.
 
-Worker restart retains supervisor arguments/environment and rereads the configuration file. Updating a package and observing its new worker version do not refresh the running supervisor code; the launcher owns full-process replacement. See [CLI lifecycle contracts](../public-docs/cli.md#daemon-management).
+Worker restart retains supervisor arguments/environment and rereads the configuration file. Updating a package and observing its new worker version do not refresh the running supervisor code; the launcher owns full-process replacement. See [CLI lifecycle contracts](https://github.com/getpaseo/paseo/blob/main/public-docs/cli.md#daemon-management).
 
 ## Deployment models
 

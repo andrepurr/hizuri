@@ -67,6 +67,7 @@ $PASEO_HOME/
 ├── plugins/
 │   ├── sources.json                      # Managed kind and Git acquisition remote
 │   └── {pluginId}/{uuid}/                # Git checkout or npm package/lockfile/dependency tree
+├── tool-hub/                            # Hizuri tool hub, see section 8
 └── push-tokens.json                     # Expo push notification tokens
 ```
 
@@ -565,6 +566,22 @@ These small files are not validated as full Zod schemas but are persisted under 
 
 ---
 
+## 8. Tool hub (Hizuri)
+
+**Path:** `$PASEO_HOME/tool-hub/` — owned by `packages/server/src/server/tool-hub/store.ts`; one write queue for all of it.
+
+| Path                | Format                                                      | Notes                                                                                                                                   |
+| ------------------- | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `install-key.json`  | `{ v: 1, publicKeyPem, privateKeyPem, createdAt }`          | Ed25519 key of this install; signs every receipt. Mode `0600`, created once with `wx`. Losing it orphans every review.                  |
+| `installs.json`     | `{ v: 1, installs: ToolInstall[] }`                         | Approved tools: launch spec, sandbox, pinned fingerprint, what the model reads per tool, `status` `active` or `blocked`. Atomic writes. |
+| `receipts.jsonl`    | One signed `Receipt` per line                               | Append-only hash chain (`previousReceiptHash`). The one JSONL file in the daemon: a chain is read in order and never rewritten.         |
+| `reviews.json`      | `{ v: 1, reviews: ToolReview[] }`                           | One review per receipt; each embeds its receipt so it can be checked without the chain. Atomic writes.                                  |
+| `secrets.json`      | `{ "<tool name or id>": { "<ENV or header>": "<value>" } }` | Written by the user, read by the daemon at launch, never returned to an agent.                                                          |
+| `cache/{hash}.json` | `{ fetchedAt, value }`                                      | Outside catalog answers (registry 6 h, agent.reviews 24 h, nohumans 6 h). A stale copy is used when a source is down.                   |
+| `servers/{id}/`     | npm prefix + `home/`                                        | `npm install --ignore-scripts` of the tool; `home/` is the only folder its sandbox can write.                                           |
+
+---
+
 ## Client-side stores (App)
 
 These live in React Native `AsyncStorage` or browser `IndexedDB`, not on the daemon filesystem.
@@ -589,7 +606,10 @@ host, kinds, and ids. Opening a cached workspace uses exact workspace and projec
 directory scan. One invalid row is deleted and returned as a miss without affecting other rows.
 An invalid directory row and its affected checkpoint cursor are repaired in one transaction, so a
 later launch cannot accept a checkpoint for a partial baseline. Directory changes and their
-checkpoint are also applied in one transaction.
+checkpoint are also applied in one transaction. Reads wait for accepted changes to reach storage,
+then retry only when a requested row changes during the read. Unrelated agent streams do not
+invalidate the read. Directory baseline replacements and host removal or renaming still invalidate
+the affected reads.
 
 The cache is capped at 32 MiB and evicts whole hosts in least-recently-written order. Budget
 bookkeeping may scan opaque row sizes during a deferred write, never during host registry startup or
