@@ -1,3 +1,4 @@
+import { stripVoiceModeSystemPrompt } from "./voice-config.js";
 import type { PluginRegistries } from "@getpaseo/protocol/plugin-registry";
 import { describeHookWorkspace } from "./plugins/lifecycle/index.js";
 import express from "express";
@@ -131,12 +132,19 @@ import type { OpenAiSpeechProviderConfig } from "./speech/providers/openai/confi
 import type { LocalSpeechProviderConfig } from "./speech/providers/local/config.js";
 import type { RequestedSpeechProviders } from "./speech/speech-types.js";
 import { createSpeechService } from "./speech/speech-runtime.js";
+import { resolveVoiceSettingsFile, VoiceSettingsStore } from "./voice-settings/store.js";
+import { moduleKernel } from "./modules/kernel.js";
+import { StageStore } from "./stage/store.js";
+import { createToolHub } from "./tool-hub/create-tool-hub.js";
+import { HUB_APPROVAL_TIMEOUT_MS } from "./tool-hub/service.js";
+import { createSecretService } from "./secrets/setup.js";
 import { AgentManager } from "./agent/agent-manager.js";
 import { AgentStorage } from "./agent/agent-storage.js";
 import { attachAgentStoragePersistence } from "./persistence-hooks.js";
 import { createAgentMcpServer } from "./agent/mcp-server.js";
 import {
   createPaseoToolCatalog,
+  createPaseoAgentToolManifest,
   type PaseoToolHostDependencies,
 } from "./agent/tools/paseo-tools.js";
 import type { PaseoToolRuntimeContext } from "./agent/tools/types.js";
@@ -152,7 +160,11 @@ import { CheckoutDiffManager } from "./checkout-diff-manager.js";
 import { ScheduleService } from "./schedule/service.js";
 import { DaemonConfigStore, type MutableDaemonConfig } from "./daemon-config-store.js";
 import { createOrchestrationSkills } from "./orchestration-skills/index.js";
-import { resolveConfigFromPersisted, type CliConfigOverrides } from "./config.js";
+import {
+  DEFAULT_APP_BASE_URL,
+  resolveConfigFromPersisted,
+  type CliConfigOverrides,
+} from "./config.js";
 import { resolvePaseoToolPolicy } from "./agent/paseo-tool-policy.js";
 import { BrowserToolsBroker } from "./browser-tools/broker.js";
 import { DaemonConfigBrowserToolsPolicy } from "./browser-tools/policy.js";
@@ -210,6 +222,12 @@ import {
 } from "./auth.js";
 import { deleteLocalCredential, writeLocalCredential } from "./local-credential.js";
 import { createWebUiMiddleware } from "./web-ui.js";
+import { createZuriUpdatesRouter, ZURI_UPDATES_ROUTE } from "./zuri-updates.js";
+import { createFaceAvatarRouter, FACE_AVATAR_ROUTE } from "./face-avatar.js";
+import { createStageMediaRouter, stageMediaDir } from "./stage/show-file.js";
+import { STAGE_MEDIA_ROUTE } from "./stage/blocks.js";
+import { SHOW_MEDIA_ROUTE, ShowMediaFileStore, showMediaGrantsPath } from "./show-media/files.js";
+import { createShowMediaRouter } from "./show-media/routes.js";
 import { WorkspaceAutoName } from "./workspace-auto-name.js";
 import { createGitMutationService } from "./session/git-mutation/git-mutation-service.js";
 import { workspaceIdsOnCheckout } from "./workspace-directory.js";
@@ -434,6 +452,10 @@ export interface PaseoDaemonConfig {
     enabled: boolean;
     distDir: string | null;
   };
+  /** Hizuri: the page that streams the agent's browser, for show_screen (features.show.screenUrl). */
+  showScreenUrl?: string | null;
+  /** Hizuri: the folder(s) of Zuri's avatar page, served at /avatar/ (features.face.avatarDir). */
+  faceAvatarDir?: string | null;
   appBaseUrl?: string;
   auth?: DaemonAuthConfig;
   openai?: PaseoOpenAIConfig;
@@ -550,7 +572,7 @@ function createInitialMutableDaemonConfig(config: PaseoDaemonConfig): MutableDae
     cors: { allowedOrigins: config.corsAllowedOrigins },
     trustedProxies: config.trustedProxies ?? ["loopback"],
     git: config.git ?? resolveGitProcessPolicy({ env: process.env }),
-    app: { baseUrl: config.appBaseUrl ?? "https://app.paseo.sh" },
+    app: { baseUrl: config.appBaseUrl ?? DEFAULT_APP_BASE_URL },
     ...(config.providerCatalogRefreshTimeoutMs !== undefined
       ? { catalogRefreshTimeoutMs: config.providerCatalogRefreshTimeoutMs }
       : {}),
@@ -595,6 +617,34 @@ export async function createPaseoDaemon(
   const bootstrapStart = performance.now();
   const elapsed = () => `${(performance.now() - bootstrapStart).toFixed(0)}ms`;
   const daemonVersion = config.daemonVersion ?? resolveDaemonVersion(import.meta.url);
+  // Hizuri: the live voice knobs (voice-settings.json), before the speech worker forks.
+  const voiceSettings = new VoiceSettingsStore({
+    file: resolveVoiceSettingsFile(config.paseoHome),
+    logger: rootLogger.child({ module: "voice-settings" }),
+  });
+  voiceSettings.start();
+  // Hizuri: the module kernel follows the `modules` section of the same file (PASEO_MODULES).
+  moduleKernel.start({
+    paseoHome: config.paseoHome,
+    logger: rootLogger.child({ module: "modules" }),
+  });
+  // Hizuri: the stage, Zuri's tabs on the user's screen ($PASEO_HOME/stage).
+  const stageStore = new StageStore({
+    paseoHome: config.paseoHome,
+    logger: rootLogger.child({ module: "stage" }),
+  });
+  // Hizuri: the tool hub ($PASEO_HOME/tool-hub): agents find, install (after the user's yes), call
+  // and review third-party MCP tools through the agent MCP endpoint.
+  const toolHub = await createToolHub({
+    paseoHome: config.paseoHome,
+    logger: rootLogger.child({ module: "tool-hub" }),
+  });
+  // Hizuri: the vault behind the secure forms on the stage (secret_* tools, secret.store).
+  const secrets = createSecretService({
+    paseoHome: config.paseoHome,
+    stage: stageStore,
+    logger: rootLogger.child({ module: "secrets" }),
+  });
   const initialMutableConfig = createInitialMutableDaemonConfig(config);
   const daemonConfigStore = new DaemonConfigStore(config.paseoHome, initialMutableConfig, logger, {
     relayEnabledMutable: config.relayEnabledMutable ?? true,
@@ -683,12 +733,12 @@ export async function createPaseoDaemon(
   const scriptRuntimeStore = new WorkspaceScriptRuntimeStore();
   const workspaceSetupRuntime = new WorkspaceSetupRuntime();
   let configuredHostnames = config.hostnames ?? config.allowedHosts;
-  let appBaseUrl = config.appBaseUrl ?? "https://app.paseo.sh";
+  let appBaseUrl = config.appBaseUrl ?? DEFAULT_APP_BASE_URL;
   daemonConfigStore.onFieldChange("hostnames", (value) => {
     configuredHostnames = value as HostnamesConfig | undefined;
   });
   daemonConfigStore.onFieldChange("app.baseUrl", (value) => {
-    appBaseUrl = typeof value === "string" ? value : "https://app.paseo.sh";
+    appBaseUrl = typeof value === "string" ? value : DEFAULT_APP_BASE_URL;
   });
   let wsServer: VoiceAssistantWebSocketServer | null = null;
   let serviceProxyListenTarget: ListenTarget | null = null;
@@ -777,6 +827,29 @@ export async function createPaseoDaemon(
     createTerminalActivityRouteHandler(terminalManager),
   );
 
+  // hizuri over-the-air JS updates (see zuri-updates.ts), public like the web UI files. Mounted
+  // before the web UI: its middleware answers every other GET (404 when disabled), so the
+  // update requests would never reach this router.
+  app.use(
+    ZURI_UPDATES_ROUTE,
+    createZuriUpdatesRouter({ updatesDir: path.join(config.paseoHome, "zuri-updates"), logger }),
+  );
+
+  // Hizuri: Zuri's avatar page, public like the web UI files and mounted before them for the same
+  // reason as the updates router.
+  if (config.faceAvatarDir) {
+    app.use(FACE_AVATAR_ROUTE, createFaceAvatarRouter({ avatarDir: config.faceAvatarDir }));
+  }
+  // Hizuri: the pictures and videos show_file put on the stage, public for the same reason as the
+  // avatar page (an image or video view cannot carry the daemon password); named by content hash.
+  app.use(STAGE_MEDIA_ROUTE, createStageMediaRouter({ mediaDir: stageMediaDir(config.paseoHome) }));
+  // Hizuri (Show window, media): the YouTube player page and media file links, public for the
+  // same reason as the update files (see show-media/routes.ts). Mounted before the web UI too.
+  const showMediaFiles = new ShowMediaFileStore({
+    persistPath: showMediaGrantsPath(config.paseoHome),
+  });
+  app.use(SHOW_MEDIA_ROUTE, createShowMediaRouter({ files: showMediaFiles, logger }));
+
   // Serve the bundled browser web UI when enabled. Mounted after service-proxy
   // classification and host/CORS handling, but before daemon bearer auth, so
   // static app files load without the daemon password while API/WebSocket calls
@@ -832,6 +905,9 @@ export async function createPaseoDaemon(
     try {
       fileHandle = await open(entry.absolutePath, DOWNLOAD_OPEN_FLAGS);
       const fileStats = await fileHandle.stat();
+      if (res.destroyed) {
+        return;
+      }
       if (!fileStats.isFile()) {
         res.status(404).json({ error: "File not found" });
         return;
@@ -843,6 +919,7 @@ export async function createPaseoDaemon(
 
       const stream = fileHandle.createReadStream();
       fileHandle = null;
+      res.once("close", () => stream.destroy());
       stream.on("error", (err) => {
         logger.error({ err }, "Failed to stream download");
         if (!res.headersSent) {
@@ -970,6 +1047,7 @@ export async function createPaseoDaemon(
     agentStorage,
   );
   await agentStorage.initialize();
+  await closeStaleAgentRecords(agentStorage);
   logger.info({ elapsed: elapsed() }, "Agent storage initialized");
   await bootstrapWorkspaceRegistries({
     serverId,
@@ -1031,10 +1109,13 @@ export async function createPaseoDaemon(
   const ensureWorkspaceForCreateExternal = async (
     cwd: string,
     firstAgentContext?: FirstAgentContext,
+    context?: { callerWorkspaceId?: string },
   ): Promise<string> => {
     const workspace = await workspaceProvisioning.createWorkspaceForDirectory(
       cwd,
       resolveFirstAgentPromptTitle(firstAgentContext),
+      undefined,
+      context,
     );
     if (firstAgentContext) {
       workspaceAutoName.scheduleForDirectory({
@@ -1081,8 +1162,9 @@ export async function createPaseoDaemon(
   const ensureWorkspaceForCreateAndBroadcastExternal = async (
     cwd: string,
     firstAgentContext?: FirstAgentContext,
+    context?: { callerWorkspaceId?: string },
   ): Promise<string> => {
-    const workspaceId = await ensureWorkspaceForCreateExternal(cwd, firstAgentContext);
+    const workspaceId = await ensureWorkspaceForCreateExternal(cwd, firstAgentContext, context);
     await emitWorkspaceUpdatesExternal([workspaceId]);
     return workspaceId;
   };
@@ -1368,6 +1450,12 @@ export async function createPaseoDaemon(
     } catch (error) {
       logger.warn({ err: error, agentId }, "Failed to complete schedules for archived agent");
     }
+    // Hizuri: by itself or with its workspace, an archived agent's voice stops.
+    try {
+      await wsServer?.endVoiceForAgent(agentId);
+    } catch (error) {
+      logger.warn({ err: error, agentId }, "Failed to end the voice of an archived agent");
+    }
   });
   logger.info({ elapsed: elapsed() }, "Schedule service initialized");
   logger.info({ elapsed: elapsed() }, "Loading persisted agent registry");
@@ -1384,8 +1472,22 @@ export async function createPaseoDaemon(
   const createAgentToolHostDependencies = (
     runtime: PaseoToolRuntimeContext,
   ): PaseoToolHostDependencies => ({
+    agentMessages: () => {
+      if (!wsServer) throw new Error("Daemon is not accepting agent messages");
+      return wsServer.agentMessages;
+    },
+    serverId,
+    hosts: () => {
+      if (!wsServer) throw new Error("Daemon is not accepting host operations");
+      return wsServer.toolHosts();
+    },
     agentManager,
     agentStorage,
+    toolHub,
+    requestDaemonPermission: (agentId, request) =>
+      agentManager.requestDaemonPermission(agentId, request, {
+        timeoutMs: HUB_APPROVAL_TIMEOUT_MS,
+      }),
     terminalManager,
     getDaemonTcpPort: () => (boundListenTarget?.type === "tcp" ? boundListenTarget.port : null),
     scheduleService,
@@ -1399,11 +1501,12 @@ export async function createPaseoDaemon(
     emitWorkspaceUpdatesForWorkspaceIds: emitWorkspaceUpdatesExternal,
     workspaceRegistry,
     projectRegistry,
-    createDirectoryWorkspace: async (cwd, title, projectId) => {
+    createDirectoryWorkspace: async (cwd, title, projectId, context) => {
       const workspace = await workspaceProvisioning.createWorkspaceForDirectory(
         cwd,
         title,
         projectId,
+        context,
       );
       await emitWorkspaceUpdatesExternal([workspace.workspaceId]);
       return workspace;
@@ -1433,6 +1536,11 @@ export async function createPaseoDaemon(
     createPaseoWorktree: createAgentCommandDependencies.createPaseoWorktree,
     browserToolsEnabled: browserToolsPolicy.isEnabled(),
     browserToolsBroker,
+    usageReports: pluginRuntime,
+    showScreen: config.showScreenUrl ? { url: config.showScreenUrl } : null,
+    voiceSettings,
+    stage: stageStore,
+    secrets,
     paseoToolPolicy:
       runtime.paseoToolPolicy ??
       (runtime.callerAgentId ? agentManager.getPaseoToolPolicy(runtime.callerAgentId) : undefined),
@@ -1441,14 +1549,21 @@ export async function createPaseoDaemon(
     callerAgentId: runtime.callerAgentId,
     enableVoiceTools: runtime.enableVoiceTools,
     voiceOnly: runtime.voiceOnly,
+    showMediaFiles,
     resolveSpeakHandler: (agentId) => wsServer?.resolveVoiceSpeakHandler(agentId) ?? null,
     resolveCallerContext: (agentId) => wsServer?.resolveVoiceCallerContext(agentId) ?? null,
+    hasVoicePrompt: (agentId) => {
+      const prompt = agentManager.getAgent(agentId)?.config.systemPrompt?.trim();
+      return !!prompt && stripVoiceModeSystemPrompt(prompt) !== prompt;
+    },
     logger,
   });
   const createAgentToolCatalog = (runtime: PaseoToolRuntimeContext) =>
     createPaseoToolCatalog(createAgentToolHostDependencies(runtime));
   const setAgentProviderToolsEnabled = (enabled: boolean) => {
-    agentProviderRuntime.setPaseoToolCatalog(enabled ? createAgentToolCatalog({}) : null);
+    agentProviderRuntime.setPaseoToolCatalog(
+      enabled ? createPaseoAgentToolManifest(createAgentToolHostDependencies({})) : null,
+    );
   };
   agentManager.setPaseoToolCatalogFactory(createAgentToolCatalog);
   agentManager.setPaseoToolsEnabled(config.mcpInjectIntoAgents !== false);
@@ -1458,6 +1573,15 @@ export async function createPaseoDaemon(
   let agentMcpBaseUrl: string | null = null;
   {
     const agentMcpRoute = "/mcp/agents";
+
+    // Open GET streams; each hears about tool hub changes so agents re-list without reconnecting.
+    const agentMcpStreams = new Set<Awaited<ReturnType<typeof createAgentMcpServer>>>();
+    toolHub.onToolsChanged(() => {
+      for (const server of agentMcpStreams) {
+        server.sendToolListChanged();
+      }
+      logger.info({ streams: agentMcpStreams.size }, "tool_hub.tools_list_changed_sent");
+    });
 
     const createAgentMcpSession = async (callerAgentId?: string) => {
       const agentMcpServer = await createAgentMcpServer(
@@ -1473,7 +1597,9 @@ export async function createPaseoDaemon(
       // torn down when the response closes, so no per-session state is retained between
       // requests. The agent control plane only lists and calls tools, neither of which
       // needs cross-request state, so sessions would only pin memory for the life of the
-      // daemon (agents that exit without a clean DELETE never get reaped).
+      // daemon (agents that exit without a clean DELETE never get reaped). The one
+      // long-lived piece is a client's GET stream: it carries
+      // notifications/tools/list_changed when the tool hub adds or blocks a tool.
       const transport = new StreamableHTTPServerTransport({
         sessionIdGenerator: undefined,
         // NOTE: We enforce a Vite-like host allowlist at the app/websocket layer.
@@ -1525,10 +1651,10 @@ export async function createPaseoDaemon(
         );
       }
       try {
-        // Stateless: GET (standalone SSE) and DELETE (session termination) have no
-        // meaning without sessions. The MCP client tolerates 405 on the GET stream
-        // and never issues a DELETE because it is never handed a session id.
-        if (req.method !== "POST") {
+        // Stateless: DELETE (session termination) has no meaning without sessions, and the
+        // MCP client never issues one because it is never handed a session id. GET opens the
+        // standalone SSE stream, which only ever carries tools/list_changed (Hizuri, tool hub).
+        if (req.method !== "POST" && req.method !== "GET") {
           res.status(405).json({
             jsonrpc: "2.0",
             error: {
@@ -1547,7 +1673,9 @@ export async function createPaseoDaemon(
           callerAgentId = callerAgentIdRaw[0];
         }
         const { server, transport } = await createAgentMcpSession(callerAgentId);
+        if (req.method === "GET") agentMcpStreams.add(server);
         res.on("close", () => {
+          agentMcpStreams.delete(server);
           void transport.close();
           void server.close();
         });
@@ -1641,10 +1769,10 @@ export async function createPaseoDaemon(
             daemonConfigStore.onFieldChange("appendSystemPrompt", (value) => {
               agentManager.setAppendSystemPrompt(typeof value === "string" ? value : "");
             });
-            const relayEnabled = config.relayEnabled ?? true;
-            const relayEndpoint = config.relayEndpoint ?? "relay.paseo.sh:443";
+            const relayEndpoint = config.relayEndpoint ?? "";
+            const relayEnabled = (config.relayEnabled ?? false) && relayEndpoint !== "";
             const relayPublicEndpoint = config.relayPublicEndpoint ?? relayEndpoint;
-            const relayUseTls = config.relayUseTls ?? relayEndpoint === "relay.paseo.sh:443";
+            const relayUseTls = config.relayUseTls ?? false;
             const relayPublicUseTls = config.relayPublicUseTls ?? relayUseTls;
             if (boundListenTarget.type === "tcp") {
               logger.info(
@@ -1685,6 +1813,9 @@ export async function createPaseoDaemon(
                 getHostnames: () => configuredHostnames,
                 daemonStatusRpc: dependencies.serverFeatureOverrides?.daemonStatusRpc,
                 relayConfig: dependencies.serverFeatureOverrides?.relayConfig,
+                face: Boolean(config.faceAvatarDir),
+                stage: stageStore,
+                secrets: secrets.service,
                 startPaused: true,
               },
               workspaceAutoName,
@@ -1813,6 +1944,7 @@ export async function createPaseoDaemon(
     scriptHealthMonitor.stop();
     // Freeze both ingress and registration before taking the agent closure snapshot.
     wsServer?.prepareForShutdown();
+    await wsServer?.agentMessages.close();
     agentManager.prepareForShutdown();
     await closeAllAgents(logger, agentManager);
     await withTimeout({
@@ -1827,6 +1959,9 @@ export async function createPaseoDaemon(
     await pluginRuntime.stopAllPlugins();
     terminalManager.killAll();
     await speechService.stop();
+    voiceSettings.stop();
+    moduleKernel.stop(); // hizuri: a later daemon in this process starts it again
+    await toolHub.close();
     await scheduleService.stop().catch(() => undefined);
     await relayRuntime?.stop().catch(() => undefined);
     if (wsServer) {
@@ -1865,6 +2000,16 @@ export async function createPaseoDaemon(
   };
 }
 
+async function closeStaleAgentRecords(agentStorage: AgentStorage): Promise<void> {
+  // No provider runtimes are loaded at startup. Repair interrupted
+  // shutdowns before any status consumer sees the persisted active states.
+  for (const record of await agentStorage.list()) {
+    if (record.lastStatus === "running" || record.lastStatus === "initializing") {
+      await agentStorage.upsert({ ...record, lastStatus: "closed" });
+    }
+  }
+}
+
 /**
  * Closing an agent asks its provider to close the session and waits for the
  * answer. A provider that never answers must not hold the daemon open, so a
@@ -1874,7 +2019,7 @@ export async function createPaseoDaemon(
 const AGENT_CLOSE_TIMEOUT_MS = 5_000;
 
 async function closeAllAgents(logger: Logger, agentManager: AgentManager): Promise<void> {
-  const agents = agentManager.listAgents();
+  const agents = agentManager.listAgents({ includeInternal: true });
   await Promise.all(
     agents.map(async (agent) => {
       try {

@@ -12,6 +12,7 @@ import { resolvePaseoHome } from "../src/server/paseo-home.js";
 import { daemonLogPath } from "../src/server/daemon-instance.js";
 import { PRIVATE_FILE_MODE } from "../src/server/private-files.js";
 import { loadPersistedConfig } from "../src/server/persisted-config.js";
+import { applySherpaLoaderEnv } from "../src/server/speech/providers/local/sherpa/sherpa-runtime-env.js";
 import { runSupervisor } from "./supervisor.js";
 import { resolveSupervisorLogFile } from "./supervisor-log-config.js";
 
@@ -102,6 +103,11 @@ async function main(): Promise<void> {
   const workerEntry = config.devMode ? resolveDevWorkerEntry() : resolveWorkerEntry();
   const workerExecArgv = resolveWorkerExecArgv(workerEntry, config.devMode);
   const workerEnv: NodeJS.ProcessEnv = { ...process.env };
+  // The worker loads sherpa-onnx in-process (VAD, the English pass, the speaker gate), so its own
+  // native libraries must come first: a library path inherited from another Paseo install (a dev
+  // daemon started from a live daemon's agent shell) loads a mismatched onnxruntime and the worker
+  // dies with SIGSEGV the moment a phrase starts.
+  applySherpaLoaderEnv(workerEnv);
   const packagedNodeEntrypointRunner =
     process.env.ELECTRON_RUN_AS_NODE === "1"
       ? resolvePackagedNodeEntrypointRunnerPath(fileURLToPath(import.meta.url))

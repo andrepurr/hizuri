@@ -149,10 +149,12 @@ export class STTManager {
     format: string,
     metadata?: TranscriptionMetadata,
   ): Promise<SessionTranscriptionResult> {
-    const stt = this.resolveStt();
-    if (!stt) {
+    const resolved = this.resolveStt();
+    if (!resolved) {
       throw new Error("STT not configured");
     }
+    // Hizuri: a streaming provider hands whole recordings to its batch provider.
+    const stt = resolved.batch ?? resolved;
 
     this.logger.debug(
       { bytes: audio.length, format, label: metadata?.label },

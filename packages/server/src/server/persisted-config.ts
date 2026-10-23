@@ -144,7 +144,8 @@ const FeatureVoiceModeSchema = z
       .object({
         provider: SpeechProviderIdSchema.optional(),
         model: z.string().min(1).optional(),
-        voice: z.enum(["alloy", "echo", "fable", "onyx", "nova", "shimmer"]).optional(),
+        // Free-form: self-hosted OpenAI-compatible servers expose their own voice names.
+        voice: z.string().trim().min(1).optional(),
         speakerId: z.number().int().optional(),
         speed: z.number().optional(),
       })
@@ -157,6 +158,23 @@ const FeatureWebUiSchema = z
   .object({
     enabled: z.boolean().optional(),
     distDir: z.string().min(1).optional(),
+  })
+  .strict();
+
+const FeatureShowSchema = z
+  .object({
+    // Hizuri: a page that streams the agent's browser (Selkies on Zuri's display). Agents get
+    // show_screen only when it is set.
+    screenUrl: z.url({ protocol: /^https?$/ }).optional(),
+  })
+  .strict();
+
+const FeatureFaceSchema = z
+  .object({
+    // Hizuri: the folder of Zuri's avatar page (three-vrm). The daemon serves it at /avatar/ so the
+    // app can show the assistant's face on its own origin. Several folders joined like PATH are
+    // looked up in turn (a data folder first, then the page code).
+    avatarDir: z.string().min(1).optional(),
   })
   .strict();
 
@@ -237,7 +255,12 @@ export const PersistedConfigSchema = z
         listen: z.string().optional(),
         hostnames: z.union([z.literal(true), z.array(z.string())]).optional(),
         allowedHosts: z.union([z.literal(true), z.array(z.string())]).optional(),
-        trustedProxies: z.union([z.literal(true), z.array(z.string())]).optional(),
+        trustedProxies: z
+          .union([z.literal(true), z.array(z.string())])
+          .optional()
+          .describe(
+            'Express trusted proxy setting for X-Forwarded-* headers. Defaults to ["loopback"]. Use true only when the final trusted proxy overwrites client-supplied forwarded headers.',
+          ),
         mcp: z
           .object({
             enabled: z.boolean().optional(),
@@ -284,9 +307,22 @@ export const PersistedConfigSchema = z
             // COMPAT(serviceProxyEnabled): added 2026-06-02, remove after 2026-12-02.
             // Parsed only to suppress optional public/listen layers for old configs;
             // localhost service proxying remains always enabled.
-            enabled: z.boolean().optional(),
-            listen: z.string().optional(),
-            publicBaseUrl: z.url().optional(),
+            enabled: z
+              .boolean()
+              .optional()
+              .describe(
+                "Compatibility shim. false suppresses optional service proxy listen/public layers only; localhost proxying remains enabled.",
+              ),
+            listen: z
+              .string()
+              .optional()
+              .describe(
+                "Optional service-only listener address. Presence enables the standalone service proxy listener.",
+              ),
+            publicBaseUrl: z
+              .url()
+              .optional()
+              .describe("Optional public base URL for service host aliases."),
           })
           .strict()
           .optional(),
@@ -325,6 +361,8 @@ export const PersistedConfigSchema = z
         dictation: FeatureDictationSchema.optional(),
         voiceMode: FeatureVoiceModeSchema.optional(),
         webUi: FeatureWebUiSchema.optional(),
+        show: FeatureShowSchema.optional(),
+        face: FeatureFaceSchema.optional(),
       })
       .strict()
       .optional(),
@@ -347,14 +385,14 @@ const DEFAULT_PERSISTED_CONFIG = PersistedConfigSchema.parse({
   daemon: {
     listen: "127.0.0.1:6767",
     cors: {
-      allowedOrigins: ["https://app.paseo.sh"],
+      allowedOrigins: [],
     },
     relay: {
       enabled: false,
     },
   },
   app: {
-    baseUrl: "https://app.paseo.sh",
+    baseUrl: "hizuri://pair",
   },
 }) as PersistedConfig;
 

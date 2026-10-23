@@ -6,6 +6,7 @@ import {
 } from "@getpaseo/protocol/plugin-registry";
 import type { PluginUpdateTarget } from "@getpaseo/protocol/messages";
 import { z } from "zod";
+import { registryAuthorizationSite, resolveSecretRefs } from "../../data-scopes/secret-refs.js";
 
 // Install reads only these fields; the rest of a published plugin is the directory's display data.
 const RegistryInstallDocumentSchema = z.object({
@@ -25,7 +26,11 @@ export async function resolveRegistryPlugin(
   const base = new URL(identity.url);
   if (!["http:", "https:"].includes(base.protocol) || base.username || base.password)
     throw new Error("Registry base must be an HTTP(S) URL without credentials");
-  const authorization = options.registries?.[base.host]?.authorization;
+  // hizuri: "!secret <name>" gets its value from the vault (data-scopes/).
+  const authorization = resolveSecretRefs({
+    value: options.registries?.[base.host]?.authorization,
+    ...registryAuthorizationSite(base.host),
+  });
   if (
     authorization &&
     base.protocol !== "https:" &&

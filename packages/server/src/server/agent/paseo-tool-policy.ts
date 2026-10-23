@@ -15,7 +15,8 @@ export function isPaseoToolEnabled(
   policy: ProviderPaseoToolsPolicy | undefined,
   toolName: string,
 ): boolean {
-  if (toolName === "speak") {
+  // Hizuri: mark_phrases is speak's signature without a spoken answer (phrase graph).
+  if (toolName === "speak" || toolName === "mark_phrases") {
     return true;
   }
   if (!isPaseoToolPolicyEnabled(policy)) {

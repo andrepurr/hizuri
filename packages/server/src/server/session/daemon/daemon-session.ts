@@ -12,6 +12,7 @@ import type { ManagedAgent } from "../../agent/agent-manager.js";
 import type { PersistedProjectRecord, PersistedWorkspaceRecord } from "../../workspace-registry.js";
 import type { HubRelationshipManagement } from "../../hub/relationship-controller.js";
 import type { DaemonConfigReloadResult } from "../../daemon-config-store.js";
+import { appendAppLogs } from "../../app-logs.js";
 
 export interface DaemonRuntimeConfig {
   listen: string | null;
@@ -267,6 +268,34 @@ export class DaemonSession {
           requestType: msg.type,
           error: error instanceof Error ? error.message : String(error),
           code: "handler_error",
+        },
+      });
+    }
+  }
+
+  async handleAppLogsUploadRequest(
+    msg: Extract<SessionInboundMessage, { type: "app.logs.upload.request" }>,
+  ): Promise<void> {
+    try {
+      const accepted = await appendAppLogs({
+        paseoHome: this.paseoHome,
+        clientId: this.clientId,
+        entries: msg.entries,
+        platform: msg.platform,
+        appVersion: msg.appVersion,
+      });
+      this.host.emit({
+        type: "app.logs.upload.response",
+        payload: { requestId: msg.requestId, accepted, error: null },
+      });
+    } catch (error) {
+      this.logger.warn({ err: error }, "Failed to write uploaded app logs");
+      this.host.emit({
+        type: "app.logs.upload.response",
+        payload: {
+          requestId: msg.requestId,
+          accepted: 0,
+          error: error instanceof Error ? error.message : String(error),
         },
       });
     }

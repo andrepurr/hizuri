@@ -426,6 +426,14 @@ describe("ClaudeAgentClient.fetchCatalog", () => {
     try {
       const client = new ClaudeAgentClient({
         logger,
+        discoverModels: async () => [
+          {
+            value: "mythos",
+            resolvedModel: "claude-mythos-5-1",
+            displayName: "Mythos",
+            description: "",
+          },
+        ],
         resolveBinary: async () => "/test/claude/bin",
         resolveVersion: async () => "2.1.219",
         runtimeSettings: { env: { CLAUDE_CONFIG_DIR: emptyConfigDir } },
@@ -438,6 +446,7 @@ describe("ClaudeAgentClient.fetchCatalog", () => {
 
       expect(models.map((m) => m.id)).toEqual([
         "claude-opus-5",
+        "claude-mythos-5-1",
         "claude-fable-5-1",
         "claude-fable-5",
         "claude-fable-5[1m]",
@@ -472,6 +481,14 @@ describe("ClaudeAgentClient.fetchCatalog", () => {
     try {
       const client = new ClaudeAgentClient({
         logger,
+        discoverModels: async () => [
+          {
+            value: "mythos",
+            resolvedModel: "claude-mythos-5-1",
+            displayName: "Mythos",
+            description: "",
+          },
+        ],
         resolveVersion: async () => {
           throw new Error("unrecognized version output");
         },
@@ -495,6 +512,14 @@ describe("ClaudeAgentClient.fetchCatalog", () => {
     try {
       const client = new ClaudeAgentClient({
         logger,
+        discoverModels: async () => [
+          {
+            value: "mythos",
+            resolvedModel: "claude-mythos-5-1",
+            displayName: "Mythos",
+            description: "",
+          },
+        ],
         resolveBinary: async () => "/test/claude/bin",
         resolveVersion: async () => "2.1.293",
         runtimeSettings: { env: { CLAUDE_CONFIG_DIR: emptyConfigDir } },
@@ -509,6 +534,14 @@ describe("ClaudeAgentClient.fetchCatalog", () => {
       };
 
       expect(getThinkingIds("claude-opus-5")).toContain("ultracode");
+      expect(getThinkingIds("claude-mythos-5-1")).toEqual([
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max",
+        "ultracode",
+      ]);
       expect(getThinkingIds("claude-fable-5-1")).toContain("ultracode");
       expect(getThinkingIds("claude-fable-5")).toContain("ultracode");
       expect(getThinkingIds("claude-opus-4-8[1m]")).toContain("ultracode");
@@ -540,6 +573,36 @@ describe("ClaudeAgentClient binary resolution", () => {
 
   test("resolves the installed Claude Code version", async () => {
     await expect(resolveClaudeCodeVersion()).resolves.toMatch(/^\d+\.\d+\.\d+$/);
+  });
+
+  test("rejects a wrapper command's own version output instead of reading it as Claude Code's", async () => {
+    const wrapperDir = await fs.mkdtemp(path.join(os.tmpdir(), "paseo-claude-version-"));
+    const wrapperPath = path.join(wrapperDir, "wrapper");
+    await fs.writeFile(wrapperPath, 'console.log("cux 0.4.1");\n');
+    try {
+      await expect(
+        resolveClaudeCodeVersion({
+          command: { mode: "replace", argv: [process.execPath, wrapperPath] },
+        }),
+      ).rejects.toThrow("Unable to parse Claude Code version from --version output");
+    } finally {
+      await fs.rm(wrapperDir, { recursive: true, force: true });
+    }
+  });
+
+  test("resolves the version when the command forwards the Claude Code banner", async () => {
+    const wrapperDir = await fs.mkdtemp(path.join(os.tmpdir(), "paseo-claude-version-"));
+    const wrapperPath = path.join(wrapperDir, "wrapper");
+    await fs.writeFile(wrapperPath, 'console.log("2.1.302 (Claude Code)");\n');
+    try {
+      await expect(
+        resolveClaudeCodeVersion({
+          command: { mode: "replace", argv: [process.execPath, wrapperPath] },
+        }),
+      ).resolves.toBe("2.1.302");
+    } finally {
+      await fs.rm(wrapperDir, { recursive: true, force: true });
+    }
   });
 
   test("loads user, project, and local Claude settings", async () => {
@@ -1232,6 +1295,7 @@ describe("ClaudeAgentSession features", () => {
 
   test.each([
     ["supported model", "claude-opus-4-8", { type: "disabled" }, undefined],
+    ["Mythos 5.1", "claude-mythos-5-1", { type: "adaptive", display: "summarized" }, "high"],
     ["Haiku 5.5", "claude-haiku-5-5", { type: "disabled" }, undefined],
     ["unsupported model", "claude-fable-5", { type: "adaptive", display: "summarized" }, "high"],
     ["custom model", "openrouter/anthropic/claude-opus-4-8", undefined, undefined],
@@ -1971,6 +2035,41 @@ describe("ClaudeAgentSession context window usage", () => {
     }
   });
 
+  test("shows a hizuri-guardian log line as a guardian note", async () => {
+    const session = await createSessionForTest();
+    try {
+      const events = session.translateMessageToEvents({
+        type: "system",
+        subtype: "ui_log",
+        plugin: "hizuri-guardian",
+        text: "[hizuri-guardian] Spoke English to the user · rule: reply-language · fix: Answer in Greek",
+        uuid: "guardian-log-1",
+        session_id: "s-1",
+      } as unknown as SDKMessage);
+
+      expect(events).toEqual([
+        {
+          type: "timeline",
+          provider: "claude",
+          item: {
+            type: "plugin",
+            id: "guardian-guardian-log-1",
+            pluginId: "hizuri-guardian",
+            kind: "guardian_note",
+            version: 1,
+            data: {
+              note: "Spoke English to the user",
+              rule: "reply-language",
+              fix: "Answer in Greek",
+            },
+          },
+        },
+      ]);
+    } finally {
+      await session.close();
+    }
+  });
+
   async function collectStreamEvents(session: AgentSession, prompt = "turn") {
     const events: AgentStreamEvent[] = [];
     for await (const event of streamSession(session, prompt)) {
@@ -2101,13 +2200,15 @@ describe("ClaudeAgentSession context window usage", () => {
   }
 
   function createMessageDeltaEvent(outputTokens: number): Record<string, unknown> {
+    return createMessageDeltaUsageEvent({ output_tokens: outputTokens });
+  }
+
+  function createMessageDeltaUsageEvent(usage: Record<string, unknown>): Record<string, unknown> {
     return {
       type: "stream_event",
       event: {
         type: "message_delta",
-        usage: {
-          output_tokens: outputTokens,
-        },
+        usage,
       },
       session_id: "session-1",
     };
@@ -2177,6 +2278,51 @@ describe("ClaudeAgentSession context window usage", () => {
       session_id: "session-1",
     };
   }
+
+  test("a guardian note that arrives after the turn's result still reaches subscribers", async () => {
+    // The mod's end-of-turn check answers a few seconds after the result (lab capture, 2.1.302).
+    const session = await createSessionForTurns([
+      [
+        { type: "system", subtype: "init", session_id: "s-guardian", permissionMode: "default" },
+        {
+          type: "result",
+          subtype: "success",
+          duration_ms: 10,
+          duration_api_ms: 8,
+          is_error: false,
+          num_turns: 1,
+          result: "done",
+          stop_reason: null,
+          total_cost_usd: 0,
+          usage: {},
+          permission_denials: [],
+          uuid: "s-guardian-result",
+          session_id: "s-guardian",
+        },
+        {
+          type: "system",
+          subtype: "ui_log",
+          plugin: "hizuri-guardian",
+          text: "[hizuri-guardian] Answered in English · rule: reply-language · fix: Answer in Greek",
+          uuid: "guardian-after-result",
+          session_id: "s-guardian",
+        },
+      ],
+    ]);
+    const events: AgentStreamEvent[] = [];
+    session.subscribe((event) => events.push(event));
+
+    await session.startTurn("turn");
+    await vi.waitFor(() =>
+      expect(events).toContainEqual(
+        expect.objectContaining({
+          type: "timeline",
+          item: expect.objectContaining({ type: "plugin", id: "guardian-guardian-after-result" }),
+        }),
+      ),
+    );
+    await session.close();
+  });
 
   test("emits turn_started before the submitted user message", async () => {
     const session = await createSessionForTurns([[]]);
@@ -2769,6 +2915,7 @@ describe("ClaudeAgentSession context window usage", () => {
           type: "usage_updated",
           provider: "claude",
           usage: {
+            contextWindowMaxTokens: 200_000,
             contextWindowUsedTokens: 150,
           },
         }),
@@ -2804,7 +2951,13 @@ describe("ClaudeAgentSession context window usage", () => {
 
   test("selected 1M Claude models seed active context window usage from the catalog", async () => {
     const session = await createSessionForTurns(
-      [[createInitMessage(), createMessageStartEvent(), createSuccessResult()]],
+      [
+        [
+          { ...createInitMessage(), model: "claude-sonnet-5[1m]" },
+          createMessageStartEvent(),
+          createSuccessResult(),
+        ],
+      ],
       { model: "claude-sonnet-5[1m]" },
     );
 
@@ -2844,10 +2997,126 @@ describe("ClaudeAgentSession context window usage", () => {
           type: "usage_updated",
           provider: "claude",
           usage: {
+            contextWindowMaxTokens: 200_000,
             contextWindowUsedTokens: 175,
           },
         }),
       );
+    } finally {
+      await session.close();
+    }
+  });
+
+  test("message_delta input usage replaces an empty message_start count", async () => {
+    // Translating gateways (LiteLLM in front of an OpenAI-compatible backend) do not know the
+    // prompt size when message_start is emitted, so they report input_tokens: 0 there and send
+    // the cumulative counts on message_delta, as the Anthropic Messages API allows.
+    const session = await createSessionForTurns([
+      [
+        createInitMessage(),
+        createMessageStartEvent({
+          input_tokens: 0,
+          cache_creation_input_tokens: 0,
+          cache_read_input_tokens: 0,
+        }),
+        createMessageDeltaUsageEvent({ input_tokens: 20_236, output_tokens: 64 }),
+        createSuccessResult({
+          usage: {
+            input_tokens: 20_236,
+            cache_creation_input_tokens: 0,
+            cache_read_input_tokens: 0,
+            output_tokens: 64,
+            iterations: [],
+          },
+        }),
+      ],
+    ]);
+
+    try {
+      const events = await collectStreamEvents(session);
+
+      expect(events).toContainEqual(
+        expect.objectContaining({
+          type: "usage_updated",
+          provider: "claude",
+          usage: {
+            contextWindowMaxTokens: 200_000,
+            contextWindowUsedTokens: 20_300,
+          },
+        }),
+      );
+      expect(events).toContainEqual(
+        expect.objectContaining({
+          type: "turn_completed",
+          usage: expect.objectContaining({
+            inputTokens: 20_236,
+            outputTokens: 64,
+            contextWindowUsedTokens: 20_300,
+          }),
+        }),
+      );
+    } finally {
+      await session.close();
+    }
+  });
+
+  test("message_delta without cache counters keeps the message_start cache usage", async () => {
+    const session = await createSessionForTurns([
+      [
+        createInitMessage(),
+        createMessageStartEvent({
+          input_tokens: 5,
+          cache_creation_input_tokens: 0,
+          cache_read_input_tokens: 1_000,
+        }),
+        createMessageDeltaUsageEvent({ input_tokens: 5, output_tokens: 64 }),
+        createSuccessResult(),
+      ],
+    ]);
+
+    try {
+      const events = await collectStreamEvents(session);
+
+      expect(events).toContainEqual(
+        expect.objectContaining({
+          type: "usage_updated",
+          provider: "claude",
+          usage: {
+            contextWindowMaxTokens: 200_000,
+            contextWindowUsedTokens: 1_069,
+          },
+        }),
+      );
+    } finally {
+      await session.close();
+    }
+  });
+
+  test("message_delta before this request's message_start does not seed usage", async () => {
+    // A canceled request can leave its terminal message_delta queued behind the next turn.
+    // Nothing is known about the new request until its message_start, so that straggler
+    // must not produce a usage_updated event or leak into the next request's counters.
+    const session = await createSessionForTurns([
+      [
+        createInitMessage(),
+        createMessageDeltaUsageEvent({ input_tokens: 20_236, output_tokens: 64 }),
+        createMessageStartEvent({
+          input_tokens: 40,
+          cache_creation_input_tokens: 5,
+          cache_read_input_tokens: 10,
+        }),
+        createMessageDeltaEvent(7),
+        createSuccessResult(),
+      ],
+    ]);
+
+    try {
+      const events = await collectStreamEvents(session);
+
+      const usedTokens = events
+        .filter((event) => event.type === "usage_updated")
+        .map((event) => event.usage.contextWindowUsedTokens);
+      expect(usedTokens).toEqual([55, 62]);
     } finally {
       await session.close();
     }
@@ -2877,6 +3146,7 @@ describe("ClaudeAgentSession context window usage", () => {
           type: "usage_updated",
           provider: "claude",
           usage: {
+            contextWindowMaxTokens: 200_000,
             contextWindowUsedTokens: 55,
           },
         }),
@@ -2886,6 +3156,7 @@ describe("ClaudeAgentSession context window usage", () => {
           type: "usage_updated",
           provider: "claude",
           usage: {
+            contextWindowMaxTokens: 200_000,
             contextWindowUsedTokens: 62,
           },
         }),
@@ -2923,6 +3194,7 @@ describe("ClaudeAgentSession context window usage", () => {
           type: "usage_updated",
           provider: "claude",
           usage: {
+            contextWindowMaxTokens: 200_000,
             contextWindowUsedTokens: 704,
           },
         }),

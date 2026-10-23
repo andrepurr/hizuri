@@ -27,6 +27,45 @@ describe("server config", () => {
     expect(standaloneConfig.desktopManaged).toBe(false);
   });
 
+  test("passes PASEO_SHOW_SCREEN_URL from env to showScreenUrl, so show_screen registers", async () => {
+    const paseoHome = await mkdtemp(path.join(os.tmpdir(), "paseo-config-show-screen-"));
+    roots.push(paseoHome);
+
+    const config = loadConfig(paseoHome, {
+      env: { PASEO_SHOW_SCREEN_URL: "http://192.0.2.1:8481/" },
+    });
+
+    expect(config.showScreenUrl).toBe("http://192.0.2.1:8481/");
+    expect(loadConfig(paseoHome, { env: {} }).showScreenUrl).toBeNull();
+  });
+
+  test("passes hizuri's STT fixes and streaming settings from env to the speech config", async () => {
+    const paseoHome = await mkdtemp(path.join(os.tmpdir(), "paseo-config-stt-env-"));
+    roots.push(paseoHome);
+    const env = {
+      OPENAI_STT_API_KEY: "local",
+      OPENAI_STT_BASE_URL: "http://127.0.0.1:9876/v1",
+      PASEO_VOICE_STT_PROVIDER: "openai",
+    };
+
+    const defaults = loadConfig(paseoHome, { env }).openai?.stt;
+    const tuned = loadConfig(paseoHome, {
+      env: {
+        ...env,
+        PASEO_ENGLISH_PASS: "0",
+        PASEO_MIXED_ENGLISH: "0",
+        PASEO_VOICE_STT_STREAM: "1",
+        PASEO_VOICE_STT_STREAM_ENDPOINT: "assistant",
+      },
+    }).openai?.stt;
+
+    expect(defaults?.transcriptFixes?.englishPass).not.toBeNull();
+    expect(defaults?.stream).toBeUndefined();
+    expect(tuned?.transcriptFixes?.englishPass).toBeNull();
+    expect(tuned?.transcriptFixes?.mixedEnglishFile).toBeNull();
+    expect(tuned?.stream).toEqual({ url: "ws://127.0.0.1:9876/v1/ws", endpointMode: "assistant" });
+  });
+
   test("loads the provider catalog refresh timeout", async () => {
     const paseoHome = await mkdtemp(path.join(os.tmpdir(), "paseo-config-provider-timeout-"));
     roots.push(paseoHome);

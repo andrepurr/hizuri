@@ -1,4 +1,6 @@
 import { mkdtempSync, rmSync } from "node:fs";
+import { createServer } from "node:http";
+import type { AddressInfo } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, test, vi } from "vitest";
@@ -9,6 +11,8 @@ import type { AgentStreamEvent, AgentTimelineItem } from "../agent-sdk-types.js"
 import {
   MOCK_LOAD_TEST_DEFAULT_MODEL_ID,
   MockLoadTestAgentClient,
+  mockStreamedInputs,
+  parseMockPaseoToolsPrompt,
 } from "./mock-load-test-agent.js";
 
 type PermissionRequestedEvent = Extract<AgentStreamEvent, { type: "permission_requested" }>;
@@ -210,6 +214,239 @@ describe("MockLoadTestAgentClient", () => {
       finalText: JSON.stringify({ title: "Fix login bug", branch: "fix-login-bug" }),
       canceled: false,
     });
+  });
+
+  test("reads the paseo tool calls a QA prompt asks for", () => {
+    expect(
+      parseMockPaseoToolsPrompt(
+        '[p12] mock paseo tools: [{"name":"show_page","input":{"page":"face"}},{"name":"speak","input":{"text":"Hi"},"pauseMs":90000,"streamMs":400,"background":true}]',
+      ),
+    ).toEqual([
+      {
+        name: "show_page",
+        input: { page: "face" },
+        pauseMs: 0,
+        streamMs: 0,
+        early: false,
+        background: false,
+      },
+      {
+        name: "speak",
+        input: { text: "Hi" },
+        pauseMs: 60_000,
+        streamMs: 400,
+        early: false,
+        background: true,
+      },
+    ]);
+    expect(parseMockPaseoToolsPrompt("mock paseo tools: not json")).toBeNull();
+    expect(parseMockPaseoToolsPrompt('mock paseo tools: [{"name":"Bash; rm"}]')).toBeNull();
+    expect(parseMockPaseoToolsPrompt("say hello")).toBeNull();
+  });
+
+  test("calls the daemon's paseo tools over its MCP server and shows each call", async () => {
+    const requests: Array<{ url: string; auth: string | undefined; body: unknown }> = [];
+    const server = createServer(async (req, res) => {
+      let raw = "";
+      for await (const chunk of req) raw += chunk;
+      const body = JSON.parse(raw) as { params: { name: string } };
+      requests.push({ url: req.url ?? "", auth: req.headers.authorization, body });
+      res.setHeader("content-type", "text/event-stream");
+      const result =
+        body.params.name === "show_page"
+          ? { content: [{ type: "text", text: "page face" }], structuredContent: { page: "face" } }
+          : { content: [{ type: "text", text: "nope" }], isError: true };
+      res.end(`event: message\ndata: ${JSON.stringify({ jsonrpc: "2.0", id: 1, result })}\n\n`);
+    });
+    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+    const { port } = server.address() as AddressInfo;
+    try {
+      const client = new MockLoadTestAgentClient();
+      const session = await client.createSession({
+        provider: "mock",
+        cwd: process.cwd(),
+        model: "ten-second-stream",
+        mcpServers: {
+          paseo: {
+            type: "http",
+            url: `http://127.0.0.1:${port}/mcp/agents?callerAgentId=a1`,
+            headers: { Authorization: "Bearer t" },
+          },
+        },
+      });
+      const events: AgentStreamEvent[] = [];
+      session.subscribe((event) => events.push(event));
+
+      const result = await session.run(
+        'mock paseo tools: [{"name":"show_page","input":{"page":"face"}},{"name":"set_my_model","input":{"model":"x"}}]',
+      );
+
+      expect(requests).toEqual([
+        {
+          url: "/mcp/agents?callerAgentId=a1",
+          auth: "Bearer t",
+          body: expect.objectContaining({
+            method: "tools/call",
+            params: { name: "show_page", arguments: { page: "face" } },
+          }),
+        },
+        expect.objectContaining({ url: "/mcp/agents?callerAgentId=a1" }),
+      ]);
+      const calls = events
+        .filter((event) => event.type === "timeline" && event.item.type === "tool_call")
+        .map((event) => (event as Extract<AgentStreamEvent, { type: "timeline" }>).item);
+      expect(calls).toMatchObject([
+        { name: "mcp__paseo__show_page", status: "running", detail: { input: { page: "face" } } },
+        {
+          name: "mcp__paseo__show_page",
+          status: "completed",
+          detail: { input: { page: "face" }, output: { page: "face" } },
+        },
+        { name: "mcp__paseo__set_my_model", status: "running" },
+        { name: "mcp__paseo__set_my_model", status: "failed", error: "nope" },
+      ]);
+      expect(result.finalText).toBe("show_page: ok\nset_my_model: failed");
+    } finally {
+      server.close();
+    }
+  });
+
+  test("a background paseo tool call lets the next call run while it is still in flight", async () => {
+    let releaseSpeak: () => void = () => {};
+    const order: string[] = [];
+    const server = createServer(async (req, res) => {
+      let raw = "";
+      for await (const chunk of req) raw += chunk;
+      const tool = (JSON.parse(raw) as { params: { name: string } }).params.name;
+      order.push(`start ${tool}`);
+      if (tool === "speak") await new Promise<void>((resolve) => (releaseSpeak = resolve));
+      order.push(`end ${tool}`);
+      res.setHeader("content-type", "application/json");
+      res.end(
+        JSON.stringify({ jsonrpc: "2.0", id: 1, result: { content: [], structuredContent: {} } }),
+      );
+      if (tool === "show_card") releaseSpeak();
+    });
+    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+    const { port } = server.address() as AddressInfo;
+    try {
+      const client = new MockLoadTestAgentClient();
+      const session = await client.createSession({
+        provider: "mock",
+        cwd: process.cwd(),
+        model: "ten-second-stream",
+        mcpServers: { paseo: { type: "http", url: `http://127.0.0.1:${port}/mcp` } },
+      });
+      const result = await session.run(
+        'mock paseo tools: [{"name":"speak","input":{"text":"Hi"},"background":true},{"name":"show_card","input":{"title":"t","body":"b"}}]',
+      );
+      expect(order).toEqual(["start speak", "start show_card", "end show_card", "end speak"]);
+      expect(result.finalText).toBe("speak: ok\nshow_card: ok");
+    } finally {
+      server.close();
+    }
+  });
+
+  test("an agent with a voice reply speaks it back to every ordinary prompt", async () => {
+    const spoken: unknown[] = [];
+    const server = createServer(async (req, res) => {
+      let raw = "";
+      for await (const chunk of req) raw += chunk;
+      spoken.push((JSON.parse(raw) as { params: unknown }).params);
+      res.setHeader("content-type", "application/json");
+      res.end(
+        JSON.stringify({ jsonrpc: "2.0", id: 1, result: { content: [], structuredContent: {} } }),
+      );
+    });
+    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+    const { port } = server.address() as AddressInfo;
+    try {
+      const client = new MockLoadTestAgentClient();
+      const session = await client.createSession({
+        provider: "mock",
+        cwd: process.cwd(),
+        model: "ten-second-stream",
+        featureValues: { mockVoiceReply: "Agent B here" },
+        mcpServers: { paseo: { type: "http", url: `http://127.0.0.1:${port}/mcp` } },
+      });
+      const result = await session.run("<spoken-input>hello there</spoken-input>");
+      expect(spoken).toEqual([{ name: "speak", arguments: { text: "Agent B here" } }]);
+      expect(result.finalText).toBe("speak: ok");
+    } finally {
+      server.close();
+    }
+  });
+
+  test("streams a paseo tool call's input one top-level key at a time, as Claude does", async () => {
+    const server = createServer(async (req, res) => {
+      for await (const _chunk of req) void _chunk;
+      const result = { content: [{ type: "text", text: "ok" }], structuredContent: { ok: true } };
+      res.setHeader("content-type", "application/json");
+      res.end(JSON.stringify({ jsonrpc: "2.0", id: 1, result }));
+    });
+    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+    const { port } = server.address() as AddressInfo;
+    try {
+      const client = new MockLoadTestAgentClient();
+      const session = await client.createSession({
+        provider: "mock",
+        cwd: process.cwd(),
+        model: "ten-second-stream",
+        mcpServers: { paseo: { type: "http", url: `http://127.0.0.1:${port}/mcp` } },
+      });
+      const events: AgentStreamEvent[] = [];
+      session.subscribe((event) => events.push(event));
+
+      const startedAt = Date.now();
+      await session.run(
+        'mock paseo tools: [{"name":"show_table","input":{"window":"W","id":"t","rows":[["a"]]},"streamMs":90}]',
+      );
+
+      expect(Date.now() - startedAt).toBeGreaterThanOrEqual(80);
+      const calls = events
+        .filter((event) => event.type === "timeline" && event.item.type === "tool_call")
+        .map((event) => (event as Extract<AgentStreamEvent, { type: "timeline" }>).item);
+      expect(calls.map((call) => [call.status, call.detail])).toEqual([
+        ["running", { type: "unknown", input: {}, output: null }],
+        ["running", { type: "unknown", input: { window: "W" }, output: null }],
+        ["running", { type: "unknown", input: { window: "W", id: "t" }, output: null }],
+        [
+          "running",
+          { type: "unknown", input: { window: "W", id: "t", rows: [["a"]] }, output: null },
+        ],
+        [
+          "completed",
+          {
+            type: "unknown",
+            input: { window: "W", id: "t", rows: [["a"]] },
+            output: { ok: true },
+          },
+        ],
+      ]);
+      expect(mockStreamedInputs({})).toEqual([]);
+
+      events.length = 0;
+      await session.run(
+        'mock paseo tools: [{"name":"show_window","input":{"window":"W","action":"close"}},{"name":"show_table","input":{"window":"W","rows":[]},"streamMs":20,"early":true}]',
+      );
+      const overlapped = events
+        .filter((event) => event.type === "timeline" && event.item.type === "tool_call")
+        .map((event) => (event as Extract<AgentStreamEvent, { type: "timeline" }>).item)
+        .map(
+          (call) =>
+            `${call.name.slice(12)} ${call.status} ${JSON.stringify((call.detail as { input?: unknown }).input)}`,
+        );
+      expect(overlapped).toEqual([
+        'show_window running {"window":"W","action":"close"}',
+        "show_table running {}",
+        'show_window completed {"window":"W","action":"close"}',
+        'show_table running {"window":"W"}',
+        'show_table running {"window":"W","rows":[]}',
+        'show_table completed {"window":"W","rows":[]}',
+      ]);
+    } finally {
+      server.close();
+    }
   });
 
   test("emits sub-word tokens, reasoning, and sequential tool calls during a foreground turn", async () => {

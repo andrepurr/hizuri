@@ -2,6 +2,13 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
 
+// Tests start from the defaults: a daemon's own PASEO_* settings, inherited when the tests run inside
+// one of its agents, would change what the code under test does. The config's test.env stays.
+const TEST_ENV = new Set(["PASEO_GIT_MAX_PROCESSES_PER_SECOND"]);
+for (const name of Object.keys(process.env)) {
+  if (name.startsWith("PASEO_") && !TEST_ENV.has(name)) delete process.env[name];
+}
+
 // Load package-local .env.test first for integration/E2E credentials, then repo-root .env fallback.
 const serverRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 dotenv.config({ path: path.resolve(serverRoot, ".env.test"), override: true });

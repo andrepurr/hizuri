@@ -139,6 +139,51 @@ async function createRootAlias(directory: string): Promise<string> {
 
 describe("plugin runtime entries", () => {
   it.each([
+    'import type { AgentTimelineItem, ToolCallDetail } from "@getpaseo/protocol/agent-types"; export type Detail = ToolCallDetail; export type Item = AgentTimelineItem;',
+    'import { type AgentTimelineItem } from "@getpaseo/protocol/agent-types"; export type Item = AgentTimelineItem;',
+    'export type { AgentTimelineItem } from "@getpaseo/protocol/agent-types";',
+    'export type Item = import("@getpaseo/protocol/agent-types").AgentTimelineItem;',
+    'export type { AgentAttachment } from "@getpaseo/protocol/messages";',
+  ])("compiles protocol types without local dependencies: %s", async (typeSource) => {
+    const entries = await createSplitPlugin();
+    await writeFile(
+      path.join(entries.directory, "shared", "labels.ts"),
+      `${typeSource}\nexport const clientLabel = "Client contribution"; export const serverLabel = "Server contribution";`,
+    );
+
+    const result = await compilePlugin(entries);
+
+    expect(result.clientBundle).toContain("Client contribution");
+    expect(result.serverBundle).toContain("Server contribution");
+    expect(result.clientBundle).not.toContain("@getpaseo/protocol");
+    expect(result.serverBundle).not.toContain("@getpaseo/protocol");
+  });
+
+  it("still requires local dependencies for protocol runtime imports", async () => {
+    const entries = await createSplitPlugin();
+    await writeFile(
+      entries.server,
+      'import { TOOL_CALL_ICON_NAMES } from "@getpaseo/protocol/agent-types"; export default () => TOOL_CALL_ICON_NAMES;',
+    );
+
+    await expect(compilePlugin(entries)).rejects.toThrow(
+      'Could not resolve "@getpaseo/protocol/agent-types"',
+    );
+  });
+
+  it("still rejects missing third-party type dependencies", async () => {
+    const entries = await createSplitPlugin();
+    await writeFile(
+      entries.client,
+      'import type { Item } from "missing-types"; export default (item: Item) => item;',
+    );
+
+    await expect(compilePlugin(entries)).rejects.toThrow(
+      'Could not resolve type dependency "missing-types"',
+    );
+  });
+
+  it.each([
     "react",
     "react/jsx-runtime",
     "react-native",
@@ -489,6 +534,25 @@ export type Value = string;`,
     expect(clientBundle).not.toContain("React.createElement");
   });
 
+  it("imports an SVG file from a runtime directory as its markup", async () => {
+    const entries = await createSplitPlugin();
+    const svg = '<svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z" /></svg>';
+    await writeFile(path.join(entries.directory, "client", "icon.svg"), svg);
+    await writeFile(
+      entries.client,
+      `import icon from "./client/icon.svg";
+export default function contribute(client) {
+  client.addCommandCenterItem({ id: "open", title: "Open", icon: { svg: icon }, context: "global", onSelect() {} });
+  return () => undefined;
+}`,
+    );
+    const { clientBundle } = await compilePlugin(entries);
+    const registered: unknown[] = [];
+    const exports = new Function(`return ${clientBundle}`)()(() => undefined);
+    exports.default({ addCommandCenterItem: (item: unknown) => registered.push(item) });
+    expect(registered).toMatchObject([{ icon: { svg } }]);
+  });
+
   it("lowers async callbacks before Hermes evaluates the client bundle", async () => {
     const entries = await createSplitPlugin();
     await writeFile(
@@ -501,6 +565,55 @@ export type Value = string;`,
     const { clientBundle } = await compilePlugin(entries);
     expect(clientBundle).not.toContain("async function contribute");
     expect(clientBundle).toContain("__async");
+  });
+
+  it("leaves the app's native engines to the app in the client bundle", async () => {
+    const entries = await createSplitPlugin();
+    await writeFile(
+      entries.client,
+      `import Animated, { useSharedValue } from "react-native-reanimated";
+import { Circle } from "react-native-svg";
+import { Canvas } from "@shopify/react-native-skia";
+import LottieView from "lottie-react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { BlurView } from "expo-blur";
+import { VideoView } from "expo-video";
+export default function contribute() { void [Animated, useSharedValue, Circle, Canvas, LottieView, LinearGradient, BlurView, VideoView]; return () => undefined; }`,
+    );
+    const { clientBundle } = await compilePlugin(entries);
+    for (const name of [
+      "react-native-reanimated",
+      "react-native-svg",
+      "@shopify/react-native-skia",
+      "lottie-react-native",
+      "expo-linear-gradient",
+      "expo-blur",
+      "expo-video",
+    ]) {
+      expect(clientBundle).toContain(`require("${name}")`);
+    }
+  });
+
+  it("points Metro's global at globalThis in the client bundle", async () => {
+    const entries = await createSplitPlugin();
+    await writeFile(
+      entries.client,
+      `export default function contribute() { void new global.Error(); return () => undefined; }`,
+    );
+    const { clientBundle } = await compilePlugin(entries);
+    expect(clientBundle).toContain("new globalThis.Error()");
+  });
+
+  it("rejects the app's native engines from the server bundle", async () => {
+    const entries = await createSplitPlugin();
+    await writeFile(
+      entries.server,
+      `import { useSharedValue } from "react-native-reanimated";
+export default function contribute() { void useSharedValue; return () => undefined; }`,
+    );
+    await expect(compilePlugin(entries)).rejects.toThrow(
+      "client-only module cannot be imported into the plugin server bundle: react-native-reanimated",
+    );
   });
 
   it("rejects node imports from the client entry", async () => {

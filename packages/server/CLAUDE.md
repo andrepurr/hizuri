@@ -193,4 +193,4 @@ npm run db:query -- "SELECT * FROM agent_timeline_rows..."
 | [../docs/architecture.md](../docs/architecture.md)         | System design, WebSocket protocol, data flow     |
 | [../docs/coding-standards.md](../docs/coding-standards.md) | Type hygiene, error handling, React patterns     |
 | [../docs/testing.md](../docs/testing.md)                   | TDD workflow, determinism, real deps over mocks  |
-| [../SECURITY.md](../SECURITY.md)                           | Relay threat model, E2E encryption               |
+| [Paseo's SECURITY.md](https://github.com/getpaseo/paseo/blob/main/SECURITY.md) | Relay threat model, E2E encryption               |

@@ -1082,3 +1082,40 @@ test("auto-completes an open autonomous turn when a foreground prompt starts", a
   subscribedEvents.close();
   await session.close();
 });
+
+test("a prompt that finds a turn the manager lost track of is queued into that live turn", async () => {
+  let query: ScriptedQuery | null = null;
+  queryFactory.mockImplementation(({ prompt }: { prompt: AsyncIterable<unknown> }) => {
+    query = createScriptedQuery({ prompt, sessionId: "lost-turn-session" });
+    return query;
+  });
+
+  const session = await new ClaudeAgentClient({
+    logger: createTestLogger(),
+    queryFactory,
+    resolveBinary: async () => "/test/claude/bin",
+  }).createSession({ provider: "claude", cwd: process.cwd() });
+
+  const turn = streamSession(session, "long running prompt");
+  const start = await turn.next();
+  if (!start.value || start.value.type !== "turn_started" || !start.value.turnId) {
+    throw new Error("Expected the long Claude turn to start");
+  }
+  await waitFor(() => query?.prompts.length === 1);
+  await waitForInitRouted(() => query);
+
+  // The manager believes no turn runs (its cancel timed out) and starts a new one.
+  const second = await session.startTurn("message sent while the turn runs");
+  await waitFor(() => query?.prompts.length === 2);
+
+  expect(second).toEqual({ turnId: start.value.turnId });
+  expect(queryFactory).toHaveBeenCalledTimes(1);
+  expect(query?.interrupt).not.toHaveBeenCalled();
+  expect(query?.prompts.map((prompt) => prompt.text)).toEqual([
+    "long running prompt",
+    "message sent while the turn runs",
+  ]);
+
+  await turn.return(undefined);
+  await session.close();
+});

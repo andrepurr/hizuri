@@ -36,8 +36,9 @@ export {
 } from "./persisted-config.js";
 
 const DEFAULT_PORT = 6767;
-const DEFAULT_RELAY_ENDPOINT = "relay.paseo.sh:443";
-const DEFAULT_APP_BASE_URL = "https://app.paseo.sh";
+// hizuri: no hosted relay and no hosted web app by default. A relay is used only when its endpoint
+// is configured; pairing links open the hizuri app through its own link scheme.
+export const DEFAULT_APP_BASE_URL = "hizuri://pair";
 const DEFAULT_TRUSTED_PROXIES = ["loopback"];
 
 interface ResolveBundledWebUiDistDirInput {
@@ -297,30 +298,24 @@ function resolveTlsFromEnv(
   return persistedValue ?? fallback;
 }
 
+// oxlint-disable-next-line complexity -- hizuri: the relay needs an endpoint as well as the switch
 function resolveRelayConfig(input: ResolveRelayInput): ResolvedRelay {
   const environmentEnabled = parseBooleanEnv(input.env.PASEO_RELAY_ENABLED);
-  // COMPAT(relayOptInDefault): daemons whose startup config omitted this field
-  // retain relay-on removal semantics until 2027-01-31. Modern homes use false.
+  // hizuri: the relay is on only when asked for and given an endpoint.
+  const endpoint = input.env.PASEO_RELAY_ENDPOINT ?? input.persisted.daemon?.relay?.endpoint ?? "";
   const enabled =
-    input.cliRelayEnabled ??
-    environmentEnabled ??
-    input.persisted.daemon?.relay?.enabled ??
-    input.enabledFallback;
-  const endpoint =
-    input.env.PASEO_RELAY_ENDPOINT ??
-    input.persisted.daemon?.relay?.endpoint ??
-    DEFAULT_RELAY_ENDPOINT;
+    (input.cliRelayEnabled ??
+      environmentEnabled ??
+      input.persisted.daemon?.relay?.enabled ??
+      input.enabledFallback) &&
+    endpoint !== "";
   const publicEndpoint =
     input.env.PASEO_RELAY_PUBLIC_ENDPOINT ??
     input.persisted.daemon?.relay?.publicEndpoint ??
     endpoint;
   const useTls =
     input.cliRelayUseTls ??
-    resolveTlsFromEnv(
-      input.env.PASEO_RELAY_USE_TLS,
-      input.persisted.daemon?.relay?.useTls,
-      endpoint === DEFAULT_RELAY_ENDPOINT,
-    );
+    resolveTlsFromEnv(input.env.PASEO_RELAY_USE_TLS, input.persisted.daemon?.relay?.useTls, false);
   const publicUseTls = resolveTlsFromEnv(
     input.env.PASEO_RELAY_PUBLIC_USE_TLS,
     input.persisted.daemon?.relay?.publicUseTls,
@@ -402,6 +397,20 @@ function resolveWebUiConfig(
     enabled,
     distDir,
   };
+}
+
+function resolveShowScreenUrl(
+  env: NodeJS.ProcessEnv,
+  persisted: ReturnType<typeof loadPersistedConfig>,
+): string | null {
+  return nonEmptyEnv(env.PASEO_SHOW_SCREEN_URL) ?? persisted.features?.show?.screenUrl ?? null;
+}
+
+function resolveFaceAvatarDir(
+  env: NodeJS.ProcessEnv,
+  persisted: ReturnType<typeof loadPersistedConfig>,
+): string | null {
+  return nonEmptyEnv(env.PASEO_FACE_AVATAR_DIR) ?? persisted.features?.face?.avatarDir ?? null;
 }
 
 function resolveVoiceLlmConfig(
@@ -566,8 +575,7 @@ export function resolveConfigFromPersisted(
   const resolvedOptions = options ?? {};
   const env = configurationEnvironment(resolvedOptions.env ?? process.env);
   const cli = resolvedOptions.cli;
-  const relayEnabledFallback =
-    resolvedOptions.relayEnabledFallback ?? persisted.daemon?.relay?.enabled === undefined;
+  const relayEnabledFallback = resolvedOptions.relayEnabledFallback ?? false;
 
   const listen = resolveListenAddress(env, cli, persisted);
   const {
@@ -641,6 +649,8 @@ export function resolveConfigFromPersisted(
     relayPublicUseTls: relay.publicUseTls,
     serviceProxy,
     webUi,
+    showScreenUrl: resolveShowScreenUrl(env, persisted),
+    faceAvatarDir: resolveFaceAvatarDir(env, persisted),
     appBaseUrl,
     auth: resolveAuthConfig(env, persisted),
     openai,

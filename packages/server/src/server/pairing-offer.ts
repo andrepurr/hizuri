@@ -1,5 +1,6 @@
 import type { Logger } from "pino";
 
+import { DEFAULT_APP_BASE_URL } from "./config.js";
 import { createConnectionOfferV2, encodeOfferToFragmentUrl } from "./connection-offer.js";
 import { loadOrCreateDaemonKeyPair } from "./daemon-keypair.js";
 import { renderPairingQr } from "./pairing-qr.js";
@@ -22,7 +23,8 @@ export async function generateLocalPairingOffer(args: {
   includeQr?: boolean;
   logger?: Logger;
 }): Promise<LocalPairingOffer> {
-  const relayEnabled = args.relayEnabled ?? true;
+  const relayEndpoint = args.relayEndpoint ?? "";
+  const relayEnabled = (args.relayEnabled ?? false) && relayEndpoint !== "";
   if (!relayEnabled) {
     return {
       relayEnabled: false,
@@ -31,11 +33,10 @@ export async function generateLocalPairingOffer(args: {
     };
   }
 
-  const relayEndpoint = args.relayEndpoint ?? "relay.paseo.sh:443";
   const relayPublicEndpoint = args.relayPublicEndpoint ?? relayEndpoint;
-  const relayUseTls = args.relayUseTls ?? relayEndpoint === "relay.paseo.sh:443";
+  const relayUseTls = args.relayUseTls ?? false;
   const relayPublicUseTls = args.relayPublicUseTls ?? relayUseTls;
-  const appBaseUrl = args.appBaseUrl ?? "https://app.paseo.sh";
+  const appBaseUrl = args.appBaseUrl ?? DEFAULT_APP_BASE_URL;
   const serverId = getOrCreateServerId(args.paseoHome, { logger: args.logger });
   const daemonKeyPair = await loadOrCreateDaemonKeyPair(args.paseoHome, args.logger);
   const offer = await createConnectionOfferV2({

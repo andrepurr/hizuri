@@ -1,4 +1,14 @@
-import { chmodSync, mkdtempSync, rmSync, statSync, writeFileSync } from "node:fs";
+import {
+  chmodSync,
+  lstatSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, test } from "vitest";
@@ -113,6 +123,19 @@ describe("PersistedConfigSchema daemon web UI feature config", () => {
       enabled: true,
       distDir: "web-ui-dist",
     });
+  });
+});
+
+describe("PersistedConfigSchema Show feature config", () => {
+  test("accepts an http(s) screen stream URL and rejects other schemes", () => {
+    const parsed = PersistedConfigSchema.parse({
+      features: { show: { screenUrl: "http://192.0.2.1:8481/" } },
+    });
+    expect(parsed.features?.show).toEqual({ screenUrl: "http://192.0.2.1:8481/" });
+    expect(
+      PersistedConfigSchema.safeParse({ features: { show: { screenUrl: "javascript:alert(1)" } } })
+        .success,
+    ).toBe(false);
   });
 });
 
@@ -664,6 +687,19 @@ describe("PersistedConfigSchema voice mode config", () => {
     expect(parsed.features?.dictation?.stt?.language).toBe("fr");
     expect(parsed.features?.voiceMode?.stt?.language).toBe("de");
   });
+
+  test("accepts a voice and model from a self-hosted OpenAI-compatible server", () => {
+    const parsed = PersistedConfigSchema.parse({
+      features: {
+        voiceMode: {
+          tts: { provider: "openai", model: "kokoro-v1:Q8_0", voice: "aiden" },
+        },
+      },
+    });
+
+    expect(parsed.features?.voiceMode?.tts?.model).toBe("kokoro-v1:Q8_0");
+    expect(parsed.features?.voiceMode?.tts?.voice).toBe("aiden");
+  });
 });
 
 describe("loadPersistedConfig", () => {
@@ -843,3 +879,35 @@ describe.skipIf(process.platform === "win32")("persisted config file permissions
     }
   });
 });
+
+describe.skipIf(process.platform === "win32")(
+  "config.json symlinked from another directory",
+  () => {
+    test("saving writes through the symlink and leaves it in place", () => {
+      const parent = createTempHome();
+      const home = path.join(parent, "home");
+      const dotfiles = path.join(parent, "dotfiles");
+      const linkedConfigPath = path.join(dotfiles, "config.json");
+      const configPath = path.join(home, "config.json");
+      try {
+        mkdirSync(home);
+        mkdirSync(dotfiles, { mode: 0o755 });
+        chmodSync(dotfiles, 0o755);
+        writeFileSync(linkedConfigPath, '{ "version": 1 }\n');
+        symlinkSync(linkedConfigPath, configPath);
+
+        savePersistedConfig(home, { version: 1, daemon: { relay: { enabled: false } } });
+
+        expect(lstatSync(configPath).isSymbolicLink()).toBe(true);
+        expect(JSON.parse(readFileSync(linkedConfigPath, "utf8"))).toEqual({
+          version: 1,
+          daemon: { relay: { enabled: false } },
+        });
+        expect(modeOf(dotfiles)).toBe(0o755);
+        expect(modeOf(linkedConfigPath)).toBe(PRIVATE_FILE_MODE);
+      } finally {
+        rmSync(parent, { recursive: true, force: true });
+      }
+    });
+  },
+);

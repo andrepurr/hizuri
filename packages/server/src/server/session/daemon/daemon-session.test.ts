@@ -1,4 +1,4 @@
-import { mkdtempSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, test } from "vitest";
@@ -374,6 +374,33 @@ describe("DaemonSession", () => {
     expect(message.payload.diagnostic).not.toContain("relay.secret.test:443");
     expect(message.payload.diagnostic).not.toContain("super-secret");
     expect(message.payload.diagnostic).not.toContain("pairing-secret");
+  });
+
+  test("app log uploads land in today's app-logs file, one line per entry", async () => {
+    const { subsystem, emitted, paseoHome } = makeSubsystem({});
+
+    await subsystem.handleAppLogsUploadRequest({
+      type: "app.logs.upload.request",
+      requestId: "logs-1",
+      platform: "android",
+      appVersion: "0.11.4",
+      entries: [
+        { ts: "2026-10-16T07:00:00.000Z", level: "warn", tag: "mic", message: "zeroChunks=12" },
+        { ts: "2026-10-16T07:00:01.000Z", level: "error", message: "first\nsecond" },
+      ],
+    });
+
+    expect(emitted).toEqual([
+      {
+        type: "app.logs.upload.response",
+        payload: { requestId: "logs-1", accepted: 2, error: null },
+      },
+    ]);
+    const file = join(paseoHome, "app-logs", `${new Date().toISOString().slice(0, 10)}.log`);
+    expect(readFileSync(file, "utf8")).toBe(
+      "2026-10-16T07:00:00.000Z WARN android/0.11.4/client-1 [mic] zeroChunks=12\n" +
+        "2026-10-16T07:00:01.000Z ERROR android/0.11.4/client-1 first\\nsecond\n",
+    );
   });
 
   test("diagnostics includes the PATH and shell visible to the daemon", async () => {

@@ -232,6 +232,7 @@ type SteeringReplayShape = "claude" | "codex";
 interface MockQuestionOption {
   label: string;
   description?: string;
+  preview?: string;
 }
 
 interface MockQuestionPromptQuestion {
@@ -257,6 +258,217 @@ function shouldEmitTurnFailure(prompt: AgentPromptInput): boolean {
   return /emit\s+(?:a\s+)?synthetic\s+turn\s+failure/i.test(promptToText(prompt));
 }
 
+function shouldEmitShowLimits(prompt: AgentPromptInput): boolean {
+  return /emit\s+synthetic\s+show\s+limits/i.test(promptToText(prompt));
+}
+
+function syntheticLimitsOutput(usedPct: number): Record<string, unknown> {
+  return {
+    ok: true,
+    window: null,
+    sources: [
+      {
+        sourceId: "claude",
+        sourceLabel: "Claude",
+        plan: "Max 20x",
+        fetchedAt: new Date().toISOString(),
+        windows: [
+          {
+            id: "five_hour",
+            label: "Session",
+            usedPct,
+            resetsAt: new Date(Date.now() + 2 * 3_600_000).toISOString(),
+          },
+          {
+            id: "weekly",
+            label: "Weekly",
+            usedPct: 13,
+            resetsAt: new Date(Date.now() + 6 * 86_400_000).toISOString(),
+          },
+        ],
+        error: null,
+      },
+    ],
+  };
+}
+
+/**
+ * Hizuri Show QA: Zuri's show_limits as the Claude provider reports it — a first call that answers
+ * after ~1 s, then a refresh that stays running ~12 s (a slow fetch or a permission wait) while
+ * the stream goes on, so the limits view can be watched for flashes.
+ */
+function buildShowLimitsQueue(turnId: string): CycleEvent[] {
+  const name = "mcp__paseo__show_limits";
+  const call = (refresh: boolean, output: unknown): ToolCallDetail => ({
+    type: "unknown",
+    input: { refresh },
+    output,
+  });
+  const filler = (count: number, cycle: number): CycleEvent[] =>
+    buildCycleQueue(`${turnId}:filler:${cycle}`, cycle)
+      .filter((event) => event.kind === "assistant_token")
+      .slice(0, count);
+  const first = `${turnId}:show_limits:1`;
+  const second = `${turnId}:show_limits:2`;
+  return [
+    { kind: "tool_running", callId: first, name, detail: call(false, null) },
+    ...filler(25, 1),
+    {
+      kind: "tool_completed",
+      callId: first,
+      name,
+      detail: call(false, syntheticLimitsOutput(75)),
+    },
+    ...filler(250, 2),
+    { kind: "tool_running", callId: second, name, detail: call(true, null) },
+    ...filler(300, 3),
+    {
+      kind: "tool_completed",
+      callId: second,
+      name,
+      detail: call(true, syntheticLimitsOutput(76)),
+    },
+  ];
+}
+
+/**
+ * Hizuri app QA: the mock calls the daemon's own agent tools (speak, show_*, set_my_model) through
+ * its injected paseo MCP server, as a Claude agent does, and shows each call in its timeline. A
+ * daemon with no Claude login can then drive the app's pages, Show and voice. Prompt:
+ * `mock paseo tools: [{"name":"show_page","input":{"page":"face"}},{"name":"speak","input":{"text":"…"},"pauseMs":500}]`.
+ * `streamMs` makes a call's input arrive the way Claude streams it: a running update with `{}`,
+ * then one per top-level key as that key completes, spread over that many ms, then the call.
+ * `early` sends a streaming call's `{}` before the previous call runs: Claude starts writing the
+ * next tool call while the daemon still executes the one before it. `background` goes on to the
+ * next call without waiting for this one (a blocking `speak` while Show updates).
+ */
+interface MockPaseoToolCall {
+  name: string;
+  input: Record<string, unknown>;
+  pauseMs: number;
+  streamMs: number;
+  early: boolean;
+  background: boolean;
+}
+
+const MOCK_PASEO_TOOLS_MARKER = /mock paseo tools:/i;
+const MOCK_PASEO_TOOL_MAX_PAUSE_MS = 60_000;
+
+function readMockPauseMs(value: unknown): number {
+  return typeof value === "number" && Number.isFinite(value) && value > 0
+    ? Math.min(value, MOCK_PASEO_TOOL_MAX_PAUSE_MS)
+    : 0;
+}
+
+/** The running inputs Claude pushes while a call streams: `{}`, then each top-level key in turn. */
+export function mockStreamedInputs(input: Record<string, unknown>): Record<string, unknown>[] {
+  const keys = Object.keys(input);
+  return keys.map((_, count) => Object.fromEntries(keys.slice(0, count).map((k) => [k, input[k]])));
+}
+
+export function parseMockPaseoToolsPrompt(prompt: AgentPromptInput): MockPaseoToolCall[] | null {
+  const text = promptToText(prompt);
+  const marker = MOCK_PASEO_TOOLS_MARKER.exec(text);
+  if (!marker) return null;
+  const rest = text.slice(marker.index + marker[0].length);
+  const start = rest.indexOf("[");
+  const end = rest.lastIndexOf("]");
+  if (start < 0 || end < start) return null;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(rest.slice(start, end + 1));
+  } catch {
+    return null;
+  }
+  if (!Array.isArray(parsed)) return null;
+  const calls: MockPaseoToolCall[] = [];
+  for (const entry of parsed) {
+    if (typeof entry !== "object" || entry === null) return null;
+    const { name, input, pauseMs, streamMs, early, background } = entry as Record<string, unknown>;
+    if (typeof name !== "string" || !/^[a-z_]+$/.test(name)) return null;
+    if (
+      input !== undefined &&
+      (typeof input !== "object" || input === null || Array.isArray(input))
+    ) {
+      return null;
+    }
+    calls.push({
+      name,
+      input: (input as Record<string, unknown> | undefined) ?? {},
+      pauseMs: readMockPauseMs(pauseMs),
+      streamMs: readMockPauseMs(streamMs),
+      early: early === true,
+      background: background === true,
+    });
+  }
+  return calls.length > 0 ? calls : null;
+}
+
+function sleepUnref(ms: number): Promise<void> {
+  return new Promise<void>((resolveSleep) => {
+    setTimeout(resolveSleep, ms).unref?.();
+  });
+}
+
+interface MockPaseoMcpServer {
+  url: string;
+  headers: Record<string, string>;
+}
+
+function resolvePaseoMcpServer(config: AgentSessionConfig): MockPaseoMcpServer | null {
+  const server = config.mcpServers?.paseo;
+  return server?.type === "http" ? { url: server.url, headers: server.headers ?? {} } : null;
+}
+
+/** One stateless `tools/call` on the daemon's agent MCP route; the answer is JSON or one SSE event. */
+export async function callMockPaseoTool(
+  server: MockPaseoMcpServer,
+  call: Pick<MockPaseoToolCall, "name" | "input">,
+): Promise<{ output: unknown; isError: boolean }> {
+  const response = await fetch(server.url, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      accept: "application/json, text/event-stream",
+      ...server.headers,
+    },
+    body: JSON.stringify({
+      jsonrpc: "2.0",
+      id: 1,
+      method: "tools/call",
+      params: { name: call.name, arguments: call.input },
+    }),
+  });
+  const body = await response.text();
+  const json = body.trimStart().startsWith("{")
+    ? body
+    : body
+        .split("\n")
+        .filter((line) => line.startsWith("data:"))
+        .map((line) => line.slice(5))
+        .pop();
+  if (!response.ok || !json) {
+    return { output: `HTTP ${response.status}: ${body.slice(0, 200)}`, isError: true };
+  }
+  const message = JSON.parse(json) as {
+    result?: {
+      content?: Array<{ type: string; text?: string }>;
+      structuredContent?: unknown;
+      isError?: boolean;
+    };
+    error?: { message?: string };
+  };
+  if (message.error) {
+    return { output: message.error.message ?? "MCP error", isError: true };
+  }
+  const result = message.result ?? {};
+  return {
+    output:
+      result.structuredContent ?? (result.content ?? []).map((part) => part.text ?? "").join("\n"),
+    isError: result.isError === true,
+  };
+}
+
 function parseSteeringReplayShape(prompt: AgentPromptInput): SteeringReplayShape | null {
   const match = /replay a (claude|codex)-shaped foreground shell tool call/i.exec(
     promptToText(prompt),
@@ -270,6 +482,16 @@ function parseSettledAssistantImageMarkdown(prompt: AgentPromptInput): string | 
   );
   return match?.[1] ?? null;
 }
+
+const ROLLOUT_FLAG_PREVIEW = [
+  "Ship it dark behind the new-surface flag, then turn it on for internal users before everyone else.",
+  "",
+  'if (flags.enabled("new-surface")) {',
+  "  render(<NewSurface />);",
+  "}",
+  ...Array.from({ length: 40 }, (_, i) => `// rollout step ${i + 1}`),
+  "// LAST PREVIEW LINE",
+].join("\n");
 
 function parseMockQuestionPrompt(prompt: AgentPromptInput): MockQuestionPromptRequest | null {
   const text = promptToText(prompt);
@@ -309,7 +531,10 @@ function parseMockQuestionPrompt(prompt: AgentPromptInput): MockQuestionPromptRe
       {
         question: "Which rollout should we use?",
         header: "rollout",
-        options: [{ label: "Immediately" }, { label: "Behind feature flag" }],
+        options: [
+          { label: "Immediately" },
+          { label: "Behind feature flag", preview: ROLLOUT_FLAG_PREVIEW },
+        ],
         multiSelect: false,
       },
       {
@@ -366,6 +591,16 @@ function parseUserMessageDelayMs(prompt: AgentPromptInput): number {
   const match = /delay synthetic user message by (\d+)ms/i.exec(promptToText(prompt));
   const delayMs = Number(match?.[1] ?? 0);
   return Number.isSafeInteger(delayMs) ? Math.min(delayMs, 2_000) : 0;
+}
+
+/**
+ * Hizuri (compact hold): “simulate compaction for N ms” compacts like Claude's auto-compaction:
+ * the turn reports compaction, refuses steers until it ends, then goes on streaming.
+ */
+function parseCompactionMs(prompt: AgentPromptInput): number | null {
+  const match = /simulate compaction for (\d+)ms/i.exec(promptToText(prompt));
+  const ms = Number(match?.[1]);
+  return match && Number.isSafeInteger(ms) ? Math.min(ms, 600_000) : null;
 }
 
 function shouldWithholdUserMessageUntilInterrupt(prompt: AgentPromptInput): boolean {
@@ -732,6 +967,11 @@ function getConfiguredAssistantResponses(value: unknown): string[] {
     : [];
 }
 
+function readFeatureString(config: AgentSessionConfig, key: string): string | null {
+  const value = config.featureValues?.[key];
+  return typeof value === "string" ? value : null;
+}
+
 export class MockLoadTestAgentSession implements AgentSession {
   readonly provider: AgentProvider = MOCK_LOAD_TEST_PROVIDER_ID;
   readonly capabilities = CAPABILITIES;
@@ -750,15 +990,21 @@ export class MockLoadTestAgentSession implements AgentSession {
   private readonly assistantResponses: string[];
   private readonly streamingAssistantResponse: string | null;
   private readonly streamingAssistantIntervalMs: number;
+  /** Hizuri app QA: speaks this line back to every ordinary prompt, so voice tests hear who answers. */
+  private readonly voiceReply: string | null;
   private readonly rewindError: string | null;
   private remainingPromptRejections: number;
   private remainingSteerFailures: number;
+  /** Hizuri (compact hold): the turn compacting now; steers wait for it (scheduleCompactionTurn). */
+  private compactingTurnId: string | null = null;
+  private readonly paseoMcp: MockPaseoMcpServer | null;
 
   constructor(options: { config: AgentSessionConfig; sessionId: string; logger?: Logger }) {
     this.id = options.sessionId;
     this.logger = options.logger;
     this.modeId = options.config.modeId ?? MOCK_LOAD_TEST_MODE_ID;
     this.modelId = options.config.model ?? MOCK_LOAD_TEST_DEFAULT_MODEL_ID;
+    this.paseoMcp = resolvePaseoMcpServer(options.config);
     this.assistantResponse =
       typeof options.config.featureValues?.mockAssistantResponse === "string"
         ? options.config.featureValues.mockAssistantResponse
@@ -770,6 +1016,7 @@ export class MockLoadTestAgentSession implements AgentSession {
       typeof options.config.featureValues?.mockStreamingAssistantResponse === "string"
         ? options.config.featureValues.mockStreamingAssistantResponse
         : null;
+    this.voiceReply = readFeatureString(options.config, "mockVoiceReply");
     const requestedStreamingInterval =
       options.config.featureValues?.mockStreamingAssistantIntervalMs;
     this.streamingAssistantIntervalMs =
@@ -842,7 +1089,7 @@ export class MockLoadTestAgentSession implements AgentSession {
       timer: null,
       resolve,
       completed,
-      queue: [],
+      queue: shouldEmitShowLimits(prompt) ? buildShowLimitsQueue(turnId) : [],
       emittedTokens: 0,
       turnStarted: false,
       burst: profile.burst,
@@ -855,11 +1102,28 @@ export class MockLoadTestAgentSession implements AgentSession {
     const structuredBranchName = parseStructuredBranchNamePrompt(prompt);
     const settledAssistantImageMarkdown = parseSettledAssistantImageMarkdown(prompt);
     const steeringReplayShape = parseSteeringReplayShape(prompt);
+    const compactionMs = parseCompactionMs(prompt);
+    const paseoToolCalls = parseMockPaseoToolsPrompt(prompt);
     const scheduleTurn = () => {
       if (shouldEmitTurnFailure(prompt)) {
         this.scheduleFailedTurn(turn);
+      } else if (paseoToolCalls) {
+        this.schedulePaseoToolsTurn(turn, paseoToolCalls);
+      } else if (compactionMs !== null) {
+        this.scheduleCompactionTurn(turn, compactionMs);
       } else if (steeringReplayShape) {
         this.scheduleSteeringReplayTurn(turn, steeringReplayShape);
+      } else if (this.voiceReply !== null) {
+        this.schedulePaseoToolsTurn(turn, [
+          {
+            name: "speak",
+            input: { text: this.voiceReply },
+            pauseMs: 0,
+            streamMs: 0,
+            early: false,
+            background: false,
+          },
+        ]);
       } else if (this.streamingAssistantResponse !== null) {
         this.scheduleStreamingAssistantTurn(turn, this.streamingAssistantResponse);
       } else if (this.assistantResponses.length > 0 || this.assistantResponse !== null) {
@@ -1060,7 +1324,10 @@ export class MockLoadTestAgentSession implements AgentSession {
     _prompt: AgentPromptInput,
     options: SteerActiveTurnOptions,
   ): Promise<SteerResult> {
-    if (this.activeTurn?.turnId !== options.expectedTurnId) {
+    if (
+      this.activeTurn?.turnId !== options.expectedTurnId ||
+      this.compactingTurnId === options.expectedTurnId
+    ) {
       return { status: "unavailable" };
     }
     if (this.remainingSteerFailures > 0) {
@@ -1140,6 +1407,23 @@ export class MockLoadTestAgentSession implements AgentSession {
     turn.timer = setTimeout(() => {
       this.emitLargePayloadTurn(turn, largePayload);
     }, 0);
+    turn.timer.unref?.();
+  }
+
+  private scheduleCompactionTurn(turn: ActiveTurn, compactionMs: number): void {
+    this.emitTurnStarted(turn);
+    this.compactingTurnId = turn.turnId;
+    this.emitTimeline(turn.turnId, { type: "compaction", status: "loading" });
+    turn.timer = setTimeout(() => {
+      if (this.activeTurn !== turn) {
+        return;
+      }
+      this.compactingTurnId = null;
+      this.emitTimeline(turn.turnId, { type: "compaction", status: "completed", trigger: "auto" });
+      // The turn goes on after the compaction for the model's whole stream, as Claude's does.
+      turn.startedAt = Date.now();
+      this.schedule(turn, 0);
+    }, compactionMs);
     turn.timer.unref?.();
   }
 
@@ -1235,6 +1519,80 @@ export class MockLoadTestAgentSession implements AgentSession {
       this.emitQuestionPromptTurn(turn, questionPrompt);
     }, 0);
     turn.timer.unref?.();
+  }
+
+  private schedulePaseoToolsTurn(turn: ActiveTurn, calls: MockPaseoToolCall[]): void {
+    turn.timer = setTimeout(() => {
+      void this.runPaseoToolsTurn(turn, calls);
+    }, 0);
+    turn.timer.unref?.();
+  }
+
+  private async runPaseoToolsTurn(turn: ActiveTurn, calls: MockPaseoToolCall[]): Promise<void> {
+    this.clearTurnTimer(turn);
+    this.emitTurnStarted(turn);
+    const results: string[] = [];
+    const inFlight: Promise<void>[] = [];
+    const emitRunning = (index: number, input: Record<string, unknown>) =>
+      this.emitTimeline(
+        turn.turnId,
+        createToolCall({
+          callId: `${turn.turnId}:paseo:${index}`,
+          name: `mcp__paseo__${calls[index]?.name}`,
+          status: "running",
+          detail: { type: "unknown", input, output: null },
+        }),
+      );
+    const startsEarly = (index: number) => {
+      const call = calls[index];
+      return index > 0 && call !== undefined && call.early && call.streamMs > 0;
+    };
+    for (const [index, call] of calls.entries()) {
+      if (this.activeTurn !== turn) return;
+      const callId = `${turn.turnId}:paseo:${index}`;
+      const name = `mcp__paseo__${call.name}`;
+      const running = call.streamMs > 0 ? mockStreamedInputs(call.input) : [];
+      for (const [step, input] of [...running, call.input].entries()) {
+        if (this.activeTurn !== turn) return;
+        // An early call's `{}` already went out while the previous call ran.
+        if (step > 0 || !startsEarly(index)) emitRunning(index, input);
+        if (input !== call.input) await sleepUnref(call.streamMs / running.length);
+      }
+      if (startsEarly(index + 1)) emitRunning(index + 1, {});
+      const run = async () => {
+        const result = this.paseoMcp
+          ? await callMockPaseoTool(this.paseoMcp, call).catch((error: unknown) => ({
+              output: error instanceof Error ? error.message : String(error),
+              isError: true,
+            }))
+          : { output: "no paseo MCP server injected", isError: true };
+        if (this.activeTurn !== turn) return;
+        const detail: ToolCallDetail = {
+          type: "unknown",
+          input: call.input,
+          output: result.output,
+        };
+        this.emitTimeline(
+          turn.turnId,
+          result.isError
+            ? { type: "tool_call", callId, name, status: "failed", error: result.output, detail }
+            : createToolCall({ callId, name, status: "completed", detail }),
+        );
+        results[index] = `${call.name}: ${result.isError ? "failed" : "ok"}`;
+      };
+      if (call.background) inFlight.push(run());
+      else await run();
+      if (call.pauseMs > 0) await sleepUnref(call.pauseMs);
+    }
+    await Promise.all(inFlight);
+    if (this.activeTurn !== turn) return;
+    const finalText = results.join("\n");
+    this.emitTimeline(turn.turnId, {
+      type: "assistant_message",
+      text: finalText,
+      messageId: turn.assistantMessageId,
+    });
+    this.finishTurnWithText(turn, finalText);
   }
 
   private scheduleSettledAssistantTurn(turn: ActiveTurn, finalText: string): void {

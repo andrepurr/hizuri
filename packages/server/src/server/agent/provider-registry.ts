@@ -46,6 +46,7 @@ import { OmpAgentClient } from "./providers/omp/agent.js";
 import type { OmpRuntime } from "./providers/omp/runtime.js";
 import { PiRpcAgentClient } from "./providers/pi/agent.js";
 import { TraeACPAgentClient } from "./providers/trae-acp-agent.js";
+import { FreeBrainAgentClient } from "./providers/hizuri-free/agent.js";
 import { MockLoadTestAgentClient } from "./providers/mock-load-test-agent.js";
 import { MockSlowProviderClient } from "./providers/mock-slow-provider.js";
 import { ToolPolicyUnsupportedError, mergeProviderOptions } from "./provider-options.js";
@@ -56,6 +57,7 @@ import {
   getAgentProviderDefinition,
   type AgentProviderDefinition,
 } from "@getpaseo/protocol/provider-manifest";
+import { PROVIDER_SETTINGS_SITE, resolveSecretRefs } from "../data-scopes/secret-refs.js";
 
 function isNonEmptyStringArray(value: string[]): value is [string, ...string[]] {
   return value.length > 0;
@@ -224,6 +226,7 @@ const PROVIDER_CLIENT_FACTORIES: Record<string, ProviderClientFactory> = {
       runtimeSettings,
       runtime: options?.ompRuntime,
     }),
+  "hizuri-free": (logger, runtimeSettings) => new FreeBrainAgentClient({ logger, runtimeSettings }),
   mock: (logger) => new MockLoadTestAgentClient(logger),
   "mock-slow": () => new MockSlowProviderClient(),
 };
@@ -908,8 +911,16 @@ export function buildProviderRegistry(
   logger: Logger,
   options?: BuildProviderRegistryOptions,
 ): Record<AgentProvider, ProviderDefinition> {
-  const runtimeSettings = options?.runtimeSettings;
-  const providerOverrides = options?.providerOverrides ?? {};
+  // hizuri: "!secret <name>" in a provider's configured env gets its value from the vault
+  // (data-scopes/); an env an agent passes at run time never does.
+  const runtimeSettings = resolveSecretRefs({
+    value: options?.runtimeSettings,
+    ...PROVIDER_SETTINGS_SITE,
+  });
+  const providerOverrides = resolveSecretRefs({
+    value: options?.providerOverrides ?? {},
+    ...PROVIDER_SETTINGS_SITE,
+  });
   const resolvedProviders = buildResolvedBuiltinProviders(
     providerOverrides,
     runtimeSettings,

@@ -6,6 +6,8 @@ import { resolvePaseoHome } from "./paseo-home.js";
 import { createRootLogger } from "./logger.js";
 import type { DaemonLifecycleIntent } from "./bootstrap.js";
 import { getProcessDiagnostics } from "./process-diagnostics.js";
+import { applyOwnerProfile, findProfileDir, readOwnerProfile } from "./owner-profile.js";
+import { logConfigSecretsReport, prepareConfigSecrets } from "./data-scopes/config-secrets.js";
 
 process.title = "Paseo Daemon";
 
@@ -28,6 +30,7 @@ interface BootstrapResult {
   paseoHome: string;
   logger: ReturnType<typeof createRootLogger>;
   config: ReturnType<typeof loadConfig>;
+  profile: { dir: string; applied: string[] } | null;
 }
 
 function isPidAlive(pid: number): boolean {
@@ -69,10 +72,15 @@ function writeWorkerLifecycleLog(
 
 function bootstrapFromEnvironment(): BootstrapResult {
   try {
+    // The user's profile goes first: its knobs are defaults for everything read below.
+    const profileDir = findProfileDir();
+    const profile = profileDir
+      ? { dir: profileDir, applied: applyOwnerProfile(process.env, readOwnerProfile(profileDir)) }
+      : null;
     const paseoHome = resolvePaseoHome();
     const config = loadConfig(paseoHome);
     const logger = createRootLogger({ log: config.log }, { paseoHome, file: false });
-    return { paseoHome, logger, config };
+    return { paseoHome, logger, config, profile };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     process.stderr.write(`${message}\n`);
@@ -129,7 +137,15 @@ function applyCliFlagOverrides(config: ReturnType<typeof loadConfig>): void {
 }
 
 async function main() {
-  const { paseoHome, logger, config } = bootstrapFromEnvironment();
+  // hizuri: config.json's "!secret" names open from the vault and literal tokens are checked
+  // before the configuration is read; the check is logged once the logger exists.
+  const configSecrets = await prepareConfigSecrets();
+  const { paseoHome, logger, config, profile } = bootstrapFromEnvironment();
+  logConfigSecretsReport({ logger, report: configSecrets });
+  logger.info(
+    { profileDir: profile?.dir ?? null, profileKnobs: profile?.applied ?? [] },
+    "owner_profile.applied",
+  );
   let daemon: Awaited<ReturnType<typeof createPaseoDaemon>> | null = null;
   let shutdownPromise: Promise<number> | null = null;
   let exitHookInstalled = false;

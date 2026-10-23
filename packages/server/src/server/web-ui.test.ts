@@ -157,6 +157,20 @@ describe("daemon web UI route module", () => {
     expect(res.body).toContain('"label":"test-label"');
   });
 
+  test("names the default port when a proxy sends a host without one", async () => {
+    const app = createApp({ enabled: true, distDir, publicDir });
+    app.set("trust proxy", true);
+
+    const tls = await request(app, "GET", "/", {
+      host: "demo.example.com",
+      "x-forwarded-proto": "https",
+    });
+    const plain = await request(app, "GET", "/", { host: "demo.example.com" });
+
+    expect(tls.body).toContain('"listen":"demo.example.com:443","useTls":true');
+    expect(plain.body).toContain('"listen":"demo.example.com:80","useTls":false');
+  });
+
   test("injects hint before closing head tag", async () => {
     const app = createApp({ enabled: true, distDir, publicDir });
 

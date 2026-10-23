@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 import type { ToolPolicy } from "@getpaseo/protocol/agent-types";
 
 import { createTestLogger } from "../../test-utils/test-logger.js";
+import { pathKey, setLoadedConfigSecrets } from "../data-scopes/secret-refs.js";
 import type {
   AgentClient,
   AgentFeature,
@@ -573,6 +574,31 @@ test("built-in override applies env", () => {
         CLAUDE_CONFIG_DIR: "/tmp/claude",
       },
     },
+  });
+});
+
+test("hizuri: a configured env's !secret reference gets the value the daemon opened at start", () => {
+  const opened = { text: "!secret agent-token", value: "opened-value" };
+  setLoadedConfigSecrets(
+    new Map([
+      [pathKey(["agents", "providers", "claude", "env", "API_TOKEN"]), opened],
+      [pathKey(["agents", "providers", "codex", "env", "OTHER_TOKEN"]), opened],
+    ]),
+  );
+  try {
+    buildProviderRegistry(logger, {
+      providerOverrides: { claude: { env: { API_TOKEN: "!secret agent-token", MODEL: "m" } } },
+      runtimeSettings: { codex: { env: { OTHER_TOKEN: "!secret agent-token" } } },
+    });
+  } finally {
+    setLoadedConfigSecrets(null);
+  }
+
+  expect(mockState.constructorArgs.claude[0]).toEqual({
+    runtimeSettings: { command: undefined, env: { API_TOKEN: "opened-value", MODEL: "m" } },
+  });
+  expect(mockState.constructorArgs.codex[0]).toEqual({
+    runtimeSettings: { env: { OTHER_TOKEN: "opened-value" } },
   });
 });
 

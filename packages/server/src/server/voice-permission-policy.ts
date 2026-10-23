@@ -1,7 +1,12 @@
 import type { AgentPermissionRequest } from "./agent/agent-sdk-types.js";
-import { isSpeakToolName } from "@getpaseo/protocol/tool-name-normalization";
+import { getToolLeafName, isSpeakToolName } from "@getpaseo/protocol/tool-name-normalization";
 
-/** Voice assistant policy: only allow the speak tool. */
+/**
+ * Voice assistant policy: allow the speak tool, its signature tool mark_phrases (phrase graph),
+ * and Claude Code's ToolSearch, which only loads tool definitions. Claude Code defers MCP tools,
+ * so speak cannot be called until ToolSearch has loaded it; without this the voice agent answered
+ * only in text.
+ */
 export function isVoicePermissionAllowed(request: AgentPermissionRequest): boolean {
   if (request.kind !== "tool") {
     return false;
@@ -12,5 +17,9 @@ export function isVoicePermissionAllowed(request: AgentPermissionRequest): boole
     return false;
   }
 
-  return isSpeakToolName(normalizedName);
+  return (
+    isSpeakToolName(normalizedName) ||
+    getToolLeafName(normalizedName) === "mark_phrases" ||
+    normalizedName === "toolsearch"
+  );
 }
